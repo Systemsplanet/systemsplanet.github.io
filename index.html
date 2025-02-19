@@ -169,68 +169,7 @@
   </div>
 </div>
   
-prompt1: make a pure javascript simulation of a sphere made up of ASCII numbers, rotating. The closest numbers should be pure white, and the farthest ones should fade to gray, on a black background
 
-  
-  <script>
-
-const canvas = document.createElement('canvas');
-const ctx = canvas.getContext('2d');
-document.body.appendChild(canvas);
-
-canvas.width = 800;
-canvas.height = 600;
-//document.body.style.backgroundColor = 'black';
-ctx.font = '12px monospace';
-ctx.textAlign = 'center';
-
-const sphereRadius = 10;
-const density = 0.3; // Adjust for resolution
-let angleX = 0;
-let angleY = 0;
-
-function drawSphere() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const centerX = canvas.width / 2;
-    const centerY = canvas.height / 2;
-
-    for (let theta = 0; theta < Math.PI * 2; theta += density) {
-        for (let phi = 0; phi < Math.PI; phi += density) {
-            // Spherical coordinates
-            const x = sphereRadius * Math.sin(phi) * Math.cos(theta);
-            const y = sphereRadius * Math.sin(phi) * Math.sin(theta);
-            const z = sphereRadius * Math.cos(phi);
-
-            // Rotate around X and Y axes
-            const rotatedX = x * Math.cos(angleY) - z * Math.sin(angleY);
-            const rotatedZ = x * Math.sin(angleY) + z * Math.cos(angleY);
-            const rotatedY = y * Math.cos(angleX) - rotatedZ * Math.sin(angleX);
-
-            // Perspective projection
-            const perspective = 300 / (300 + rotatedZ);
-            const screenX = centerX + rotatedX * perspective * 20;
-            const screenY = centerY + rotatedY * perspective * 20;
-
-            // Brightness based on depth
-            const brightness = Math.min(Math.max((rotatedZ + sphereRadius) / (2 * sphereRadius), 0), 1);
-            const colorValue = Math.floor(255 - brightness * 255);
-            ctx.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
-
-            ctx.fillText(Math.round(brightness * 9), screenX, screenY);
-        }
-    }
-}
-
-function animate() {
-    angleX += 0.02;
-    angleY += 0.01;
-    drawSphere();
-    requestAnimationFrame(animate);
-}
-
-animate();
-
-  </script>
 </body>
 </html>
   

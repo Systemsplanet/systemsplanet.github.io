@@ -168,53 +168,51 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 <script>
 
-let font;
-let angleX = 0;
-let angleY = 0;
-
-function preload() {
-  font = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat-font/0.8.0/SourceCodePro-Regular.otf'); // Load a monospaced font
-}
+let angle = 0;
 
 function setup() {
-  createCanvas(600, 600, WEBGL);
-  textFont(font);
-  textSize(12);
+  createCanvas(400, 400, WEBGL);
+  noStroke();
+  textSize(10);
   textAlign(CENTER, CENTER);
 }
 
 function draw() {
   background(0);
-  rotateX(angleX);
-  rotateY(angleY);
+  rotateY(angle);
+  rotateX(angle * 0.5);
+  angle += 0.03;
 
-  let radius = 200;
-  let detail = 20; // Adjust for more or fewer numbers
-  for (let i = -PI / 2; i < PI / 2; i += PI / detail) {
-    let z = sin(i) * radius;
-    let r = cos(i) * radius;
-
-    for (let j = 0; j < TWO_PI; j += TWO_PI / detail) {
-      let x = cos(j) * r;
-      let y = sin(j) * r;
-
-      // Calculate brightness based on distance
-      let distToCamera = map(z, -radius, radius, 255, 100);
-      fill(distToCamera);
-
-      push();
-      translate(x, y, z);
-      rotateY(-angleY); // Keep text upright
-      rotateX(-angleX);
-      text(floor(random(10)), 0, 0); // Random ASCII number
-      pop();
+  for (let i = -5; i <= 5; i++) {
+    for (let j = -5; j <= 5; j++) {
+      for (let k = -5; k <= 5; k++) {
+        let x = i * 20;
+        let y = j * 20;
+        let z = k * 20;
+        
+        // Push and pop to isolate transformations
+        push();
+        translate(x, y, z);
+        
+        // Face the camera
+        let dir = createVector(x, y, z);
+        dir.normalize();
+        rotateY(atan2(dir.z, dir.x));
+        rotateX(acos(dir.y));
+        
+        // Calculate brightness based on distance from center
+        let distance = dist(0, 0, 0, x, y, z);
+        let maxDist = dist(0, 0, 0, 100, 100, 100); // distance to corner of our sphere
+        let brightness = map(distance, 0, maxDist, 255, 100);
+        
+        // Draw number
+        fill(brightness);
+        text(random(0, 9), 0, 0);
+        pop();
+      }
     }
   }
-
-  angleX += radians(1); // Rotate sphere
-  angleY += radians(1.5);
 }
-
 </script>
 
   

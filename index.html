@@ -22,7 +22,6 @@
 </style>
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
 
 
 
@@ -170,57 +169,66 @@
   </div>
 </div>
   
-prompt: make a p5.js simulation of a sphere made up of ASCII numbers, rotating. The closest numbers should be pure white, and the farthest ones should fade to gray, on a black background
+prompt1: make a pure javascript simulation of a sphere made up of ASCII numbers, rotating. The closest numbers should be pure white, and the farthest ones should fade to gray, on a black background
 
   
   <script>
 
-//let font;
+const canvas = document.createElement('canvas');
+const ctx = canvas.getContext('2d');
+document.body.appendChild(canvas);
+
+canvas.width = 800;
+canvas.height = 600;
+document.body.style.backgroundColor = 'black';
+ctx.font = '12px monospace';
+ctx.textAlign = 'center';
+
+const sphereRadius = 10;
+const density = 0.3; // Adjust for resolution
 let angleX = 0;
 let angleY = 0;
 
-//function preload() {
-//  font = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat-font/0.8.0/SourceCodePro-Regular.otf'); // Load a monospaced font
-//}
+function drawSphere() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
 
-function setup() {
-  createCanvas(600, 600, WEBGL);
- // textFont(font);
-  textSize(12);
-  textAlign(CENTER, CENTER);
-}
+    for (let theta = 0; theta < Math.PI * 2; theta += density) {
+        for (let phi = 0; phi < Math.PI; phi += density) {
+            // Spherical coordinates
+            const x = sphereRadius * Math.sin(phi) * Math.cos(theta);
+            const y = sphereRadius * Math.sin(phi) * Math.sin(theta);
+            const z = sphereRadius * Math.cos(phi);
 
-function draw() {
-  //background(0);
-  rotateX(angleX);
-  rotateY(angleY);
+            // Rotate around X and Y axes
+            const rotatedX = x * Math.cos(angleY) - z * Math.sin(angleY);
+            const rotatedZ = x * Math.sin(angleY) + z * Math.cos(angleY);
+            const rotatedY = y * Math.cos(angleX) - rotatedZ * Math.sin(angleX);
 
-  let radius = 200;
-  let detail = 20; // Adjust for more or fewer numbers
-  for (let i = -PI / 2; i < PI / 2; i += PI / detail) {
-    let z = sin(i) * radius;
-    let r = cos(i) * radius;
+            // Perspective projection
+            const perspective = 300 / (300 + rotatedZ);
+            const screenX = centerX + rotatedX * perspective * 20;
+            const screenY = centerY + rotatedY * perspective * 20;
 
-    for (let j = 0; j < TWO_PI; j += TWO_PI / detail) {
-      let x = cos(j) * r;
-      let y = sin(j) * r;
+            // Brightness based on depth
+            const brightness = Math.min(Math.max((rotatedZ + sphereRadius) / (2 * sphereRadius), 0), 1);
+            const colorValue = Math.floor(255 - brightness * 255);
+            ctx.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
 
-      // Calculate brightness based on distance
-      let distToCamera = map(z, -radius, radius, 255, 100);
-      fill(distToCamera);
-
-      push();
-      translate(x, y, z);
-      rotateY(-angleY); // Keep text upright
-      rotateX(-angleX);
-      text(floor(random(10)), 0, 0); // Random ASCII number
-      pop();
+            ctx.fillText(Math.round(brightness * 9), screenX, screenY);
+        }
     }
-  }
-
-  angleX += radians(1); // Rotate sphere
-  angleY += radians(1.5);
 }
+
+function animate() {
+    angleX += 0.02;
+    angleY += 0.01;
+    drawSphere();
+    requestAnimationFrame(animate);
+}
+
+animate();
 
   </script>
 </body>

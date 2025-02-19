@@ -23,56 +23,7 @@
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.4.0/p5.js"></script>
-<script>
 
-//let font;
-let angleX = 0;
-let angleY = 0;
-
-//function preload() {
-//  font = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat-font/0.8.0/SourceCodePro-Regular.otf'); // Load a monospaced font
-//}
-
-function setup() {
-  createCanvas(600, 600, WEBGL);
- // textFont(font);
-  textSize(12);
-  textAlign(CENTER, CENTER);
-}
-
-function draw() {
-  background(0);
-  rotateX(angleX);
-  rotateY(angleY);
-
-  let radius = 200;
-  let detail = 20; // Adjust for more or fewer numbers
-  for (let i = -PI / 2; i < PI / 2; i += PI / detail) {
-    let z = sin(i) * radius;
-    let r = cos(i) * radius;
-
-    for (let j = 0; j < TWO_PI; j += TWO_PI / detail) {
-      let x = cos(j) * r;
-      let y = sin(j) * r;
-
-      // Calculate brightness based on distance
-      let distToCamera = map(z, -radius, radius, 255, 100);
-      fill(distToCamera);
-
-      push();
-      translate(x, y, z);
-      rotateY(-angleY); // Keep text upright
-      rotateX(-angleX);
-      text(floor(random(10)), 0, 0); // Random ASCII number
-      pop();
-    }
-  }
-
-  angleX += radians(1); // Rotate sphere
-  angleY += radians(1.5);
-}
-
-</script>
 
 
   
@@ -219,10 +170,59 @@ function draw() {
   </div>
 </div>
   
- make a p5.js simulation of a sphere made up of ASCII numbers, rotating. The closest numbers should be pure white, and the farthest ones should fade to gray, on a black background
+prompt: make a p5.js simulation of a sphere made up of ASCII numbers, rotating. The closest numbers should be pure white, and the farthest ones should fade to gray, on a black background
 
   
-  
+  <script>
+
+//let font;
+let angleX = 0;
+let angleY = 0;
+
+//function preload() {
+//  font = loadFont('https://cdnjs.cloudflare.com/ajax/libs/topcoat-font/0.8.0/SourceCodePro-Regular.otf'); // Load a monospaced font
+//}
+
+function setup() {
+  createCanvas(600, 600, WEBGL);
+ // textFont(font);
+  textSize(12);
+  textAlign(CENTER, CENTER);
+}
+
+function draw() {
+  //background(0);
+  rotateX(angleX);
+  rotateY(angleY);
+
+  let radius = 200;
+  let detail = 20; // Adjust for more or fewer numbers
+  for (let i = -PI / 2; i < PI / 2; i += PI / detail) {
+    let z = sin(i) * radius;
+    let r = cos(i) * radius;
+
+    for (let j = 0; j < TWO_PI; j += TWO_PI / detail) {
+      let x = cos(j) * r;
+      let y = sin(j) * r;
+
+      // Calculate brightness based on distance
+      let distToCamera = map(z, -radius, radius, 255, 100);
+      fill(distToCamera);
+
+      push();
+      translate(x, y, z);
+      rotateY(-angleY); // Keep text upright
+      rotateX(-angleX);
+      text(floor(random(10)), 0, 0); // Random ASCII number
+      pop();
+    }
+  }
+
+  angleX += radians(1); // Rotate sphere
+  angleY += radians(1.5);
+}
+
+  </script>
 </body>
 </html>
   

@@ -113,9 +113,9 @@ function draw() {
   const projectedVertices = vertices.map(project);
 
   // Center the tesseract on the screen
-  const scale = Math.min(width, height) / 8;
-  const offsetX = width; // / 2;
-  const offsetY = height; // / 2;
+  const scale = Math.min(width, height) / 4; /// 8;
+  const offsetX = width / 2;
+  const offsetY = height / 2;
 
   // Draw edges
   for (const edge of edges) {

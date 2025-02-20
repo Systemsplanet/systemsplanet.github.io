@@ -3,6 +3,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
 <style>
+  
   h1 {}
   h2 {}
   p {  
@@ -30,7 +31,9 @@
   allow mouse moves to impact the rotation
   <script>
 
-
+document.body.style.overflow = 'hidden'; // Prevents scrolling
+document.body.style.height = '100vh';   // Ensures full viewport height
+    
 const canvas = document.createElement('canvas');
 const ctx = canvas.getContext('2d');
 document.body.appendChild(canvas);

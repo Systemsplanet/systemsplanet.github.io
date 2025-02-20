@@ -34,7 +34,6 @@ document.body.appendChild(canvas);
 
 canvas.width = 800;
 canvas.height = 600;
-//document.body.style.backgroundColor = 'black';
 ctx.font = '12px monospace';
 ctx.textAlign = 'center';
 
@@ -42,6 +41,21 @@ const sphereRadius = 10;
 const density = 0.3; // Adjust for resolution
 let angleX = 0;
 let angleY = 0;
+
+// Track mouse position
+let mouseX = canvas.width / 2;
+let mouseY = canvas.height / 2;
+
+// Event listener for mouse movement
+canvas.addEventListener('mousemove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+
+    // Map mouse position to rotation angles
+    angleX = (mouseY / canvas.height - 0.5) * Math.PI; // Vertical movement affects X-axis rotation
+    angleY = (mouseX / canvas.width - 0.5) * Math.PI;  // Horizontal movement affects Y-axis rotation
+});
 
 function drawSphere() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -76,14 +90,11 @@ function drawSphere() {
 }
 
 function animate() {
-    angleX += 0.02;
-    angleY += 0.01;
     drawSphere();
     requestAnimationFrame(animate);
 }
 
 animate();
-
 
   </script>
   </body>

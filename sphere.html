@@ -42,19 +42,19 @@ const density = 0.3; // Adjust for resolution
 let angleX = 0;
 let angleY = 0;
 
-// Track mouse position
-let mouseX = canvas.width / 2;
-let mouseY = canvas.height / 2;
+// Track mouse movement deltas
+let mouseDeltaX = 0;
+let mouseDeltaY = 0;
 
 // Event listener for mouse movement
 canvas.addEventListener('mousemove', (e) => {
     const rect = canvas.getBoundingClientRect();
-    mouseX = e.clientX - rect.left;
-    mouseY = e.clientY - rect.top;
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
 
-    // Map mouse position to rotation angles
-    angleX = (mouseY / canvas.height - 0.5) * Math.PI; // Vertical movement affects X-axis rotation
-    angleY = (mouseX / canvas.width - 0.5) * Math.PI;  // Horizontal movement affects Y-axis rotation
+    // Map mouse deltas to rotation influence
+    mouseDeltaX = (mouseX / canvas.width - 0.5) * 0.1; // Horizontal movement affects Y-axis rotation
+    mouseDeltaY = (mouseY / canvas.height - 0.5) * 0.1; // Vertical movement affects X-axis rotation
 });
 
 function drawSphere() {
@@ -90,6 +90,10 @@ function drawSphere() {
 }
 
 function animate() {
+    // Add automatic rotation and include mouse influence
+    angleX += 0.02 + mouseDeltaY; // Automatic rotation plus vertical mouse influence
+    angleY += 0.01 + mouseDeltaX; // Automatic rotation plus horizontal mouse influence
+
     drawSphere();
     requestAnimationFrame(animate);
 }

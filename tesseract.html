@@ -8,7 +8,7 @@
     body {
       margin: 0;
       overflow: hidden;
-      background: black;
+      background: white;
     }
     canvas {
       display: block;
@@ -106,8 +106,8 @@ function project(point) {
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.fillStyle = "white";
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 4;
 
   // Project all vertices to 2D screen space
   const projectedVertices = vertices.map(project);

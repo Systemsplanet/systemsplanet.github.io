@@ -105,17 +105,17 @@ function project(point) {
 // Draw the tesseract
 function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = "white";
+  ctx.fillStyle = "red";
   ctx.strokeStyle = "red";
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 2;
 
   // Project all vertices to 2D screen space
   const projectedVertices = vertices.map(project);
 
   // Center the tesseract on the screen
   const scale = Math.min(width, height) / 8;
-  const offsetX = width / 2;
-  const offsetY = height / 2;
+  const offsetX = width; // / 2;
+  const offsetY = height; // / 2;
 
   // Draw edges
   for (const edge of edges) {

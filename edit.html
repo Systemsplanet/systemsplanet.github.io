@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub File Manager</title>
+</head>
+<body>
+  <h1>GitHub File Manager</h1>
+
+  <!-- Form for input -->
+  <form id="githubForm">
+    <label for="token">GitHub Token:</label><br>
+    <input type="password" id="token" name="token" required><br><br>
+
+    <label for="owner">GitHub Username (Owner):</label><br>
+    <input type="text" id="owner" name="owner" required><br><br>
+
+    <label for="repo">Repository Name:</label><br>
+    <input type="text" id="repo" name="repo" required><br><br>
+
+    <label for="path">File Path (e.g., example.txt):</label><br>
+    <input type="text" id="path" name="path" required><br><br>
+
+    <label for="content">File Content:</label><br>
+    <textarea id="content" name="content"></textarea><br><br>
+
+    <label for="commitMessage">Commit Message:</label><br>
+    <input type="text" id="commitMessage" name="commitMessage" required><br><br>
+
+    <button type="button" id="createUpdateButton">Create/Update File</button>
+    <button type="button" id="deleteButton">Delete File</button>
+  </form>
+
+  <script>
+    // Function to create or update a file
+    async function createOrUpdateFile(token, owner, repo, path, content, commitMessage) {
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+      let sha = null;
+      try {
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (response.ok) {
+          const data = await response.json();
+          sha = data.sha; // Get SHA if file exists
+        }
+      } catch (error) {
+        console.log("File does not exist. It will be created.");
+      }
+
+      const body = {
+        message: commitMessage,
+        content: btoa(content), // Encode content to Base64
+        sha: sha || undefined,
+      };
+
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        alert(`File created/updated successfully: ${data.content.html_url}`);
+      } else {
+        alert("Failed to create/update file.");
+      }
+    }
+
+    // Function to delete a file
+    async function deleteFile(token, owner, repo, path, commitMessage) {
+      const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+
+      const response = await fetch(url, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!response.ok) {
+        alert("Failed to fetch file for deletion.");
+        return;
+      }
+
+      const data = await response.json();
+      const sha = data.sha;
+
+      const body = { message: commitMessage, sha };
+
+      const deleteResponse = await fetch(url, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (deleteResponse.ok) {
+        alert("File deleted successfully.");
+      } else {
+        alert("Failed to delete file.");
+      }
+    }
+
+    // Event Listeners
+    document.getElementById("createUpdateButton").addEventListener("click", async () => {
+      const token = document.getElementById("token").value;
+      const owner = document.getElementById("owner").value;
+      const repo = document.getElementById("repo").value;
+      const path = document.getElementById("path").value;
+      const content = document.getElementById("content").value;
+      const commitMessage = document.getElementById("commitMessage").value;
+
+      await createOrUpdateFile(token, owner, repo, path, content, commitMessage);
+    });
+
+    document.getElementById("deleteButton").addEventListener("click", async () => {
+      const token = document.getElementById("token").value;
+      const owner = document.getElementById("owner").value;
+      const repo = document.getElementById("repo").value;
+      const path = document.getElementById("path").value;
+      const commitMessage = document.getElementById("commitMessage").value;
+
+      await deleteFile(token, owner, repo, path, commitMessage);
+    });
+  </script>
+</body>
+</html>

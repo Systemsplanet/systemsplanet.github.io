@@ -7,207 +7,246 @@
   canvas { display: block; }
 </style>
 </head>
-<body>2
+<body>
   <canvas id="rubiksCanvas"></canvas>
 
-  <script type="module">
-    import * as THREE from 'three';
-    import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+  <script>
+    function RubiksCube(canvasId, rows) {
+      this.canvas = document.getElementById(canvasId);
+      this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
+      this.scene = new THREE.Scene();
+      this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+      this.rows = Math.max(2, Math.floor(rows)); // Ensure at least 2 rows
+      this.cellSize = 1;
+      this.spacing = 0.05;
+      this.cubeSize = this.rows * this.cellSize + (this.rows - 1) * this.spacing;
+      this.cubes = [];
+      this.animating = false;
+      this.animationQueue = [];
+      this.currentRotationAxis = null;
+      this.currentRotationDirection = 0;
+      this.currentRotationAngle = 0;
+      this.rotationSpeed = 0.1;
+      this.targetRotationAngle = Math.PI / 2; // 90 degrees
 
-    const numRows = parseInt(prompt("Enter the number of rows for the Rubik's Cube (e.g., 3 for a standard cube):") || '3');
-    const cubeSize = 1;
-    const spacing = 0.01;
-    const colors = [
-      0xff0000, // Red
-      0x00ff00, // Green
-      0x0000ff, // Blue
-      0xffff00, // Yellow
-      0xffa500, // Orange
-      0xffffff  // White
-    ];
+      this.colors = [
+        0xff0000, // Red
+        0x00ff00, // Green
+        0x0000ff, // Blue
+        0xffff00, // Yellow
+        0xffa500, // Orange
+        0xffffff  // White
+      ];
 
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('rubiksCanvas'), antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
-
-    const controls = new OrbitControls(camera, renderer.domElement);
-    camera.position.z = numRows * 2;
-    controls.update();
-
-    const cubes = [];
-    const group = new THREE.Group();
-    scene.add(group);
-
-    function createCube(x, y, z) {
-      const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
-      const materials = [];
-      const halfSize = cubeSize / 2;
-
-      // Order: +X, -X, +Y, -Y, +Z, -Z
-      const px = x > (numRows - 1) / 2 + spacing / 2;
-      const nx = x < (numRows - 1) / 2 - spacing / 2;
-      const py = y > (numRows - 1) / 2 + spacing / 2;
-      const ny = y < (numRows - 1) / 2 - spacing / 2;
-      const pz = z > (numRows - 1) / 2 + spacing / 2;
-      const nz = z < (numRows - 1) / 2 - spacing / 2;
-
-      materials.push(new THREE.MeshBasicMaterial({ color: px ? colors[0] : 0x333333 })); // +X (Red)
-      materials.push(new THREE.MeshBasicMaterial({ color: nx ? colors[1] : 0x333333 })); // -X (Green)
-      materials.push(new THREE.MeshBasicMaterial({ color: py ? colors[2] : 0x333333 })); // +Y (Blue)
-      materials.push(new THREE.MeshBasicMaterial({ color: ny ? colors[3] : 0x333333 })); // -Y (Yellow)
-      materials.push(new THREE.MeshBasicMaterial({ color: pz ? colors[4] : 0x333333 })); // +Z (Orange)
-      materials.push(new THREE.MeshBasicMaterial({ color: nz ? colors[5] : 0x333333 })); // -Z (White)
-
-      const faceMaterials = [];
-      for (let i = 0; i < 6; i++) {
-        faceMaterials.push(materials[i]);
-      }
-      const material = new THREE.MeshFaceMaterial(faceMaterials);
-      const cube = new THREE.Mesh(geometry, material);
-      cube.position.set(
-        (x - (numRows - 1) / 2) * (cubeSize + spacing),
-        (y - (numRows - 1) / 2) * (cubeSize + spacing),
-        (z - (numRows - 1) / 2) * (cubeSize + spacing)
-      );
-      return cube;
+      this._initialize();
+      this._setupEventListeners();
+      this._animate();
     }
 
-    for (let i = 0; i < numRows; i++) {
-      for (let j = 0; j < numRows; j++) {
-        for (let k = 0; k < numRows; k++) {
-          const cube = createCube(i, j, k);
-          cubes.push(cube);
-          group.add(cube);
+    RubiksCube.prototype._initialize = function() {
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+      this.camera.position.z = this.cubeSize * 2;
+      this.scene.add(new THREE.AmbientLight(0x404040));
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+      directionalLight.position.set(1, 1, 1).normalize();
+      this.scene.add(directionalLight);
+
+      const halfCubeSize = this.cubeSize / 2;
+      for (let x = 0; x < this.rows; x++) {
+        for (let y = 0; y < this.rows; y++) {
+          for (let z = 0; z < this.rows; z++) {
+            const geometry = new THREE.BoxGeometry(this.cellSize, this.cellSize, this.cellSize);
+            const materials = [];
+            const colorMap = [null, null, null, null, null, null];
+
+            // Assign colors based on position (crude but effective for visualization)
+            if (z === this.rows - 1) colorMap[0] = this.colors[0]; // Front (Red)
+            if (z === 0) colorMap[1] = this.colors[2];           // Back (Blue)
+            if (x === this.rows - 1) colorMap[2] = this.colors[1]; // Right (Green)
+            if (x === 0) colorMap[3] = this.colors[3];           // Left (Yellow)
+            if (y === this.rows - 1) colorMap[4] = this.colors[4]; // Top (Orange)
+            if (y === 0) colorMap[5] = this.colors[5];           // Bottom (White)
+
+            for (let i = 0; i < 6; i++) {
+              materials.push(new THREE.MeshBasicMaterial({ color: colorMap[i] }));
+            }
+            const faceColors = new THREE.MeshFaceMaterial(materials);
+            const cube = new THREE.Mesh(geometry, faceColors);
+
+            const positionOffset = (this.cellSize + this.spacing) * (this.rows - 1) / 2;
+            cube.position.set(
+              x * (this.cellSize + this.spacing) - positionOffset,
+              y * (this.cellSize + this.spacing) - positionOffset,
+              z * (this.cellSize + this.spacing) - positionOffset
+            );
+            this.scene.add(cube);
+            this.cubes.push(cube);
+            cube.originalPosition = new THREE.Vector3(cube.position.x, cube.position.y, cube.position.z);
+          }
         }
       }
-    }
+    };
 
-    const rotationSpeed = 0.1;
-    let animating = false;
-    let currentRotationAxis = new THREE.Vector3(0, 1, 0); // Default to Y-axis
-    let currentRotationLayer = Math.floor(numRows / 2); // Default to middle layer
-    let targetRotationAngle = 0;
+    RubiksCube.prototype._setupEventListeners = function() {
+      window.addEventListener('resize', this._onWindowResize.bind(this), false);
+      document.addEventListener('keydown', this._onKeyDown.bind(this));
+    };
 
-    function rotateLayer(axis, layerIndex, angle) {
-      const layer = [];
-      const layerOffset = (layerIndex - (numRows - 1) / 2) * (cubeSize + spacing);
+    RubiksCube.prototype._onWindowResize = function() {
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(window.innerWidth, window.innerHeight);
+    };
 
-      cubes.forEach(cube => {
-        const position = cube.position;
-        if (Math.abs(axis.x) === 1 && Math.abs(position.x - layerOffset) < cubeSize / 2 + spacing / 2) {
-          layer.push(cube);
-        } else if (Math.abs(axis.y) === 1 && Math.abs(position.y - layerOffset) < cubeSize / 2 + spacing / 2) {
-          layer.push(cube);
-        } else if (Math.abs(axis.z) === 1 && Math.abs(position.z - layerOffset) < cubeSize / 2 + spacing / 2) {
-          layer.push(cube);
+    RubiksCube.prototype._onKeyDown = function(event) {
+      if (this.animating) return;
+
+      const key = event.key.toLowerCase();
+      let layer = Math.floor(this.rows / 2); // Default middle layer
+
+      // Allow specifying layer with number keys (1 to rows)
+      const layerNumber = parseInt(key);
+      if (!isNaN(layerNumber) && layerNumber >= 1 && layerNumber <= this.rows) {
+        layer = layerNumber - 1;
+      }
+
+      switch (key) {
+        // Rotate X-axis (Red/Orange faces)
+        case 'r': this._queueRotation('x', layer, 1); break;   // Right clockwise
+        case 'l': this._queueRotation('x', layer, -1); break;  // Left clockwise
+        case 'u': this._queueRotation('y', layer, 1); break;   // Up clockwise
+        case 'd': this._queueRotation('y', layer, -1); break;  // Down clockwise
+        case 'f': this._queueRotation('z', layer, 1); break;   // Front clockwise
+        case 'b': this._queueRotation('z', layer, -1); break;  // Back clockwise
+
+        case 'r\'': // Right counter-clockwise
+        case 'r\'\'': this._queueRotation('x', layer, -1); break;
+        case 'l\'': // Left counter-clockwise
+        case 'l\'\'': this._queueRotation('x', layer, 1); break;
+        case 'u\'': // Up counter-clockwise
+        case 'u\'\'': this._queueRotation('y', layer, -1); break;
+        case 'd\'': // Down counter-clockwise
+        case 'd\'\'': this._queueRotation('y', layer, 1); break;
+        case 'f\'': // Front counter-clockwise
+        case 'f\'\'': this._queueRotation('z', layer, -1); break;
+        case 'b\'': // Back counter-clockwise
+        case 'b\'\'': this._queueRotation('z', layer, 1); break;
+
+        // Whole cube rotations
+        case 'x': this._queueRotation('wholeX', 0, 1); break;
+        case 'y': this._queueRotation('wholeY', 0, 1); break;
+        case 'z': this._queueRotation('wholeZ', 0, 1); break;
+        case 'x\'': this._queueRotation('wholeX', 0, -1); break;
+        case 'y\'': this._queueRotation('wholeY', 0, -1); break;
+        case 'z\'': this._queueRotation('wholeZ', 0, -1); break;
+      }
+    };
+
+    RubiksCube.prototype._queueRotation = function(axis, layer, direction) {
+      this.animationQueue.push({ axis: axis, layer: layer, direction: direction });
+      if (!this.animating) {
+        this._startRotation();
+      }
+    };
+
+    RubiksCube.prototype._startRotation = function() {
+      if (this.animationQueue.length === 0) {
+        this.animating = false;
+        this.currentRotationAxis = null;
+        return;
+      }
+
+      this.animating = true;
+      const rotation = this.animationQueue.shift();
+      this.currentRotationAxis = rotation.axis;
+      this.currentRotationLayer = rotation.layer;
+      this.currentRotationDirection = rotation.direction;
+      this.currentRotationAngle = 0;
+
+      this.rotatingCubes = this.cubes.filter(cube => {
+        const position = cube.originalPosition;
+        const layerThreshold = this.currentRotationLayer * (this.cellSize + this.spacing);
+        const nextLayerThreshold = layerThreshold + this.cellSize;
+
+        if (this.currentRotationAxis === 'x') {
+          return position.x >= layerThreshold && position.x < nextLayerThreshold;
+        } else if (this.currentRotationAxis === 'y') {
+          return position.y >= layerThreshold && position.y < nextLayerThreshold;
+        } else if (this.currentRotationAxis === 'z') {
+          return position.z >= layerThreshold && position.z < nextLayerThreshold;
+        } else if (this.currentRotationAxis === 'wholeX') {
+          return true;
+        } else if (this.currentRotationAxis === 'wholeY') {
+          return true;
+        } else if (this.currentRotationAxis === 'wholeZ') {
+          return true;
+        }
+        return false;
+      });
+    };
+
+    RubiksCube.prototype._rotateLayer = function(deltaTime) {
+      if (!this.animating || this.currentRotationAxis === null) return;
+
+      const deltaAngle = this.rotationSpeed * deltaTime * this.currentRotationDirection;
+      this.currentRotationAngle += Math.abs(deltaAngle);
+
+      this.rotatingCubes.forEach(cube => {
+        const worldPosition = new THREE.Vector3();
+        cube.getWorldPosition(worldPosition);
+
+        if (this.currentRotationAxis === 'x') {
+          cube.position.sub(worldPosition); // Move to origin for rotation
+          cube.position.applyAxisAngle(new THREE.Vector3(1, 0, 0), deltaAngle);
+          cube.position.add(worldPosition); // Move back
+          cube.rotateX(deltaAngle);
+        } else if (this.currentRotationAxis === 'y') {
+          cube.position.sub(worldPosition);
+          cube.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), deltaAngle);
+          cube.position.add(worldPosition);
+          cube.rotateY(deltaAngle);
+        } else if (this.currentRotationAxis === 'z') {
+          cube.position.sub(worldPosition);
+          cube.position.applyAxisAngle(new THREE.Vector3(0, 0, 1), deltaAngle);
+          cube.position.add(worldPosition);
+          cube.rotateZ(deltaAngle);
+        } else if (this.currentRotationAxis === 'wholeX') {
+          this.scene.rotateX(deltaAngle);
+        } else if (this.currentRotationAxis === 'wholeY') {
+          this.scene.rotateY(deltaAngle);
+        } else if (this.currentRotationAxis === 'wholeZ') {
+          this.scene.rotateZ(deltaAngle);
         }
       });
 
-      const rotationGroup = new THREE.Group();
-      layer.forEach(cube => {
-        group.remove(cube);
-        rotationGroup.add(cube);
-      });
-      group.add(rotationGroup);
-
-      const rotationPoint = new THREE.Vector3(
-        Math.abs(axis.x) === 1 ? layerOffset : 0,
-        Math.abs(axis.y) === 1 ? layerOffset : 0,
-        Math.abs(axis.z) === 1 ? layerOffset : 0
-      );
-      rotationGroup.position.copy(rotationPoint);
-
-      rotationGroup.rotation.reorder('XYZ');
-      const startRotation = rotationGroup.rotation.clone();
-      const endRotation = rotationGroup.rotation.clone();
-
-      if (axis.x === 1) endRotation.x += angle;
-      else if (axis.y === 1) endRotation.y += angle;
-      else if (axis.z === 1) endRotation.z += angle;
-
-      const animationDuration = 200; // milliseconds
-      let startTime = null;
-
-      function animateRotation(currentTime) {
-        if (!startTime) startTime = currentTime;
-        const elapsedTime = currentTime - startTime;
-        const t = Math.min(1, elapsedTime / animationDuration);
-
-        rotationGroup.rotation.slerp(endRotation, t);
-
-        if (t < 1) {
-          requestAnimationFrame(animateRotation);
-        } else {
-          // Re-attach cubes to the main group and update their world positions
-          rotationGroup.updateWorldMatrix(true, true);
-          layer.forEach(cube => {
-            rotationGroup.remove(cube);
-            scene.attach(cube); // Attach to scene to maintain world position
-          });
-          scene.remove(rotationGroup);
-          animating = false;
-        }
+      if (this.currentRotationAngle >= this.targetRotationAngle) {
+        this.animating = false;
+        this.rotatingCubes.forEach(cube => {
+          cube.updateMatrixWorld();
+          cube.originalPosition.copy(cube.position);
+        });
+        this._startRotation(); // Start the next rotation in the queue
       }
+    };
 
-      requestAnimationFrame(animateRotation);
-    }
+    RubiksCube.prototype._animate = function() {
+      requestAnimationFrame(this._animate.bind(this));
+      this._rotateLayer(16 / 1000); // Assuming ~60 FPS
+      this.renderer.render(this.scene, this.camera);
+    };
 
-    document.addEventListener('keydown', (event) => {
-      if (animating) return;
+    // Instantiate the Rubik's Cube with a specified number of rows
+    const rubiksCube = new RubiksCube('rubiksCanvas', 3); // Example: 3x3x3 cube
 
-      const layerIndex = Math.floor(numRows / 2); // For simplicity, rotate middle layer
-
-      switch (event.key.toLowerCase()) {
-        case 'x':
-          currentRotationAxis.set(1, 0, 0);
-          rotateLayer(currentRotationAxis, layerIndex, Math.PI / 2);
-          animating = true;
-          break;
-        case 'y':
-          currentRotationAxis.set(0, 1, 0);
-          rotateLayer(currentRotationAxis, layerIndex, Math.PI / 2);
-          animating = true;
-          break;
-        case 'z':
-          currentRotationAxis.set(0, 0, 1);
-          rotateLayer(currentRotationAxis, layerIndex, Math.PI / 2);
-          animating = true;
-          break;
-        case 'shift+x':
-        case 'x+shift':
-          currentRotationAxis.set(1, 0, 0);
-          rotateLayer(currentRotationAxis, layerIndex, -Math.PI / 2);
-          animating = true;
-          break;
-        case 'shift+y':
-        case 'y+shift':
-          currentRotationAxis.set(0, 1, 0);
-          rotateLayer(currentRotationAxis, layerIndex, -Math.PI / 2);
-          animating = true;
-          break;
-        case 'shift+z':
-        case 'z+shift':
-          currentRotationAxis.set(0, 0, 1);
-          rotateLayer(currentRotationAxis, layerIndex, -Math.PI / 2);
-          animating = true;
-          break;
-      }
-    });
-
-    function animate() {
-      requestAnimationFrame(animate);
-      controls.update();
-      renderer.render(scene, camera);
-    }
-
+    // Handle window resizing
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      rubiksCube.camera.aspect = window.innerWidth / window.innerHeight;
+      rubiksCube.camera.updateProjectionMatrix();
+      rubiksCube.renderer.setSize(window.innerWidth, window.innerHeight);
     });
-
-    animate();
   </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.js"></script>
+4
 </body>
 </html>

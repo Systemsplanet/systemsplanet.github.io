@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D Rubik's Cube Simulation</title>
+  <style>
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: white;
+    }
+    canvas {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.154.0/three.min.js"></script>
+<script>
+  // Configuration
+  const rows = 3; // Specify number of rows (e.g., 2 for 2x2, 3 for 3x3, etc.)
+  
+  // Scene setup
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  // Lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+  scene.add(ambientLight);
+
+  const pointLight = new THREE.PointLight(0xffffff, 1);
+  pointLight.position.set(10, 10, 10);
+  scene.add(pointLight);
+
+  // Rubik's Cube creation
+  const cubeSize = 1; // Size of each small cube
+  const gap = 0.05;   // Gap between cubes
+  const colors = [
+    'red', 'green', 'blue', 'yellow', 'orange', 'white'
+  ]; // Vivid colors for faces
+
+  const rubiksCubeGroup = new THREE.Group();
+
+  for (let x = -Math.floor(rows / 2); x <= Math.floor(rows / 2); x++) {
+    for (let y = -Math.floor(rows / 2); y <= Math.floor(rows / 2); y++) {
+      for (let z = -Math.floor(rows / 2); z <= Math.floor(rows / 2); z++) {
+        if (rows % 2 === 0 && x === y && y === z && x === z && x === -1) continue; // Skip center for even rows
+
+        const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+        const materials = colors.map(color => new THREE.MeshStandardMaterial({ color }));
+        const cube = new THREE.Mesh(geometry, materials);
+
+        cube.position.set(
+          x * (cubeSize + gap),
+          y * (cubeSize + gap),
+          z * (cubeSize + gap)
+        );
+
+        rubiksCubeGroup.add(cube);
+      }
+    }
+  }
+
+  scene.add(rubiksCubeGroup);
+
+  // Position camera
+  camera.position.z = rows * cubeSize * 2;
+
+  // Rotation controls
+  let rotationSpeed = Math.PI / rows / rows; // Adjust rotation speed based on size
+  document.addEventListener('keydown', (event) => {
+    switch (event.key) {
+      case 'ArrowUp':
+        rubiksCubeGroup.rotation.x -= rotationSpeed;
+        break;
+      case 'ArrowDown':
+        rubiksCubeGroup.rotation.x += rotationSpeed;
+        break;
+      case 'ArrowLeft':
+        rubiksCubeGroup.rotation.y -= rotationSpeed;
+        break;
+      case 'ArrowRight':
+        rubiksCubeGroup.rotation.y += rotationSpeed;
+        break;
+      case 'q': // Rotate Z-axis counterclockwise
+        rubiksCubeGroup.rotation.z -= rotationSpeed;
+        break;
+      case 'e': // Rotate Z-axis clockwise
+        rubiksCubeGroup.rotation.z += rotationSpeed;
+        break;
+    }
+    event.preventDefault(); // Prevent default browser behavior for arrow keys
+  });
+
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+    renderer.render(scene, camera);
+    rubiksCubeGroup.rotation.y += rotationSpeed / rows / rows; // Optional auto-rotation
+    renderer.render(scene,cube)
+    
+    
+``

@@ -302,7 +302,7 @@
         let categories = new Set();
         let aiNames = new Set();
         let currentSettings = {
-            url: 'https://github.com/Systemsplanet/AIStore/blob/main/Prompts.json',
+            url: 'https://raw.githubusercontent.com/Systemsplanet/AIStore/refs/heads/main/Prompts.json',
             user: 'systemsplanet',
             apiKey: ''
         };
@@ -375,10 +375,7 @@
 
                 // GitHub specific handling
                 if (url.includes("github.com")) {
-                    // For raw content, we might need to adjust the URL
-                    // Example: https://github.com/Systemsplanet/AIStore/blob/main/Prompts.json
-                    // becomes: https://raw.githubusercontent.com/Systemsplanet/AIStore/main/Prompts.json
-                    fetchUrl = url.replace('github.com', 'raw.githubusercontent.com').replace('/blob/', '/');
+                    fetchUrl = url;
                     if (user && apiKey) {
                         // Not typically needed for public raw content, but good for private repos
                         headers['Authorization'] = `token ${apiKey}`;

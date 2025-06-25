@@ -1,3 +1,6 @@
+<comment>
+File: https://systemsplanet.github.io/AIStore/create-index.html.md
+</comment>
 Create an app:
 - called AIStore
 - written in javascript/css/html 

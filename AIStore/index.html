@@ -16,20 +16,20 @@
             height: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #1f2937;
+            background: #1f2937; /* gray-800 */
         }
         ::-webkit-scrollbar-thumb {
-            background: #4b5563;
+            background: #4b5563; /* gray-600 */
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #6b7280;
+            background: #6b7280; /* gray-500 */
         }
         .modal-backdrop {
             transition: opacity 0.3s ease-in-out;
         }
         .modal-content {
-            transition: transform 0.3s ease-in-out;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
         }
         /* Prevent layout shift on scrollbar appearance */
         :root {
@@ -40,20 +40,18 @@
 <body class="bg-gray-900 text-gray-200 antialiased">
 
     <div id="app" class="min-h-screen flex flex-col">
-        <!-- Header -->
         <header class="bg-gray-800/80 backdrop-blur-sm sticky top-0 z-20 border-b border-gray-700 shadow-lg">
             <div class="container mx-auto px-4 py-3">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <h1 class="text-2xl font-bold text-white">AIStore</h1>
                     <div class="flex flex-wrap items-center justify-center gap-2 md:gap-4 w-full md:w-auto">
                         <button id="storageBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md">Storage</button>
-                        <button id="saveToGithubBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md flex items-center gap-2">
+                        <button id="saveToGithubBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md flex items-center gap-2 disabled:bg-green-800 disabled:cursor-not-allowed">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
                             <span>Save to GitHub</span>
                         </button>
                     </div>
                 </div>
-                <!-- Filters -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
                     <input type="text" id="search" placeholder="Search prompts..." class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
                     <select id="categoryFilter" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"></select>
@@ -62,18 +60,14 @@
             </div>
         </header>
 
-        <!-- Main Content -->
         <main class="container mx-auto px-4 py-6 flex-grow">
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- Prompt List -->
                 <div class="lg:col-span-1 flex flex-col gap-4">
-                     <button id="addNewPromptBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md">Add New Prompt</button>
+                    <button id="addNewPromptBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md">Add New Prompt</button>
                     <div id="promptList" class="bg-gray-800 rounded-lg p-2 overflow-y-auto max-h-[calc(100vh-250px)]">
-                        <!-- Prompt items will be injected here -->
-                    </div>
+                        </div>
                 </div>
 
-                <!-- Prompt Editor -->
                 <div id="promptEditor" class="lg:col-span-2 bg-gray-800 rounded-lg p-6 shadow-xl hidden">
                     <div class="space-y-4">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -101,18 +95,17 @@
         </main>
     </div>
 
-    <!-- Storage Settings Modal -->
     <div id="storageModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden modal-backdrop opacity-0">
-        <div class="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md modal-content transform scale-95">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md modal-content transform scale-95 opacity-0">
             <h2 class="text-2xl font-bold mb-6 text-white">GitHub Storage Settings</h2>
             <div class="space-y-4">
                 <div>
                     <label for="storageOwner" class="block mb-2 text-sm font-medium text-gray-300">GitHub Owner</label>
-                    <input type="text" id="storageOwner" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., systemsplanet">
+                    <input type="text" id="storageOwner" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., your-github-username">
                 </div>
                 <div>
                     <label for="storageRepo" class="block mb-2 text-sm font-medium text-gray-300">Repository Name</label>
-                    <input type="text" id="storageRepo" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., AIStore">
+                    <input type="text" id="storageRepo" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., AIStore-data">
                 </div>
                 <div>
                     <label for="storagePath" class="block mb-2 text-sm font-medium text-gray-300">File Path</label>
@@ -130,8 +123,18 @@
         </div>
     </div>
     
-    <!-- Notification Toast -->
-    <div id="notification" class="fixed bottom-5 right-5 bg-green-500 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 opacity-0">
+    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden modal-backdrop opacity-0">
+        <div class="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-sm modal-content transform scale-95 opacity-0">
+            <h2 class="text-xl font-bold mb-4 text-white" id="confirmTitle">Are you sure?</h2>
+            <p class="text-gray-300 mb-6" id="confirmMessage">This action cannot be undone.</p>
+            <div class="flex justify-end gap-4">
+                <button id="confirmCancelBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Cancel</button>
+                <button id="confirmOkBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="fixed bottom-5 right-5 bg-green-600 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 opacity-0">
         Message
     </div>
 
@@ -175,7 +178,7 @@
         const deletePromptBtn = document.getElementById('deletePromptBtn');
         const copyPromptBtn = document.getElementById('copyPromptBtn');
 
-        // Modal elements
+        // Storage Modal elements
         const storageModal = document.getElementById('storageModal');
         const storageBtn = document.getElementById('storageBtn');
         const cancelStorageBtn = document.getElementById('cancelStorageBtn');
@@ -185,6 +188,12 @@
         const storagePathInput = document.getElementById('storagePath');
         const storageApiKeyInput = document.getElementById('storageApiKey');
         
+        // Confirm Modal elements
+        const confirmModal = document.getElementById('confirmModal');
+        const confirmMessage = document.getElementById('confirmMessage');
+        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+        const confirmOkBtn = document.getElementById('confirmOkBtn');
+
         // Other UI
         const saveToGithubBtn = document.getElementById('saveToGithubBtn');
         const notification = document.getElementById('notification');
@@ -202,22 +211,21 @@
             const savedConfig = localStorage.getItem('aistore_config');
             if (savedConfig) {
                 const parsedConfig = JSON.parse(savedConfig);
-                // Simple migration: if old format detected, reset.
-                if (parsedConfig.url || !parsedConfig.repo) {
-                   setDefaultConfig();
+                if (parsedConfig.owner && parsedConfig.repo) {
+                     config = parsedConfig;
                 } else {
-                    config = parsedConfig;
+                    setDefaultConfig();
                 }
             } else {
                 setDefaultConfig();
             }
-            saveConfig(); // Save to ensure new format is stored
+            saveConfig();
             updateStorageModalFields();
         };
         
         const setDefaultConfig = () => {
             config = {
-                owner: 'systemsplanet',
+                owner: 'Systemsplanet',
                 repo: 'AIStore',
                 path: 'prompts.json',
                 apiKey: ''
@@ -242,58 +250,83 @@
         
         const fetchData = async () => {
             const apiUrl = getGitHubApiUrl();
-            const defaultUrl = 'https://systemsplanet.github.io/AIStore/prompts.json';
+            const rawContentUrl = 'https://raw.githubusercontent.com/Systemsplanet/AIStore/main/prompts.json';
             
-            // Try fetching from GitHub if configured, otherwise use the default public URL.
-            let fetchUrl = defaultUrl;
+            let fetchUrl = rawContentUrl; // Default to the raw URL
             let headers = {};
+            let isUsingApi = false;
+
+            // If an API key is provided, prefer the API for freshness
             if (apiUrl && config.apiKey) {
                 fetchUrl = apiUrl;
+                isUsingApi = true;
                 headers = { 
                     'Authorization': `token ${config.apiKey}`,
-                    'Accept': 'application/vnd.github.v3.raw' // To get raw content directly
+                    'Accept': 'application/vnd.github.v3.raw',
+                    'Cache-Control': 'no-cache'
                 };
-            } else if(apiUrl) {
-                // If configured but no API key, try public API (less reliable for private repos)
-                fetchUrl = apiUrl;
-                headers = { 'Accept': 'application/vnd.github.v3.raw' };
             }
 
             try {
                 const response = await fetch(fetchUrl, { headers });
                 if (!response.ok) {
-                    if (fetchUrl !== defaultUrl) {
-                         // If GitHub fetch failed, try the default as a fallback
-                        console.warn(`Failed to fetch from GitHub (${response.status}). Falling back to default URL.`);
-                        return await fetchDataFromUrl(defaultUrl);
-                    }
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    throw new Error(`HTTP status ${response.status}`);
                 }
                 const jsonData = await response.json();
                 allPrompts = jsonData.data || [];
                 processLoadedData();
             } catch (error) {
-                console.error('Error fetching prompts:', error);
-                showNotification(`Failed to load prompts. Check settings or console for details.`, 'error');
-                allPrompts = []; 
-                processLoadedData();
+                console.error(`Fetch failed for ${fetchUrl}:`, error.message);
+                if (isUsingApi) {
+                    // If the API fails, fall back to the raw public URL
+                    console.warn(`API fetch failed. Falling back to public raw content URL.`);
+                    await fetchFromRawUrl(rawContentUrl);
+                } else {
+                    // If the primary raw URL fails, load sample data
+                    console.error("Primary raw content fetch failed. Loading sample data.");
+                    loadSampleData();
+                }
             }
         };
 
-        // Helper for the fallback logic
-        const fetchDataFromUrl = async (url) => {
+        const fetchFromRawUrl = async (url) => {
             try {
-                const response = await fetch(url);
-                 if (!response.ok) throw new Error(`HTTP fallback error! status: ${response.status}`);
+                const response = await fetch(url, { headers: { 'Cache-Control': 'no-cache' } });
+                if (!response.ok) throw new Error(`HTTP fallback error! status: ${response.status}`);
                 const jsonData = await response.json();
                 allPrompts = jsonData.data || [];
                 processLoadedData();
             } catch(e) {
-                console.error("Fallback fetch also failed:", e);
-                showNotification('Failed to load prompts from both GitHub and default URL.', 'error');
-                allPrompts = []; 
-                processLoadedData();
+                console.error("All fetch attempts have failed. Loading sample data.", e);
+                loadSampleData();
             }
+        };
+
+        const loadSampleData = () => {
+            showNotification('Could not load from GitHub. Loading sample prompts.', 'error', 5000);
+            allPrompts = [
+                {
+                    "Category": "General",
+                    "Prompt Name": "Welcome Prompt",
+                    "AI Name": "Any",
+                    "Prompt Text": "This is a sample prompt. You can edit it or create a new one. Use the 'Storage' button to configure your GitHub repository to save your prompts.",
+                    "Date Created": new Date().toISOString(),
+                    "Date Updated": new Date().toISOString(),
+                    "User ID": "local",
+                    "Notes": "This is a default prompt loaded because fetching from GitHub failed."
+                },
+                {
+                    "Category": "Writing",
+                    "Prompt Name": "Brainstorm Blog Post Ideas",
+                    "AI Name": "ChatGPT",
+                    "Prompt Text": "Act as a content strategist. Brainstorm 5 engaging blog post ideas about [topic]. For each idea, provide a catchy title, a brief summary, and 3-4 key talking points.",
+                    "Date Created": new Date().toISOString(),
+                    "Date Updated": new Date().toISOString(),
+                    "User ID": "local",
+                    "Notes": ""
+                }
+            ];
+            processLoadedData();
         };
         
         const processLoadedData = () => {
@@ -520,25 +553,32 @@
         const handleDeletePrompt = () => {
             if (!selectedPromptId) return;
 
-            if (confirm('Are you sure you want to delete this prompt?')) {
+            showConfirm('Are you sure you want to delete this prompt?', () => {
                 allPrompts = allPrompts.filter(p => p.id !== selectedPromptId);
                 selectedPromptId = null;
                 updateDerivedState();
                 renderAll();
                 showNotification('Prompt deleted.', 'success');
-            }
+            });
         };
 
         const handleCopyPrompt = () => {
             if (!selectedPromptId) return;
             const prompt = allPrompts.find(p => p.id === selectedPromptId);
             if(prompt) {
-                navigator.clipboard.writeText(prompt['Prompt Text']).then(() => {
+                const textArea = document.createElement("textarea");
+                textArea.value = prompt['Prompt Text'];
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
                     showNotification('Prompt copied to clipboard!', 'success');
-                }).catch(err => {
+                } catch (err) {
                     showNotification('Failed to copy prompt.', 'error');
                     console.error('Clipboard copy failed:', err);
-                });
+                }
+                document.body.removeChild(textArea);
             }
         };
         
@@ -566,41 +606,51 @@
             btn.innerHTML = '<span>Saving...</span>';
             
             try {
-                // 1. Get current file SHA to perform an update
                 let sha;
                 try {
                     const getFileResponse = await fetch(apiUrl, {
-                        headers: { 'Authorization': `token ${config.apiKey}` }
+                        headers: { 
+                            'Authorization': `token ${config.apiKey}`,
+                            'Accept': 'application/vnd.github.v3+json',
+                            'Cache-Control': 'no-cache'
+                        }
                     });
+                    
                     if (getFileResponse.ok) {
                         const fileData = await getFileResponse.json();
+                        if (Array.isArray(fileData)) throw new Error("The configured path points to a directory, not a file.");
+                        if (fileData.type !== 'file') throw new Error(`The path points to a '${fileData.type}', not a file.`);
+                        if (!fileData.sha) throw new Error("Could not retrieve the file's SHA from GitHub's response.");
+                        
                         sha = fileData.sha;
                     } else if (getFileResponse.status !== 404) {
                         const errorData = await getFileResponse.json();
                         throw new Error(`GitHub GET failed: ${errorData.message || getFileResponse.statusText}`);
                     }
                 } catch (e) {
-                     throw new Error(`Could not fetch file from GitHub. Check settings and token permissions.`);
+                    throw new Error(`Could not fetch file metadata from GitHub. ${e.message}`);
                 }
 
-                // Prepare content, removing the temporary 'id' field for storage.
                 const promptsToSave = allPrompts.map(({ id, ...rest }) => rest);
                 const contentToSave = JSON.stringify({ data: promptsToSave }, null, 2);
+                
                 const encodedContent = btoa(unescape(encodeURIComponent(contentToSave)));
                 
-                // 2. Create or update the file
                 const body = {
                     message: `AIStore: Updated prompts on ${new Date().toISOString()}`,
                     content: encodedContent,
                     committer: { name: "AIStore App", email: "aistore@example.com" }
                 };
-                if (sha) body.sha = sha; // Add SHA if updating an existing file
+                if (sha) {
+                    body.sha = sha;
+                }
 
                 const putResponse = await fetch(apiUrl, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `token ${config.apiKey}`,
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/vnd.github.v3+json'
                     },
                     body: JSON.stringify(body)
                 });
@@ -624,30 +674,60 @@
         };
 
         // --- UTILITY FUNCTIONS --- //
-        const openStorageModal = () => {
-            updateStorageModalFields();
-            storageModal.classList.remove('hidden');
+        const openModal = (modalElement) => {
+            modalElement.classList.remove('hidden');
             setTimeout(() => {
-                storageModal.classList.remove('opacity-0');
-                const modalContent = storageModal.querySelector('.modal-content');
-                if(modalContent) modalContent.classList.add('scale-100');
+                modalElement.classList.remove('opacity-0');
+                const modalContent = modalElement.querySelector('.modal-content');
+                if(modalContent) {
+                    modalContent.classList.remove('scale-95', 'opacity-0');
+                    modalContent.classList.add('scale-100', 'opacity-100');
+                }
             }, 10);
         };
-
-        const closeStorageModal = () => {
-            storageModal.classList.add('opacity-0');
-            const modalContent = storageModal.querySelector('.modal-content');
-            if(modalContent) modalContent.classList.remove('scale-100');
+        
+        const closeModal = (modalElement) => {
+            modalElement.classList.add('opacity-0');
+            const modalContent = modalElement.querySelector('.modal-content');
+            if(modalContent) {
+                 modalContent.classList.add('scale-95', 'opacity-0');
+                 modalContent.classList.remove('scale-100', 'opacity-100');
+            }
             setTimeout(() => {
-                storageModal.classList.add('hidden');
+                modalElement.classList.add('hidden');
             }, 300);
+        };
+        
+        const openStorageModal = () => {
+            updateStorageModalFields();
+            openModal(storageModal);
+        };
+
+        const closeStorageModal = () => closeModal(storageModal);
+
+        const showConfirm = (message, onConfirm) => {
+            confirmMessage.textContent = message;
+
+            const oldOkBtn = confirmOkBtn;
+            const newOkBtn = oldOkBtn.cloneNode(true);
+            oldOkBtn.parentNode.replaceChild(newOkBtn, oldOkBtn);
+            
+            const handleConfirm = () => {
+                closeModal(confirmModal);
+                onConfirm();
+            };
+
+            newOkBtn.addEventListener('click', handleConfirm, { once: true });
+            confirmCancelBtn.addEventListener('click', () => closeModal(confirmModal), { once: true });
+            
+            openModal(confirmModal);
         };
         
         let notificationTimeout;
         const showNotification = (message, type = 'success', duration = 3000) => {
             clearTimeout(notificationTimeout);
             notification.textContent = message;
-            notification.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 ${type === 'error' ? 'bg-red-500' : 'bg-red-600'}`;
+            notification.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`;
             notification.classList.remove('opacity-0');
             
             notificationTimeout = setTimeout(() => {

@@ -11,7 +11,7 @@ Create an app:
 - store and retrieve AI Prompts using URL, User, API Key
 -on first run set URL to ​https://systemsplanet.github.io/AIStore/​prompts.json
 User to systemsplanet, and API Key to blank
-- on first run load defaults from URL
+- on first run load data property from URL. data contains a list of AI Prompts
 - gui allows you to add/edit/remove Categories strings
 - gui allows you to add/edit/remove AI Names strings
 - gui allows you to add/edit/remove AI Prompts strings

@@ -646,7 +646,7 @@
         };
         
         // --- DATA HANDLING ---
-        const getPromptUniqueKey = (p) => `${p.category?.toLowerCase()}/${p.promptName?.toLowerCase()}/${p.aiName?.toLowerCase()}`;
+        const getPromptUniqueKey = (p) => `${p.Category?.toLowerCase()}/${p.PromptName?.toLowerCase()}/${p.AIName?.toLowerCase()}`;
 
         
         const renderPrompts = (filteredPrompts = prompts) => {
@@ -667,11 +667,11 @@
                 log("prompt"+index+":" + JSON.stringify(prompt) )
                 row.innerHTML = `
                     <td>${prompt.Category || ''}</td>
-                    <td>${prompt.promptName || ''}</td>
-                    <td>${prompt.aiName || ''}</td>
-                    <td><div class="truncate" title="${prompt.promptText || ''}">${(prompt.promptText?.length > 30 ? prompt.promptText.substring(0, 27) + '...' : prompt.promptText) || ''}</div></td>
+                    <td>${prompt.PromptName || ''}</td>
+                    <td>${prompt.AIName || ''}</td>
+                    <td><div class="truncate" title="${prompt.PromptText || ''}">${(prompt.PromptText?.length > 30 ? prompt.PromptText.substring(0, 27) + '...' : prompt.PromptText) || ''}</div></td>
                     <td><div class="truncate" title="${prompt.Notes || ''}">${(prompt.Notes?.length > 30 ? prompt.Notes.substring(0, 27) + '...' : prompt.Notes) || ''}</div></td>
-                    <td>${prompt.dateUpdated ? new Date(prompt.dateUpdated).toLocaleDateString() : ''}</td>
+                    <td>${prompt.DateUpdated ? new Date(prompt.DateUpdated).toLocaleDateString() : ''}</td>
                     <td class="actions-cell">
                         <div class="tooltip">
                             <button class="copy-btn">
@@ -687,7 +687,7 @@
                         </button>
                     </td>
                 `;
-                row.querySelector('.copy-btn').addEventListener('click', () => copyPromptText(prompt.promptText));
+                row.querySelector('.copy-btn').addEventListener('click', () => copyPromptText(prompt.PromptText));
                 row.querySelector('.edit-btn').addEventListener('click', () => openPromptModal(originalIndex));
                 row.querySelector('.remove-btn').addEventListener('click', () => removePrompt(originalIndex));
             });
@@ -696,8 +696,8 @@
         
         const populateFilters = () => {
             // Use PascalCase for mapping to match prompt object properties
-            const categories = [...new Set(prompts.map(p => p.category))].sort();
-            const aiNames = [...new Set(prompts.map(p => p.aiName))].sort();
+            const categories = [...new Set(prompts.map(p => p.Category))].sort();
+            const aiNames = [...new Set(prompts.map(p => p.AIName))].sort();
 
             // Clear existing options except for the "All" option
             categoryFilter.innerHTML = '<option value="*">All Categories</option>';
@@ -724,13 +724,13 @@
 
             const filtered = prompts.filter(p => {
                 // Use PascalCase for comparison with prompt object properties
-                const categoryMatch = category === '*' || p.category === category;
-                const aiNameMatch = aiName === '*' || p.aiName === aiName;
+                const categoryMatch = category === '*' || p.Category === category;
+                const aiNameMatch = aiName === '*' || p.AIName === aiName;
                 const queryMatch = !query || 
-                    p.category?.toLowerCase().includes(query) ||
-                    p.promptName?.toLowerCase().includes(query) ||
-                    p.aiName?.toLowerCase().includes(query) ||
-                    p.promptText?.toLowerCase().includes(query) ||
+                    p.Category?.toLowerCase().includes(query) ||
+                    p.PromptName?.toLowerCase().includes(query) ||
+                    p.AIName?.toLowerCase().includes(query) ||
+                    p.PromptText?.toLowerCase().includes(query) ||
                     p.notes?.toLowerCase().includes(query); // Added notes to search
                 
                 return categoryMatch && aiNameMatch && queryMatch;
@@ -766,7 +766,7 @@
         };
 
         const removePrompt = async (index) => {
-            const confirmed = await showConfirm('Delete Prompt', `Are you sure you want to delete the prompt "${prompts[index].promptName}"?`);
+            const confirmed = await showConfirm('Delete Prompt', `Are you sure you want to delete the prompt "${prompts[index].PromptName}"?`);
             if (confirmed) {
                 prompts.splice(index, 1);
                 filterAndRender();
@@ -784,10 +784,10 @@
                 modalTitle.textContent = 'Edit Prompt';
                 promptIndexInput.value = index;
                 promptCategoryInput.value = prompt.Category || '';
-                promptNameInput.value = prompt.promptName || '';
-                aiNameInput.value = prompt.aiName || '';
+                promptNameInput.value = prompt.PromptName || '';
+                aiNameInput.value = prompt.AIName || '';
                 userIdInput.value = prompt.userID || '';
-                promptTextInput.value = prompt.promptText || '';
+                promptTextInput.value = prompt.PromptText || '';
                 notesInput.value = prompt.Notes || '';
             } else {
                 modalTitle.textContent = 'Add New Prompt';
@@ -843,10 +843,10 @@
             };
             
             if (index) { // Editing existing prompt
-                promptData.dateCreated = prompts[index].dateCreated; // Preserve original creation date
+                promptData.DateCreated = prompts[index].DateCreated; // Preserve original creation date
                 prompts[index] = promptData;
             } else { // Adding new prompt
-                promptData.dateCreated = now;
+                promptData.DateCreated = now;
                 prompts.push(promptData);
             }
             
@@ -925,8 +925,8 @@
                 
                 // 2. Prepare the content for upload
                 prompts.sort((a, b) => {
-                    const keyA = `${a.Category}${a.promptName}${a.aiName}${a.promptText}`;
-                    const keyB = `${b.Category}${b.promptName}${b.aiName}${b.promptText}`;
+                    const keyA = `${a.Category}${a.PromptName}${a.AIName}${a.PromptText}`;
+                    const keyB = `${b.Category}${b.PromptName}${b.AIName}${b.PromptText}`;
                     return keyA.localeCompare(keyB);
                 });
 

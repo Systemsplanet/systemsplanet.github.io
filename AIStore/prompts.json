@@ -8,7 +8,7 @@
       "Date Created": "2025-06-23 23:01:01", 
       "Date Updated": "2025-06-23 23:01:01", 
       "User ID": "systemsplanet", 
-      "Notes" "first note":
+      "Notes": "first note"
     },
     {
       "Category": "General", 
@@ -18,7 +18,7 @@
       "Date Created": "2025-06-23 23:02:02", 
       "Date Updated": "2025-06-23 23:02:02", 
       "User ID": "systemsplanet", 
-      "Notes" "second note":
+      "Notes": "second note"
     }
   ]
 }

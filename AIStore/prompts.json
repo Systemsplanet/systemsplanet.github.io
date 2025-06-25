@@ -1,6 +1,24 @@
 {
-  [
-   ["General", "who am i", "llamba/ent3", "who am I", "2025-06-23 23:01:01", "2025-06-23 23:01:01", "systemsplanet", "first note"],
-   ["General", "who am i", "OpenAI/chatgpt4", "who am I", "2025-06-23 23:01:01", "2025-06-23 23:01:01", "systemsplanet", "second note"]
+  "data": [
+    {
+      "Category": "General", 
+      "Prompt Name": "who am i", 
+      "AI Name": "llamba/ent3", 
+      "Prompt Text": "who am I", 
+      "Date Created": "2025-06-23 23:01:01", 
+      "Date Updated": "2025-06-23 23:01:01", 
+      "User ID": "systemsplanet", 
+      "Notes" "first note":
+    },
+    {
+      "Category": "General", 
+      "Prompt Name": "who am i", 
+      "AI Name": "OpenAI/chatgpt4", 
+      "Prompt Text": "who am I", 
+      "Date Created": "2025-06-23 23:02:02", 
+      "Date Updated": "2025-06-23 23:02:02", 
+      "User ID": "systemsplanet", 
+      "Notes" "second note":
+    }
   ]
 }

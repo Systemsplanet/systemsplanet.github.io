@@ -15,7 +15,7 @@
             --accent-hover: #5aa1f2;
             --error-color: #e24a4a;
             --success-color: #4ae28a;
-            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --font-family: 'Inter', sans-serif; /* Changed to Inter */
             --border-radius: 8px;
             --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
@@ -28,6 +28,8 @@
             padding: 20px;
             display: flex;
             justify-content: center;
+            min-height: 100vh; /* Ensure full height */
+            box-sizing: border-box; /* Include padding in element's total width and height */
         }
 
         .container {
@@ -84,6 +86,7 @@
             color: var(--primary-text);
             border-radius: var(--border-radius);
             font-size: 1em;
+            box-sizing: border-box; /* Ensures padding doesn't increase total width */
         }
         
         input:focus, select:focus {
@@ -143,7 +146,7 @@
         }
 
         .truncate {
-            max-width: 200px;
+            max-width: 200px; /* Adjust as needed */
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -157,7 +160,7 @@
         }
         
         .modal {
-            display: none;
+            display: none; /* Hidden by default */
             position: fixed;
             z-index: 1000;
             left: 0;
@@ -182,6 +185,12 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
+            animation: fadeIn 0.3s ease-out; /* Simple animation */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .modal-header {
@@ -296,6 +305,77 @@
             border-style: solid;
             border-color: var(--accent-color) transparent transparent transparent;
         }
+        /* Custom Message Box Styles */
+        #message-box, #confirm-box {
+            display: none;
+            position: fixed;
+            z-index: 1001; /* Above other modals */
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            align-items: center;
+            justify-content: center;
+        }
+
+        #message-box-content, #confirm-box-content {
+            background-color: var(--secondary-bg);
+            padding: 25px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            max-width: 400px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        #message-box-content h3, #confirm-box-content h3 {
+            color: var(--accent-color);
+            margin-top: 0;
+        }
+
+        #message-box-content p, #confirm-box-content p {
+            color: var(--primary-text);
+            margin-bottom: 0;
+        }
+
+        #message-box-buttons, #confirm-box-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        #message-box-buttons button, #confirm-box-buttons button {
+            min-width: 80px;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .modal-form {
+                grid-template-columns: 1fr; /* Stack columns on small screens */
+            }
+            .search-group {
+                flex-direction: column;
+            }
+            .search-group input {
+                border-radius: var(--border-radius);
+                border-right: 1px solid var(--tertiary-bg);
+            }
+            .search-group button {
+                border-radius: var(--border-radius);
+            }
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .controls > *:not(.search-group) {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -378,7 +458,7 @@
                     <label for="notes">Notes</label>
                     <textarea id="notes"></textarea>
                 </div>
-                 <small id="duplicate-warning" class="full-width" style="color: var(--error-color); display: none;">A prompt with this Category, Prompt Name, and AI Name already exists. You cannot save a duplicate.</small>
+                <small id="duplicate-warning" class="full-width" style="color: var(--error-color); display: none;">A prompt with this Category, Prompt Name, and AI Name already exists. You cannot save a duplicate.</small>
             </form>
             <div class="modal-footer">
                 <button id="cancel-prompt-btn">Cancel</button>
@@ -412,7 +492,7 @@
                     <input type="password" id="github-key">
                 </div>
             </div>
-             <div class="full-width">
+            <div class="full-width">
                 <label>Log</label>
                 <div id="log-area"></div>
             </div>
@@ -422,6 +502,28 @@
         </div>
     </div>
 
+    <!-- Custom Message Box -->
+    <div id="message-box" class="modal">
+        <div id="message-box-content" class="modal-content">
+            <h3 id="message-box-title"></h3>
+            <p id="message-box-text"></p>
+            <div id="message-box-buttons">
+                <button id="message-box-ok">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Box -->
+    <div id="confirm-box" class="modal">
+        <div id="confirm-box-content" class="modal-content">
+            <h3 id="confirm-box-title">Confirm Action</h3>
+            <p id="confirm-box-text"></p>
+            <div id="confirm-box-buttons">
+                <button id="confirm-box-yes">Yes</button>
+                <button id="confirm-box-no">No</button>
+            </div>
+        </div>
+    </div>
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
@@ -469,6 +571,41 @@
         const saveToGithubBtn = document.getElementById('save-to-github-btn');
         const logArea = document.getElementById('log-area');
 
+        // Custom Message Box Elements
+        const messageBox = document.getElementById('message-box');
+        const messageBoxTitle = document.getElementById('message-box-title');
+        const messageBoxText = document.getElementById('message-box-text');
+        const messageBoxOkBtn = document.getElementById('message-box-ok');
+
+        // Custom Confirmation Box Elements
+        const confirmBox = document.getElementById('confirm-box');
+        const confirmBoxText = document.getElementById('confirm-box-text');
+        const confirmBoxYesBtn = document.getElementById('confirm-box-yes');
+        const confirmBoxNoBtn = document.getElementById('confirm-box-no');
+
+        // --- CUSTOM ALERT/CONFIRM ---
+        const showMessage = (title, message) => {
+            messageBoxTitle.textContent = title;
+            messageBoxText.textContent = message;
+            messageBox.style.display = 'flex';
+        };
+
+        const showConfirm = (title, message) => {
+            confirmBoxTitle.textContent = title;
+            confirmBoxText.textContent = message;
+            confirmBox.style.display = 'flex';
+            return new Promise((resolve) => {
+                confirmBoxYesBtn.onclick = () => {
+                    confirmBox.style.display = 'none';
+                    resolve(true);
+                };
+                confirmBoxNoBtn.onclick = () => {
+                    confirmBox.style.display = 'none';
+                    resolve(false);
+                };
+            });
+        };
+
         // --- COOKIE HELPERS ---
         const setCookie = (name, value, days) => {
             let expires = "";
@@ -509,7 +646,7 @@
         };
         
         // --- DATA HANDLING ---
-        const getPromptUniqueKey = (p) => `${p.Category?.toLowerCase()}/${p.PromptName?.toLowerCase()}/${p.AIName?.toLowerCase()}`;
+        const getPromptUniqueKey = (p) => `${p.Category?.toLowerCase()}/${p["Prompt Name"]?.toLowerCase()}/${p["AI Name"]?.toLowerCase()}`;
 
         
         const renderPrompts = (filteredPrompts = prompts) => {
@@ -525,19 +662,20 @@
             filteredPrompts.forEach((prompt, index) => {
                 const originalIndex = prompts.findIndex(p => p === prompt);
                 const row = promptsTbody.insertRow();
-                // --- FIX IS HERE ---
-                // Changed PascalCase (e.g., PromptName) to camelCase (e.g., promptName)
+                // Corrected property access from camelCase to PascalCase
+
+                log("prompt"+index+":" + JSON.stringify(prompt) )
                 row.innerHTML = `
-                    <td>${prompt.category || ''}</td>
-                    <td>${prompt.promptName || ''}</td>
-                    <td>${prompt.aiName || ''}</td>
-                    <td><div class="truncate" title="${prompt.promptText || ''}">${prompt.promptText?.substring(0, 30) || ''}...</div></td>
-                    <td><div class="truncate" title="${prompt.notes || ''}">${prompt.notes?.substring(0, 30) || ''}...</div></td>
-                    <td>${prompt.dateUpdated ? new Date(prompt.dateUpdated).toLocaleDateString() : ''}</td>
+                    <td>${prompt.Category || ''}</td>
+                    <td>${prompt["Prompt Name"] || ''}</td>
+                    <td>${prompt["AI Name"] || ''}</td>
+                    <td><div class="truncate" title="${prompt["Prompt Text"] || ''}">${(prompt["Prompt Text"]?.length > 30 ? prompt["Prompt Text"].substring(0, 27) + '...' : prompt["Prompt Text"]) || ''}</div></td>
+                    <td><div class="truncate" title="${prompt.Notes || ''}">${(prompt.Notes?.length > 30 ? prompt.Notes.substring(0, 27) + '...' : prompt.Notes) || ''}</div></td>
+                    <td>${prompt["Date Updated"] ? new Date(prompt["Date Updated"]).toLocaleDateString() : ''}</td>
                     <td class="actions-cell">
                         <div class="tooltip">
                             <button class="copy-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zM-1 7a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1h-15A.5.5 0 0 1-1 7z"/></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zM6 7a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 6 7z"/></svg>
                             </button>
                             <span class="tooltiptext">Copy Prompt</span>
                         </div>
@@ -549,8 +687,7 @@
                         </button>
                     </td>
                 `;
-                // Pass the correct camelCase property to the copy button
-                row.querySelector('.copy-btn').addEventListener('click', () => copyPromptText(prompt.promptText));
+                row.querySelector('.copy-btn').addEventListener('click', () => copyPromptText(prompt["Prompt Text"]));
                 row.querySelector('.edit-btn').addEventListener('click', () => openPromptModal(originalIndex));
                 row.querySelector('.remove-btn').addEventListener('click', () => removePrompt(originalIndex));
             });
@@ -558,8 +695,9 @@
 
         
         const populateFilters = () => {
+            // Use PascalCase for mapping to match prompt object properties
             const categories = [...new Set(prompts.map(p => p.Category))].sort();
-            const aiNames = [...new Set(prompts.map(p => p.AIName))].sort();
+            const aiNames = [...new Set(prompts.map(p => p["AI Name"]))].sort();
 
             // Clear existing options except for the "All" option
             categoryFilter.innerHTML = '<option value="*">All Categories</option>';
@@ -585,13 +723,15 @@
             const aiName = aiNameFilter.value;
 
             const filtered = prompts.filter(p => {
+                // Use PascalCase for comparison with prompt object properties
                 const categoryMatch = category === '*' || p.Category === category;
-                const aiNameMatch = aiName === '*' || p.AIName === aiName;
+                const aiNameMatch = aiName === '*' || p["AI Name"] === aiName;
                 const queryMatch = !query || 
                     p.Category?.toLowerCase().includes(query) ||
-                    p.PromptName?.toLowerCase().includes(query) ||
-                    p.AIName?.toLowerCase().includes(query) ||
-                    p.PromptText?.toLowerCase().includes(query);
+                    p["Prompt Name"]?.toLowerCase().includes(query) ||
+                    p["AI Name"]?.toLowerCase().includes(query) ||
+                    p["Prompt Text"]?.toLowerCase().includes(query) ||
+                    p.Notes?.toLowerCase().includes(query); // Added notes to search
                 
                 return categoryMatch && aiNameMatch && queryMatch;
             });
@@ -599,35 +739,39 @@
         };
         
         const copyPromptText = (text) => {
-             if (!navigator.clipboard) {
-                // Fallback for older browsers
+            if (!navigator.clipboard) {
+                // Fallback for older browsers (document.execCommand is deprecated but more widely supported in sandboxed iframes)
                 const textArea = document.createElement("textarea");
                 textArea.value = text;
                 textArea.style.position = "fixed";
+                textArea.style.left = "-9999px"; // Hide off-screen
+                textArea.style.top = "0";
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    alert('Prompt copied to clipboard!');
+                    showMessage('Success', 'Prompt copied to clipboard!');
                 } catch (err) {
-                    alert('Failed to copy prompt.');
+                    showMessage('Error', 'Failed to copy prompt.');
                 }
                 document.body.removeChild(textArea);
                 return;
             }
             navigator.clipboard.writeText(text).then(() => {
-                alert('Prompt copied to clipboard!');
+                showMessage('Success', 'Prompt copied to clipboard!');
             }).catch(err => {
-                alert('Failed to copy prompt.');
+                showMessage('Error', 'Failed to copy prompt.');
             });
         };
 
-        const removePrompt = (index) => {
-            if (confirm(`Are you sure you want to delete the prompt "${prompts[index].PromptName}"?`)) {
+        const removePrompt = async (index) => {
+            const confirmed = await showConfirm('Delete Prompt', `Are you sure you want to delete the prompt "${prompts[index]["Prompt Name"]}"?`);
+            if (confirmed) {
                 prompts.splice(index, 1);
                 filterAndRender();
                 populateFilters();
+                showMessage('Deleted', 'Prompt successfully deleted.');
             }
         };
 
@@ -640,17 +784,17 @@
                 modalTitle.textContent = 'Edit Prompt';
                 promptIndexInput.value = index;
                 promptCategoryInput.value = prompt.Category || '';
-                promptNameInput.value = prompt.PromptName || '';
-                aiNameInput.value = prompt.AIName || '';
-                userIdInput.value = prompt.UserID || '';
-                promptTextInput.value = prompt.PromptText || '';
+                promptNameInput.value = prompt["Prompt Name"] || '';
+                aiNameInput.value = prompt["AI Name"] || '';
+                userIdInput.value = prompt["User ID"] || '';
+                promptTextInput.value = prompt["Prompt Text"] || '';
                 notesInput.value = prompt.Notes || '';
             } else {
                 modalTitle.textContent = 'Add New Prompt';
                 promptIndexInput.value = '';
             }
             promptModal.style.display = 'flex';
-            checkDuplicate();
+            checkDuplicate(); // Check duplicates immediately when opening for add/edit
         };
 
         const closePromptModal = () => {
@@ -699,16 +843,17 @@
             };
             
             if (index) { // Editing existing prompt
-                promptData.DateCreated = prompts[index].DateCreated;
+                promptData["Date Created"] = prompts[index]["Date Created"]; // Preserve original creation date
                 prompts[index] = promptData;
             } else { // Adding new prompt
-                promptData.DateCreated = now;
+                promptData["Date Created"] = now;
                 prompts.push(promptData);
             }
             
             filterAndRender();
             populateFilters();
             closePromptModal();
+            showMessage('Saved', 'Prompt saved successfully!');
         };
         
         const openGitHubModal = () => {
@@ -780,17 +925,18 @@
                 
                 // 2. Prepare the content for upload
                 prompts.sort((a, b) => {
-                    const keyA = `${a.Category}${a.PromptName}${a.AIName}${a.PromptText}`;
-                    const keyB = `${b.Category}${b.PromptName}${b.AIName}${b.PromptText}`;
+                    const keyA = `${a.Category}${a["Prompt Name"]}${a["AI Name"]}${a["Prompt Text"]}`;
+                    const keyB = `${b.Category}${b["Prompt Name"]}${b["AI Name"]}${b["Prompt Text"]}`;
                     return keyA.localeCompare(keyB);
                 });
 
                 const contentToSave = JSON.stringify(prompts, null, 2);
-                const encodedContent = btoa(unescape(encodeURIComponent(contentToSave))); // Handles UTF-8 chars
+                // encodeURIComponent is crucial for handling non-ASCII characters, then btoa for base64
+                const encodedContent = btoa(unescape(encodeURIComponent(contentToSave)));
 
                 // 3. Create or update the file
                 const body = {
-                    message: `AIStore: Updated prompts.json on ${new Date().toISOString()}`,
+                    message: `AIStore: Updated prompts.json on ${new Date().toLocaleString()}`, // More readable date
                     content: encodedContent,
                     sha: sha // Include SHA if updating
                 };
@@ -807,10 +953,10 @@
                 
                 if (putResponse.ok) {
                     log('Successfully saved to GitHub!', 'success');
-                    log(`Commit SHA: ${result.commit.sha.substring(0,7)}...`, 'info');
+                    log(`Commit URL: ${result.commit.html_url}`, 'info'); // Provide commit URL
                     setTimeout(closeGitHubModal, 1500);
                 } else {
-                    throw new Error(`GitHub API Error: ${putResponse.status} - ${result.message}`);
+                    throw new Error(`GitHub API Error: ${putResponse.status} - ${result.message || JSON.stringify(result)}`);
                 }
             } catch (error) {
                 log(`Error: ${error.message}`, 'error');
@@ -836,17 +982,15 @@
                     prompts = initialPrompts;
                     console.log(`Successfully fetched ${prompts.length} prompts.`);
                 } else {
-                    console.error("Fetched data is not an array.");
+                    console.error("Fetched data is not an array. Initializing with empty prompts.");
+                    prompts = []; // Ensure prompts is an array even if fetch fails or returns non-array
                 }
             } catch (error) {
                 console.error('Failed to fetch initial prompts:', error);
-                alert('Could not load the initial set of prompts. The application may be empty.');
+                showMessage('Error', 'Could not load the initial set of prompts. The application may be empty.');
+                prompts = []; // Ensure prompts is an array even on fetch error
             }
             
-            // Note: Per requirements, the app first loads from the URL, then could load from Github.
-            // For a better UX, one might merge or ask the user, but we'll stick to a simple load for now.
-            // A 'Load from GitHub' button could be added to the settings modal for explicit action.
-
             filterAndRender();
             populateFilters();
             setupEventListeners();
@@ -871,14 +1015,19 @@
             githubSettingsBtn.addEventListener('click', openGitHubModal);
             closeGithubModalBtn.addEventListener('click', closeGitHubModal);
             [githubOwnerInput, githubRepoInput, githubPathInput, githubKeyInput].forEach(input => {
-                input.addEventListener('keyup', saveGitHubConfig);
+                input.addEventListener('input', saveGitHubConfig); // Changed to input for real-time saving
             });
             saveToGithubBtn.addEventListener('click', saveToGitHub);
+            
+            // Custom Message Box
+            messageBoxOkBtn.addEventListener('click', () => messageBox.style.display = 'none');
             
             // Close modals on outside click
             window.addEventListener('click', (event) => {
                 if (event.target === promptModal) closePromptModal();
                 if (event.target === githubModal) closeGitHubModal();
+                if (event.target === messageBox) messageBox.style.display = 'none';
+                if (event.target === confirmBox) confirmBox.style.display = 'none';
             });
         };
 

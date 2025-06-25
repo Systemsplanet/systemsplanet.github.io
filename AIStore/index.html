@@ -1,745 +1,884 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIStore - Prompt Manager</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <title>AIStore</title>
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-        /* Custom scrollbar for better aesthetics in dark mode */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #1f2937; /* gray-800 */
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #4b5563; /* gray-600 */
-            border-radius: 4px;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #6b7280; /* gray-500 */
-        }
-        .modal-backdrop {
-            transition: opacity 0.3s ease-in-out;
-        }
-        .modal-content {
-            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
-        }
-        /* Prevent layout shift on scrollbar appearance */
         :root {
-            overflow-y: scroll;
+            --primary-bg: #1a1a1a;
+            --secondary-bg: #2b2b2b;
+            --tertiary-bg: #3c3c3c;
+            --primary-text: #f0f0f0;
+            --secondary-text: #b0b0b0;
+            --accent-color: #4a90e2;
+            --accent-hover: #5aa1f2;
+            --error-color: #e24a4a;
+            --success-color: #4ae28a;
+            --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            --border-radius: 8px;
+            --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        body {
+            font-family: var(--font-family);
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: var(--secondary-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+        }
+
+        header h1 {
+            margin: 0;
+            color: var(--accent-color);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            padding: 15px;
+            background-color: var(--secondary-bg);
+            border-radius: var(--border-radius);
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .search-group {
+            flex-grow: 1;
+            display: flex;
+        }
+
+        .search-group input {
+            border-radius: var(--border-radius) 0 0 var(--border-radius);
+            border-right: none;
+        }
+
+        .search-group button {
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+        }
+
+        input, select {
+            padding: 10px;
+            border: 1px solid var(--tertiary-bg);
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+            border-radius: var(--border-radius);
+            font-size: 1em;
+        }
+        
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+        }
+        
+        button {
+            padding: 10px 15px;
+            border: none;
+            background-color: var(--accent-color);
+            color: white;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+        
+        button:disabled {
+            background-color: var(--tertiary-bg);
+            cursor: not-allowed;
+        }
+
+        .results-grid {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: var(--secondary-bg);
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: var(--box-shadow);
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--tertiary-bg);
+            white-space: nowrap;
+        }
+        
+        th {
+            background-color: var(--tertiary-bg);
+        }
+
+        tbody tr:hover {
+            background-color: #253344;
+        }
+
+        .truncate {
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        
+        .actions-cell {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background-color: var(--secondary-bg);
+            margin: auto;
+            padding: 25px;
+            border: 1px solid var(--tertiary-bg);
+            width: 90%;
+            max-width: 600px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: var(--accent-color);
+        }
+        
+        .close-button {
+            color: var(--secondary-text);
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .close-button:hover {
+            color: var(--primary-text);
+        }
+        
+        .modal-form {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .modal-form .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .modal-form .full-width {
+            grid-column: 1 / -1;
+        }
+        
+        .modal-form label {
+            font-weight: bold;
+            color: var(--secondary-text);
+        }
+        
+        .modal-form input, .modal-form textarea {
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border: 1px solid var(--tertiary-bg);
+            background-color: var(--primary-bg);
+            color: var(--primary-text);
+            border-radius: var(--border-radius);
+        }
+        
+        .modal-form textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #log-area {
+            background-color: var(--primary-bg);
+            border: 1px solid var(--tertiary-bg);
+            border-radius: var(--border-radius);
+            padding: 10px;
+            height: 150px;
+            overflow-y: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+        #log-area .log-success { color: var(--success-color); }
+        #log-area .log-error { color: var(--error-color); }
+        #log-area .log-info { color: var(--secondary-text); }
+
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 140px;
+            background-color: var(--accent-color);
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -70px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .tooltip .tooltiptext::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--accent-color) transparent transparent transparent;
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200 antialiased">
+<body>
 
-    <div id="app" class="min-h-screen flex flex-col">
-        <header class="bg-gray-800/80 backdrop-blur-sm sticky top-0 z-20 border-b border-gray-700 shadow-lg">
-            <div class="container mx-auto px-4 py-3">
-                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <h1 class="text-2xl font-bold text-white">AIStore</h1>
-                    <div class="flex flex-wrap items-center justify-center gap-2 md:gap-4 w-full md:w-auto">
-                        <button id="storageBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md">Storage</button>
-                        <button id="saveToGithubBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md flex items-center gap-2 disabled:bg-green-800 disabled:cursor-not-allowed">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
-                            <span>Save to GitHub</span>
-                        </button>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
-                    <input type="text" id="search" placeholder="Search prompts..." class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition">
-                    <select id="categoryFilter" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"></select>
-                    <select id="aiNameFilter" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"></select>
-                </div>
-            </div>
+    <div class="container">
+        <header>
+            <h1>AIStore</h1>
+            <button id="add-prompt-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+                Add Prompt
+            </button>
         </header>
 
-        <main class="container mx-auto px-4 py-6 flex-grow">
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div class="lg:col-span-1 flex flex-col gap-4">
-                    <button id="addNewPromptBtn" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg transition-colors shadow-md">Add New Prompt</button>
-                    <div id="promptList" class="bg-gray-800 rounded-lg p-2 overflow-y-auto max-h-[calc(100vh-250px)]">
-                        </div>
-                </div>
-
-                <div id="promptEditor" class="lg:col-span-2 bg-gray-800 rounded-lg p-6 shadow-xl hidden">
-                    <div class="space-y-4">
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                           <input type="text" id="promptName" placeholder="Prompt Name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                           <input type="text" id="promptCategory" placeholder="Category" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        </div>
-                         <input type="text" id="promptAiName" placeholder="AI Name" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                        <textarea id="promptText" placeholder="Prompt Text..." rows="10" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-y"></textarea>
-                        <textarea id="promptNotes" placeholder="Notes..." rows="3" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none resize-y"></textarea>
-                        <div class="text-xs text-gray-400">
-                            <p>Created: <span id="dateCreated"></span></p>
-                            <p>Updated: <span id="dateUpdated"></span></p>
-                        </div>
-                        <div class="flex flex-wrap gap-4 justify-end">
-                            <button id="copyPromptBtn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Copy Prompt</button>
-                            <button id="deletePromptBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Delete</button>
-                            <button id="savePromptBtn" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Save Prompt</button>
-                        </div>
-                    </div>
-                </div>
-                 <div id="welcomeMessage" class="lg:col-span-2 flex items-center justify-center bg-gray-800 rounded-lg p-6 text-center">
-                    <p class="text-gray-400">Select a prompt from the list to view or edit, or add a new one.</p>
-                </div>
+        <div class="controls">
+            <div class="search-group">
+                <input type="text" id="search-query" placeholder="Search prompts...">
             </div>
-        </main>
-    </div>
-
-    <div id="storageModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden modal-backdrop opacity-0">
-        <div class="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-md modal-content transform scale-95 opacity-0">
-            <h2 class="text-2xl font-bold mb-6 text-white">GitHub Storage Settings</h2>
-            <div class="space-y-4">
-                <div>
-                    <label for="storageOwner" class="block mb-2 text-sm font-medium text-gray-300">GitHub Owner</label>
-                    <input type="text" id="storageOwner" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., your-github-username">
-                </div>
-                <div>
-                    <label for="storageRepo" class="block mb-2 text-sm font-medium text-gray-300">Repository Name</label>
-                    <input type="text" id="storageRepo" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., AIStore-data">
-                </div>
-                <div>
-                    <label for="storagePath" class="block mb-2 text-sm font-medium text-gray-300">File Path</label>
-                    <input type="text" id="storagePath" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g., prompts.json">
-                </div>
-                <div>
-                    <label for="storageApiKey" class="block mb-2 text-sm font-medium text-gray-300">GitHub API Key (Personal Access Token)</label>
-                    <input type="password" id="storageApiKey" class="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Requires 'Contents: Read & Write' permission">
-                </div>
-            </div>
-            <div class="flex justify-end gap-4 mt-8">
-                <button id="cancelStorageBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Cancel</button>
-                <button id="saveStorageBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Save</button>
-            </div>
+            <select id="category-filter">
+                <option value="*">All Categories</option>
+            </select>
+            <select id="ai-name-filter">
+                <option value="*">All AI Names</option>
+            </select>
+            <button id="github-settings-btn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>
+                Save
+            </button>
+        </div>
+        
+        <div class="results-grid">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Category</th>
+                        <th>Prompt Name</th>
+                        <th>AI Name</th>
+                        <th>Prompt Text</th>
+                        <th>Notes</th>
+                        <th>Updated</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="prompts-tbody">
+                    <!-- Prompt rows will be injected here by JavaScript -->
+                </tbody>
+            </table>
         </div>
     </div>
     
-    <div id="confirmModal" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden modal-backdrop opacity-0">
-        <div class="bg-gray-800 rounded-lg shadow-xl p-8 w-full max-w-sm modal-content transform scale-95 opacity-0">
-            <h2 class="text-xl font-bold mb-4 text-white" id="confirmTitle">Are you sure?</h2>
-            <p class="text-gray-300 mb-6" id="confirmMessage">This action cannot be undone.</p>
-            <div class="flex justify-end gap-4">
-                <button id="confirmCancelBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Cancel</button>
-                <button id="confirmOkBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition-colors">Confirm</button>
+    <!-- Edit/Add Prompt Modal -->
+    <div id="prompt-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add New Prompt</h2>
+                <span class="close-button" id="close-prompt-modal">&times;</span>
+            </div>
+            <form id="prompt-form" class="modal-form">
+                <input type="hidden" id="prompt-index">
+                <div class="form-group">
+                    <label for="prompt-category">Category</label>
+                    <input type="text" id="prompt-category" required>
+                </div>
+                <div class="form-group">
+                    <label for="prompt-name">Prompt Name</label>
+                    <input type="text" id="prompt-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="ai-name">AI Name</label>
+                    <input type="text" id="ai-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="user-id">User ID</label>
+                    <input type="text" id="user-id">
+                </div>
+                <div class="form-group full-width">
+                    <label for="prompt-text">Prompt Text</label>
+                    <textarea id="prompt-text" required></textarea>
+                </div>
+                <div class="form-group full-width">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes"></textarea>
+                </div>
+                 <small id="duplicate-warning" class="full-width" style="color: var(--error-color); display: none;">A prompt with this Category, Prompt Name, and AI Name already exists. You cannot save a duplicate.</small>
+            </form>
+            <div class="modal-footer">
+                <button id="cancel-prompt-btn">Cancel</button>
+                <button id="save-prompt-btn">Save Prompt</button>
             </div>
         </div>
     </div>
 
-    <div id="notification" class="fixed bottom-5 right-5 bg-green-600 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 opacity-0">
-        Message
+    <!-- GitHub Settings Modal -->
+    <div id="github-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Save to GitHub</h2>
+                <span class="close-button" id="close-github-modal">&times;</span>
+            </div>
+            <div id="github-form" class="modal-form">
+                <div class="form-group">
+                    <label for="github-owner">GitHub Owner</label>
+                    <input type="text" id="github-owner">
+                </div>
+                <div class="form-group">
+                    <label for="github-repo">Repository Name</label>
+                    <input type="text" id="github-repo">
+                </div>
+                <div class="form-group full-width">
+                    <label for="github-path">File Path</label>
+                    <input type="text" id="github-path">
+                </div>
+                <div class="form-group full-width">
+                    <label for="github-key">GitHub API Key (Personal Access Token)</label>
+                    <input type="password" id="github-key">
+                </div>
+            </div>
+             <div class="full-width">
+                <label>Log</label>
+                <div id="log-area"></div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-to-github-btn">Save to GitHub</button>
+            </div>
+        </div>
     </div>
 
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-
-        // --- STATE MANAGEMENT --- //
-        let allPrompts = [];
-        let filteredPrompts = [];
-        let categories = new Set();
-        let aiNames = new Set();
-        let selectedPromptId = null;
-        let config = {
-            owner: '',
-            repo: '',
-            path: '',
+        // --- STATE MANAGEMENT ---
+        let prompts = [];
+        let githubConfig = {
+            owner: 'Systemsplanet',
+            repo: 'AIStore',
+            path: 'prompts.json',
             apiKey: ''
         };
+        const PROMPTS_URL = 'https://raw.githubusercontent.com/Systemsplanet/AIStore/main/prompts.json';
 
-        // --- DOM ELEMENTS --- //
-        const searchInput = document.getElementById('search');
-        const categoryFilter = document.getElementById('categoryFilter');
-        const aiNameFilter = document.getElementById('aiNameFilter');
-        const promptList = document.getElementById('promptList');
-        const promptEditor = document.getElementById('promptEditor');
-        const welcomeMessage = document.getElementById('welcomeMessage');
-        const addNewPromptBtn = document.getElementById('addNewPromptBtn');
+        // --- DOM ELEMENTS ---
+        const promptsTbody = document.getElementById('prompts-tbody');
+        const searchQuery = document.getElementById('search-query');
+        const categoryFilter = document.getElementById('category-filter');
+        const aiNameFilter = document.getElementById('ai-name-filter');
 
-        // Editor fields
-        const promptNameInput = document.getElementById('promptName');
-        const promptCategoryInput = document.getElementById('promptCategory');
-        const promptAiNameInput = document.getElementById('promptAiName');
-        const promptTextInput = document.getElementById('promptText');
-        const promptNotesInput = document.getElementById('promptNotes');
-        const dateCreatedSpan = document.getElementById('dateCreated');
-        const dateUpdatedSpan = document.getElementById('dateUpdated');
-        
-        // Editor buttons
-        const savePromptBtn = document.getElementById('savePromptBtn');
-        const deletePromptBtn = document.getElementById('deletePromptBtn');
-        const copyPromptBtn = document.getElementById('copyPromptBtn');
+        // Prompt Modal Elements
+        const promptModal = document.getElementById('prompt-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const closePromptModalBtn = document.getElementById('close-prompt-modal');
+        const addPromptBtn = document.getElementById('add-prompt-btn');
+        const savePromptBtn = document.getElementById('save-prompt-btn');
+        const cancelPromptBtn = document.getElementById('cancel-prompt-btn');
+        const promptForm = document.getElementById('prompt-form');
+        const promptIndexInput = document.getElementById('prompt-index');
+        const promptCategoryInput = document.getElementById('prompt-category');
+        const promptNameInput = document.getElementById('prompt-name');
+        const aiNameInput = document.getElementById('ai-name');
+        const userIdInput = document.getElementById('user-id');
+        const promptTextInput = document.getElementById('prompt-text');
+        const notesInput = document.getElementById('notes');
+        const duplicateWarning = document.getElementById('duplicate-warning');
 
-        // Storage Modal elements
-        const storageModal = document.getElementById('storageModal');
-        const storageBtn = document.getElementById('storageBtn');
-        const cancelStorageBtn = document.getElementById('cancelStorageBtn');
-        const saveStorageBtn = document.getElementById('saveStorageBtn');
-        const storageOwnerInput = document.getElementById('storageOwner');
-        const storageRepoInput = document.getElementById('storageRepo');
-        const storagePathInput = document.getElementById('storagePath');
-        const storageApiKeyInput = document.getElementById('storageApiKey');
-        
-        // Confirm Modal elements
-        const confirmModal = document.getElementById('confirmModal');
-        const confirmMessage = document.getElementById('confirmMessage');
-        const confirmCancelBtn = document.getElementById('confirmCancelBtn');
-        const confirmOkBtn = document.getElementById('confirmOkBtn');
+        // GitHub Modal Elements
+        const githubModal = document.getElementById('github-modal');
+        const githubSettingsBtn = document.getElementById('github-settings-btn');
+        const closeGithubModalBtn = document.getElementById('close-github-modal');
+        const githubOwnerInput = document.getElementById('github-owner');
+        const githubRepoInput = document.getElementById('github-repo');
+        const githubPathInput = document.getElementById('github-path');
+        const githubKeyInput = document.getElementById('github-key');
+        const saveToGithubBtn = document.getElementById('save-to-github-btn');
+        const logArea = document.getElementById('log-area');
 
-        // Other UI
-        const saveToGithubBtn = document.getElementById('saveToGithubBtn');
-        const notification = document.getElementById('notification');
-
-        // --- INITIALIZATION --- //
-        
-        const init = async () => {
-            loadConfig();
-            await fetchData();
-            addEventListeners();
-            renderAll();
-        };
-
-        const loadConfig = () => {
-            const savedConfig = localStorage.getItem('aistore_config');
-            if (savedConfig) {
-                const parsedConfig = JSON.parse(savedConfig);
-                if (parsedConfig.owner && parsedConfig.repo) {
-                     config = parsedConfig;
-                } else {
-                    setDefaultConfig();
-                }
-            } else {
-                setDefaultConfig();
+        // --- COOKIE HELPERS ---
+        const setCookie = (name, value, days) => {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
             }
-            saveConfig();
-            updateStorageModalFields();
-        };
-        
-        const setDefaultConfig = () => {
-            config = {
-                owner: 'Systemsplanet',
-                repo: 'AIStore',
-                path: 'prompts.json',
-                apiKey: ''
-            };
+            // Use a very long expiry for "never expires"
+            document.cookie = name + "=" + (JSON.stringify(value) || "") + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
         };
 
-        const saveConfig = () => {
-            localStorage.setItem('aistore_config', JSON.stringify(config));
-        };
-        
-        const updateStorageModalFields = () => {
-            storageOwnerInput.value = config.owner;
-            storageRepoInput.value = config.repo;
-            storagePathInput.value = config.path;
-            storageApiKeyInput.value = config.apiKey;
-        };
-
-        const getGitHubApiUrl = () => {
-            if (!config.owner || !config.repo || !config.path) return null;
-            return `https://api.github.com/repos/${config.owner}/${config.repo}/contents/${config.path}`;
-        };
-        
-        const fetchData = async () => {
-            const apiUrl = getGitHubApiUrl();
-            const rawContentUrl = 'https://raw.githubusercontent.com/Systemsplanet/AIStore/main/prompts.json';
-            
-            let fetchUrl = rawContentUrl; // Default to the raw URL
-            let headers = {};
-            let isUsingApi = false;
-
-            // If an API key is provided, prefer the API for freshness
-            if (apiUrl && config.apiKey) {
-                fetchUrl = apiUrl;
-                isUsingApi = true;
-                headers = { 
-                    'Authorization': `token ${config.apiKey}`,
-                    'Accept': 'application/vnd.github.v3.raw',
-                    'Cache-Control': 'no-cache'
-                };
-            }
-
-            try {
-                const response = await fetch(fetchUrl, { headers });
-                if (!response.ok) {
-                    throw new Error(`HTTP status ${response.status}`);
-                }
-                const jsonData = await response.json();
-                allPrompts = jsonData.data || [];
-                processLoadedData();
-            } catch (error) {
-                console.error(`Fetch failed for ${fetchUrl}:`, error.message);
-                if (isUsingApi) {
-                    // If the API fails, fall back to the raw public URL
-                    console.warn(`API fetch failed. Falling back to public raw content URL.`);
-                    await fetchFromRawUrl(rawContentUrl);
-                } else {
-                    // If the primary raw URL fails, load sample data
-                    console.error("Primary raw content fetch failed. Loading sample data.");
-                    loadSampleData();
+        const getCookie = (name) => {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) {
+                    try {
+                        return JSON.parse(c.substring(nameEQ.length, c.length));
+                    } catch(e) {
+                        return c.substring(nameEQ.length, c.length);
+                    }
                 }
             }
+            return null;
         };
 
-        const fetchFromRawUrl = async (url) => {
-            try {
-                const response = await fetch(url, { headers: { 'Cache-Control': 'no-cache' } });
-                if (!response.ok) throw new Error(`HTTP fallback error! status: ${response.status}`);
-                const jsonData = await response.json();
-                allPrompts = jsonData.data || [];
-                processLoadedData();
-            } catch(e) {
-                console.error("All fetch attempts have failed. Loading sample data.", e);
-                loadSampleData();
+        // --- LOGGING ---
+        const log = (message, type = 'info') => {
+            console.log(message);
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEntry.className = `log-${type}`;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+        };
+        
+        // --- DATA HANDLING ---
+        const getPromptUniqueKey = (p) => `${p.Category?.toLowerCase()}/${p.PromptName?.toLowerCase()}/${p.AIName?.toLowerCase()}`;
+
+        const renderPrompts = (filteredPrompts = prompts) => {
+            promptsTbody.innerHTML = '';
+            if (filteredPrompts.length === 0) {
+                const row = promptsTbody.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 7;
+                cell.textContent = "No prompts found.";
+                cell.style.textAlign = 'center';
+                return;
             }
-        };
-
-        const loadSampleData = () => {
-            showNotification('Could not load from GitHub. Loading sample prompts.', 'error', 5000);
-            allPrompts = [
-                {
-                    "Category": "General",
-                    "Prompt Name": "Welcome Prompt",
-                    "AI Name": "Any",
-                    "Prompt Text": "This is a sample prompt. You can edit it or create a new one. Use the 'Storage' button to configure your GitHub repository to save your prompts.",
-                    "Date Created": new Date().toISOString(),
-                    "Date Updated": new Date().toISOString(),
-                    "User ID": "local",
-                    "Notes": "This is a default prompt loaded because fetching from GitHub failed."
-                },
-                {
-                    "Category": "Writing",
-                    "Prompt Name": "Brainstorm Blog Post Ideas",
-                    "AI Name": "ChatGPT",
-                    "Prompt Text": "Act as a content strategist. Brainstorm 5 engaging blog post ideas about [topic]. For each idea, provide a catchy title, a brief summary, and 3-4 key talking points.",
-                    "Date Created": new Date().toISOString(),
-                    "Date Updated": new Date().toISOString(),
-                    "User ID": "local",
-                    "Notes": ""
-                }
-            ];
-            processLoadedData();
-        };
-        
-        const processLoadedData = () => {
-            allPrompts = allPrompts.map(p => ({
-                ...p,
-                id: `${p.Category}/${p['Prompt Name']}/${p['AI Name']}`
-            }));
-            updateDerivedState();
-        };
-        
-        const updateDerivedState = () => {
-            categories = new Set(allPrompts.map(p => p.Category).filter(Boolean));
-            aiNames = new Set(allPrompts.map(p => p['AI Name']).filter(Boolean));
-        };
-
-        // --- RENDERING --- //
-
-        const renderAll = () => {
-            applyFilters();
-            renderFilters();
-            renderPromptList();
-            renderEditor();
-        };
-
-        const renderFilters = () => {
-            const currentCategory = categoryFilter.value;
-            categoryFilter.innerHTML = '<option value="All">All Categories</option>';
-            [...categories].sort().forEach(cat => {
-                categoryFilter.innerHTML += `<option value="${cat}">${cat}</option>`;
+            filteredPrompts.forEach((prompt, index) => {
+                const originalIndex = prompts.findIndex(p => p === prompt);
+                const row = promptsTbody.insertRow();
+                row.innerHTML = `
+                    <td>${prompt.Category || ''}</td>
+                    <td>${prompt.PromptName || ''}</td>
+                    <td>${prompt.AIName || ''}</td>
+                    <td><div class="truncate" title="${prompt.PromptText || ''}">${prompt.PromptText?.substring(0, 30) || ''}...</div></td>
+                    <td><div class="truncate" title="${prompt.Notes || ''}">${prompt.Notes?.substring(0, 30) || ''}...</div></td>
+                    <td>${prompt.DateUpdated ? new Date(prompt.DateUpdated).toLocaleDateString() : ''}</td>
+                    <td class="actions-cell">
+                        <div class="tooltip">
+                           <button class="copy-btn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zM-1 7a.5.5 0 0 1 .5-.5h15a.5.5 0 0 1 0 1h-15A.5.5 0 0 1-1 7z"/></svg>
+                           </button>
+                           <span class="tooltiptext">Copy Prompt</span>
+                        </div>
+                        <button class="edit-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
+                        </button>
+                        <button class="remove-btn">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                        </button>
+                    </td>
+                `;
+                row.querySelector('.copy-btn').addEventListener('click', () => copyPromptText(prompt.PromptText));
+                row.querySelector('.edit-btn').addEventListener('click', () => openPromptModal(originalIndex));
+                row.querySelector('.remove-btn').addEventListener('click', () => removePrompt(originalIndex));
             });
-            categoryFilter.innerHTML += '<option value="AddNew">-- Add New Category --</option>';
-            categoryFilter.value = categories.has(currentCategory) ? currentCategory : 'All';
-            
-            const currentAiName = aiNameFilter.value;
-            aiNameFilter.innerHTML = '<option value="All">All AI Names</option>';
-            [...aiNames].sort().forEach(name => {
-                aiNameFilter.innerHTML += `<option value="${name}">${name}</option>`;
+        };
+        
+        const populateFilters = () => {
+            const categories = [...new Set(prompts.map(p => p.Category))].sort();
+            const aiNames = [...new Set(prompts.map(p => p.AIName))].sort();
+
+            // Clear existing options except for the "All" option
+            categoryFilter.innerHTML = '<option value="*">All Categories</option>';
+            aiNameFilter.innerHTML = '<option value="*">All AI Names</option>';
+
+            categories.forEach(cat => {
+                if(cat) {
+                    const option = new Option(cat, cat);
+                    categoryFilter.add(option);
+                }
             });
-            aiNameFilter.innerHTML += '<option value="AddNew">-- Add New AI Name --</option>';
-            aiNameFilter.value = aiNames.has(currentAiName) ? currentAiName : 'All';
+            aiNames.forEach(name => {
+                if(name) {
+                    const option = new Option(name, name);
+                    aiNameFilter.add(option);
+                }
+            });
         };
 
-        const applyFilters = () => {
-            const searchTerm = searchInput.value.toLowerCase();
+        const filterAndRender = () => {
+            const query = searchQuery.value.toLowerCase();
             const category = categoryFilter.value;
             const aiName = aiNameFilter.value;
 
-            filteredPrompts = allPrompts.filter(p => {
-                const searchMatch = !searchTerm || 
-                    (p.Category || '').toLowerCase().includes(searchTerm) ||
-                    (p['Prompt Name'] || '').toLowerCase().includes(searchTerm) ||
-                    (p['AI Name'] || '').toLowerCase().includes(searchTerm) ||
-                    (p['Prompt Text'] || '').toLowerCase().includes(searchTerm);
+            const filtered = prompts.filter(p => {
+                const categoryMatch = category === '*' || p.Category === category;
+                const aiNameMatch = aiName === '*' || p.AIName === aiName;
+                const queryMatch = !query || 
+                    p.Category?.toLowerCase().includes(query) ||
+                    p.PromptName?.toLowerCase().includes(query) ||
+                    p.AIName?.toLowerCase().includes(query) ||
+                    p.PromptText?.toLowerCase().includes(query);
                 
-                const categoryMatch = category === 'All' || p.Category === category;
-                const aiNameMatch = aiName === 'All' || p['AI Name'] === aiName;
-
-                return searchMatch && categoryMatch && aiNameMatch;
+                return categoryMatch && aiNameMatch && queryMatch;
             });
+            renderPrompts(filtered);
         };
         
-        const renderPromptList = () => {
-            if (filteredPrompts.length === 0) {
-                promptList.innerHTML = `<div class="text-center text-gray-400 p-4">No prompts found.</div>`;
-                return;
-            }
-
-            promptList.innerHTML = filteredPrompts
-                .sort((a,b) => (a['Prompt Name'] || '').localeCompare(b['Prompt Name'] || ''))
-                .map(p => `
-                <div class="p-3 rounded-lg cursor-pointer transition-colors ${p.id === selectedPromptId ? 'bg-blue-600' : 'hover:bg-gray-700'}" data-id="${p.id}">
-                    <h3 class="font-semibold text-white truncate">${p['Prompt Name']}</h3>
-                    <p class="text-sm text-gray-400 truncate">${p.Category} / ${p['AI Name']}</p>
-                </div>
-            `).join('');
-        };
-
-        const renderEditor = () => {
-            const prompt = allPrompts.find(p => p.id === selectedPromptId);
-            if (prompt) {
-                promptNameInput.value = prompt['Prompt Name'] || '';
-                promptCategoryInput.value = prompt.Category || '';
-                promptAiNameInput.value = prompt['AI Name'] || '';
-                promptTextInput.value = prompt['Prompt Text'] || '';
-                promptNotesInput.value = prompt.Notes || '';
-                dateCreatedSpan.textContent = prompt['Date Created'] ? new Date(prompt['Date Created']).toLocaleString() : 'N/A';
-                dateUpdatedSpan.textContent = prompt['Date Updated'] ? new Date(prompt['Date Updated']).toLocaleString() : 'N/A';
-                promptEditor.classList.remove('hidden');
-                welcomeMessage.classList.add('hidden');
-            } else {
-                promptEditor.classList.add('hidden');
-                welcomeMessage.classList.remove('hidden');
-            }
-        };
-        
-        const clearEditor = () => {
-            selectedPromptId = null; 
-            promptNameInput.value = '';
-            promptCategoryInput.value = '';
-            promptAiNameInput.value = '';
-            promptTextInput.value = '';
-            promptNotesInput.value = '';
-            dateCreatedSpan.textContent = 'N/A';
-            dateUpdatedSpan.textContent = 'N/A';
-            promptEditor.classList.remove('hidden');
-            welcomeMessage.classList.add('hidden');
-            promptNameInput.focus();
-        };
-
-        // --- EVENT HANDLERS --- //
-        const addEventListeners = () => {
-            searchInput.addEventListener('input', renderAll);
-            categoryFilter.addEventListener('change', handleCategoryChange);
-            aiNameFilter.addEventListener('change', handleAiNameChange);
-            
-            promptList.addEventListener('click', (e) => {
-                const item = e.target.closest('[data-id]');
-                if (item) {
-                    selectedPromptId = item.dataset.id;
-                    renderAll();
-                }
-            });
-            
-            addNewPromptBtn.addEventListener('click', clearEditor);
-            savePromptBtn.addEventListener('click', handleSavePrompt);
-            deletePromptBtn.addEventListener('click', handleDeletePrompt);
-            copyPromptBtn.addEventListener('click', handleCopyPrompt);
-
-            storageBtn.addEventListener('click', openStorageModal);
-            cancelStorageBtn.addEventListener('click', closeStorageModal);
-            saveStorageBtn.addEventListener('click', handleSaveStorage);
-            
-            saveToGithubBtn.addEventListener('click', handleSaveToGithub);
-        };
-        
-        const handleCategoryChange = (e) => {
-            if (e.target.value === 'AddNew') {
-                const newCategory = prompt("Enter new category name:");
-                if (newCategory && !categories.has(newCategory)) {
-                    categories.add(newCategory);
-                    renderFilters();
-                    categoryFilter.value = newCategory;
-                } else if (!newCategory) {
-                    categoryFilter.value = 'All';
-                }
-            }
-            renderAll();
-        };
-        
-        const handleAiNameChange = (e) => {
-            if (e.target.value === 'AddNew') {
-                const newAiName = prompt("Enter new AI name:");
-                if (newAiName && !aiNames.has(newAiName)) {
-                    aiNames.add(newAiName);
-                    renderFilters();
-                    aiNameFilter.value = newAiName;
-                } else if (!newAiName) {
-                    aiNameFilter.value = 'All';
-                }
-            }
-            renderAll();
-        };
-
-        const handleSavePrompt = () => {
-            const name = promptNameInput.value.trim();
-            const category = promptCategoryInput.value.trim();
-            const aiName = promptAiNameInput.value.trim();
-            const text = promptTextInput.value.trim();
-
-            if (!name || !category || !aiName || !text) {
-                showNotification('Name, Category, AI Name, and Prompt Text are required.', 'error');
-                return;
-            }
-            
-            const newId = `${category}/${name}/${aiName}`;
-            
-            const existingPrompt = allPrompts.find(p => p.id === newId);
-            if (selectedPromptId !== newId && existingPrompt) {
-                showNotification('A prompt with this Category, Name, and AI Name already exists.', 'error');
-                return;
-            }
-
-            const now = new Date().toISOString();
-            
-            if (selectedPromptId && selectedPromptId !== newId) {
-                const index = allPrompts.findIndex(p => p.id === selectedPromptId);
-                if (index > -1) allPrompts.splice(index, 1);
-            }
-
-            const promptToUpdateIndex = allPrompts.findIndex(p => p.id === newId);
-            if (promptToUpdateIndex > -1) {
-                allPrompts[promptToUpdateIndex] = {
-                    ...allPrompts[promptToUpdateIndex],
-                    'Prompt Name': name,
-                    'Category': category,
-                    'AI Name': aiName,
-                    'Prompt Text': text,
-                    'Notes': promptNotesInput.value.trim(),
-                    'Date Updated': now,
-                    id: newId
-                };
-                 showNotification('Prompt updated successfully!', 'success');
-            } else {
-                const newPrompt = {
-                    'Category': category,
-                    'Prompt Name': name,
-                    'AI Name': aiName,
-                    'Prompt Text': text,
-                    'Date Created': now,
-                    'Date Updated': now,
-                    'User ID': config.owner, // Use owner as User ID
-                    'Notes': promptNotesInput.value.trim(),
-                    id: newId
-                };
-                allPrompts.push(newPrompt);
-                showNotification('Prompt added successfully!', 'success');
-            }
-            
-            selectedPromptId = newId;
-            updateDerivedState();
-            renderAll();
-        };
-        
-        const handleDeletePrompt = () => {
-            if (!selectedPromptId) return;
-
-            showConfirm('Are you sure you want to delete this prompt?', () => {
-                allPrompts = allPrompts.filter(p => p.id !== selectedPromptId);
-                selectedPromptId = null;
-                updateDerivedState();
-                renderAll();
-                showNotification('Prompt deleted.', 'success');
-            });
-        };
-
-        const handleCopyPrompt = () => {
-            if (!selectedPromptId) return;
-            const prompt = allPrompts.find(p => p.id === selectedPromptId);
-            if(prompt) {
+        const copyPromptText = (text) => {
+             if (!navigator.clipboard) {
+                // Fallback for older browsers
                 const textArea = document.createElement("textarea");
-                textArea.value = prompt['Prompt Text'];
+                textArea.value = text;
+                textArea.style.position = "fixed";
                 document.body.appendChild(textArea);
                 textArea.focus();
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showNotification('Prompt copied to clipboard!', 'success');
+                    alert('Prompt copied to clipboard!');
                 } catch (err) {
-                    showNotification('Failed to copy prompt.', 'error');
-                    console.error('Clipboard copy failed:', err);
+                    alert('Failed to copy prompt.');
                 }
                 document.body.removeChild(textArea);
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                alert('Prompt copied to clipboard!');
+            }).catch(err => {
+                alert('Failed to copy prompt.');
+            });
+        };
+
+        const removePrompt = (index) => {
+            if (confirm(`Are you sure you want to delete the prompt "${prompts[index].PromptName}"?`)) {
+                prompts.splice(index, 1);
+                filterAndRender();
+                populateFilters();
             }
         };
-        
-        const handleSaveStorage = () => {
-            config.owner = storageOwnerInput.value.trim();
-            config.repo = storageRepoInput.value.trim();
-            config.path = storagePathInput.value.trim();
-            config.apiKey = storageApiKeyInput.value.trim();
-            saveConfig();
-            closeStorageModal();
-            showNotification('Storage settings saved. Reloading data...', 'success');
-            fetchData().then(() => renderAll());
+
+        // --- MODAL HANDLING ---
+        const openPromptModal = (index = null) => {
+            promptForm.reset();
+            duplicateWarning.style.display = 'none';
+            if (index !== null) {
+                const prompt = prompts[index];
+                modalTitle.textContent = 'Edit Prompt';
+                promptIndexInput.value = index;
+                promptCategoryInput.value = prompt.Category || '';
+                promptNameInput.value = prompt.PromptName || '';
+                aiNameInput.value = prompt.AIName || '';
+                userIdInput.value = prompt.UserID || '';
+                promptTextInput.value = prompt.PromptText || '';
+                notesInput.value = prompt.Notes || '';
+            } else {
+                modalTitle.textContent = 'Add New Prompt';
+                promptIndexInput.value = '';
+            }
+            promptModal.style.display = 'flex';
+            checkDuplicate();
+        };
+
+        const closePromptModal = () => {
+            promptModal.style.display = 'none';
         };
         
-        const handleSaveToGithub = async () => {
-            const apiUrl = getGitHubApiUrl();
-            if (!apiUrl || !config.apiKey) {
-                 showNotification('Please configure GitHub settings and API Key to save.', 'error');
-                 openStorageModal();
-                 return;
+        const checkDuplicate = () => {
+            const currentIndex = promptIndexInput.value;
+            const currentKey = getPromptUniqueKey({
+                Category: promptCategoryInput.value,
+                PromptName: promptNameInput.value,
+                AIName: aiNameInput.value
+            });
+
+            const isDuplicate = prompts.some((p, i) => {
+                // It's a duplicate if the key exists and it's not the prompt we are currently editing
+                return getPromptUniqueKey(p) === currentKey && i.toString() !== currentIndex;
+            });
+
+            if (isDuplicate) {
+                duplicateWarning.style.display = 'block';
+                savePromptBtn.disabled = true;
+            } else {
+                duplicateWarning.style.display = 'none';
+                savePromptBtn.disabled = false;
+            }
+        };
+
+        const savePrompt = () => {
+            if (!promptForm.checkValidity()) {
+                promptForm.reportValidity();
+                return;
             }
 
-            const btn = saveToGithubBtn;
-            btn.disabled = true;
-            btn.innerHTML = '<span>Saving...</span>';
+            const index = promptIndexInput.value;
+            const now = new Date().toISOString();
             
-            try {
-                let sha;
-                try {
-                    const getFileResponse = await fetch(apiUrl, {
-                        headers: { 
-                            'Authorization': `token ${config.apiKey}`,
-                            'Accept': 'application/vnd.github.v3+json',
-                            'Cache-Control': 'no-cache'
-                        }
-                    });
-                    
-                    if (getFileResponse.ok) {
-                        const fileData = await getFileResponse.json();
-                        if (Array.isArray(fileData)) throw new Error("The configured path points to a directory, not a file.");
-                        if (fileData.type !== 'file') throw new Error(`The path points to a '${fileData.type}', not a file.`);
-                        if (!fileData.sha) throw new Error("Could not retrieve the file's SHA from GitHub's response.");
-                        
-                        sha = fileData.sha;
-                    } else if (getFileResponse.status !== 404) {
-                        const errorData = await getFileResponse.json();
-                        throw new Error(`GitHub GET failed: ${errorData.message || getFileResponse.statusText}`);
-                    }
-                } catch (e) {
-                    throw new Error(`Could not fetch file metadata from GitHub. ${e.message}`);
-                }
-
-                const promptsToSave = allPrompts.map(({ id, ...rest }) => rest);
-                const contentToSave = JSON.stringify({ data: promptsToSave }, null, 2);
-                
-                const encodedContent = btoa(unescape(encodeURIComponent(contentToSave)));
-                
-                const body = {
-                    message: `AIStore: Updated prompts on ${new Date().toISOString()}`,
-                    content: encodedContent,
-                    committer: { name: "AIStore App", email: "aistore@example.com" }
-                };
-                if (sha) {
-                    body.sha = sha;
-                }
-
-                const putResponse = await fetch(apiUrl, {
-                    method: 'PUT',
-                    headers: {
-                        'Authorization': `token ${config.apiKey}`,
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/vnd.github.v3+json'
-                    },
-                    body: JSON.stringify(body)
-                });
-
-                if (!putResponse.ok) {
-                    const errorData = await putResponse.json();
-                    throw new Error(`GitHub PUT failed: ${errorData.message}`);
-                }
-                
-                showNotification('Successfully saved to GitHub!', 'success');
-
-            } catch (error) {
-                console.error('GitHub save error:', error);
-                showNotification(`Error: ${error.message}`, 'error', 7000);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/></svg>
-                    <span>Save to GitHub</span>`;
-            }
-        };
-
-        // --- UTILITY FUNCTIONS --- //
-        const openModal = (modalElement) => {
-            modalElement.classList.remove('hidden');
-            setTimeout(() => {
-                modalElement.classList.remove('opacity-0');
-                const modalContent = modalElement.querySelector('.modal-content');
-                if(modalContent) {
-                    modalContent.classList.remove('scale-95', 'opacity-0');
-                    modalContent.classList.add('scale-100', 'opacity-100');
-                }
-            }, 10);
-        };
-        
-        const closeModal = (modalElement) => {
-            modalElement.classList.add('opacity-0');
-            const modalContent = modalElement.querySelector('.modal-content');
-            if(modalContent) {
-                 modalContent.classList.add('scale-95', 'opacity-0');
-                 modalContent.classList.remove('scale-100', 'opacity-100');
-            }
-            setTimeout(() => {
-                modalElement.classList.add('hidden');
-            }, 300);
-        };
-        
-        const openStorageModal = () => {
-            updateStorageModalFields();
-            openModal(storageModal);
-        };
-
-        const closeStorageModal = () => closeModal(storageModal);
-
-        const showConfirm = (message, onConfirm) => {
-            confirmMessage.textContent = message;
-
-            const oldOkBtn = confirmOkBtn;
-            const newOkBtn = oldOkBtn.cloneNode(true);
-            oldOkBtn.parentNode.replaceChild(newOkBtn, oldOkBtn);
+            const promptData = {
+                Category: promptCategoryInput.value.trim(),
+                PromptName: promptNameInput.value.trim(),
+                AIName: aiNameInput.value.trim(),
+                PromptText: promptTextInput.value.trim(),
+                UserID: userIdInput.value.trim(),
+                Notes: notesInput.value.trim(),
+                DateUpdated: now,
+            };
             
-            const handleConfirm = () => {
-                closeModal(confirmModal);
-                onConfirm();
+            if (index) { // Editing existing prompt
+                promptData.DateCreated = prompts[index].DateCreated;
+                prompts[index] = promptData;
+            } else { // Adding new prompt
+                promptData.DateCreated = now;
+                prompts.push(promptData);
+            }
+            
+            filterAndRender();
+            populateFilters();
+            closePromptModal();
+        };
+        
+        const openGitHubModal = () => {
+            logArea.innerHTML = ''; // Clear logs
+            loadGitHubConfig();
+            githubModal.style.display = 'flex';
+        };
+
+        const closeGitHubModal = () => {
+            githubModal.style.display = 'none';
+        };
+        
+        // --- GITHUB INTEGRATION ---
+        const loadGitHubConfig = () => {
+            const storedConfig = getCookie('Github');
+            if(storedConfig) {
+                githubConfig = { ...githubConfig, ...storedConfig };
+            }
+            githubOwnerInput.value = githubConfig.owner;
+            githubRepoInput.value = githubConfig.repo;
+            githubPathInput.value = githubConfig.path;
+            githubKeyInput.value = githubConfig.apiKey;
+        };
+        
+        const saveGitHubConfig = () => {
+            githubConfig.owner = githubOwnerInput.value.trim();
+            githubConfig.repo = githubRepoInput.value.trim();
+            githubConfig.path = githubPathInput.value.trim();
+            githubConfig.apiKey = githubKeyInput.value.trim();
+            setCookie('Github', githubConfig);
+        };
+        
+        const saveToGitHub = async () => {
+            saveToGithubBtn.disabled = true;
+            saveToGithubBtn.textContent = 'Saving...';
+            log('Starting save process to GitHub...', 'info');
+
+            const { owner, repo, path, apiKey } = githubConfig;
+
+            if (!owner || !repo || !path || !apiKey) {
+                log('GitHub configuration is incomplete. Please fill all fields.', 'error');
+                saveToGithubBtn.disabled = false;
+                saveToGithubBtn.textContent = 'Save to GitHub';
+                return;
+            }
+            
+            const GITHUB_API_URL = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+            const headers = {
+                'Authorization': `token ${apiKey}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'X-GitHub-Api-Version': '2022-11-28'
             };
 
-            newOkBtn.addEventListener('click', handleConfirm, { once: true });
-            confirmCancelBtn.addEventListener('click', () => closeModal(confirmModal), { once: true });
+            try {
+                // 1. Get the current file to get its SHA
+                log('Fetching current file SHA...', 'info');
+                const getFileResponse = await fetch(GITHUB_API_URL, { headers });
+                
+                let sha;
+                if (getFileResponse.ok) {
+                    const fileData = await getFileResponse.json();
+                    sha = fileData.sha;
+                    log(`File found. Current SHA: ${sha.substring(0,7)}...`, 'success');
+                } else if (getFileResponse.status === 404) {
+                    log('File not found. This will be a new commit.', 'info');
+                } else {
+                    throw new Error(`Failed to fetch file: ${getFileResponse.status} ${await getFileResponse.text()}`);
+                }
+                
+                // 2. Prepare the content for upload
+                prompts.sort((a, b) => {
+                    const keyA = `${a.Category}${a.PromptName}${a.AIName}${a.PromptText}`;
+                    const keyB = `${b.Category}${b.PromptName}${b.AIName}${b.PromptText}`;
+                    return keyA.localeCompare(keyB);
+                });
+
+                const contentToSave = JSON.stringify(prompts, null, 2);
+                const encodedContent = btoa(unescape(encodeURIComponent(contentToSave))); // Handles UTF-8 chars
+
+                // 3. Create or update the file
+                const body = {
+                    message: `AIStore: Updated prompts.json on ${new Date().toISOString()}`,
+                    content: encodedContent,
+                    sha: sha // Include SHA if updating
+                };
+                if (!sha) delete body.sha; // Don't send SHA for new files
+
+                log('Uploading new content...', 'info');
+                const putResponse = await fetch(GITHUB_API_URL, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify(body)
+                });
+                
+                const result = await putResponse.json();
+                
+                if (putResponse.ok) {
+                    log('Successfully saved to GitHub!', 'success');
+                    log(`Commit SHA: ${result.commit.sha.substring(0,7)}...`, 'info');
+                    setTimeout(closeGitHubModal, 1500);
+                } else {
+                    throw new Error(`GitHub API Error: ${putResponse.status} - ${result.message}`);
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                console.error(error);
+            } finally {
+                saveToGithubBtn.disabled = false;
+                saveToGithubBtn.textContent = 'Save to GitHub';
+            }
+        };
+
+        // --- INITIALIZATION ---
+        const initialize = async () => {
+            loadGitHubConfig();
             
-            openModal(confirmModal);
+            console.log('Fetching initial prompts from default URL...');
+            try {
+                const response = await fetch(PROMPTS_URL);
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                const initialPrompts = await response.json();
+                if(Array.isArray(initialPrompts)) {
+                    prompts = initialPrompts;
+                    console.log(`Successfully fetched ${prompts.length} prompts.`);
+                } else {
+                    console.error("Fetched data is not an array.");
+                }
+            } catch (error) {
+                console.error('Failed to fetch initial prompts:', error);
+                alert('Could not load the initial set of prompts. The application may be empty.');
+            }
+            
+            // Note: Per requirements, the app first loads from the URL, then could load from Github.
+            // For a better UX, one might merge or ask the user, but we'll stick to a simple load for now.
+            // A 'Load from GitHub' button could be added to the settings modal for explicit action.
+
+            filterAndRender();
+            populateFilters();
+            setupEventListeners();
         };
         
-        let notificationTimeout;
-        const showNotification = (message, type = 'success', duration = 3000) => {
-            clearTimeout(notificationTimeout);
-            notification.textContent = message;
-            notification.className = `fixed bottom-5 right-5 text-white py-2 px-4 rounded-lg shadow-lg transition-opacity duration-300 ${type === 'error' ? 'bg-red-600' : 'bg-green-600'}`;
-            notification.classList.remove('opacity-0');
+        const setupEventListeners = () => {
+            // Filters
+            searchQuery.addEventListener('input', filterAndRender);
+            categoryFilter.addEventListener('change', filterAndRender);
+            aiNameFilter.addEventListener('change', filterAndRender);
             
-            notificationTimeout = setTimeout(() => {
-                notification.classList.add('opacity-0');
-            }, duration);
+            // Prompt Modal
+            addPromptBtn.addEventListener('click', () => openPromptModal());
+            closePromptModalBtn.addEventListener('click', closePromptModal);
+            cancelPromptBtn.addEventListener('click', closePromptModal);
+            savePromptBtn.addEventListener('click', savePrompt);
+            [promptCategoryInput, promptNameInput, aiNameInput].forEach(input => {
+                input.addEventListener('input', checkDuplicate);
+            });
+            
+            // GitHub Modal
+            githubSettingsBtn.addEventListener('click', openGitHubModal);
+            closeGithubModalBtn.addEventListener('click', closeGitHubModal);
+            [githubOwnerInput, githubRepoInput, githubPathInput, githubKeyInput].forEach(input => {
+                input.addEventListener('keyup', saveGitHubConfig);
+            });
+            saveToGithubBtn.addEventListener('click', saveToGitHub);
+            
+            // Close modals on outside click
+            window.addEventListener('click', (event) => {
+                if (event.target === promptModal) closePromptModal();
+                if (event.target === githubModal) closeGitHubModal();
+            });
         };
 
-        // --- START THE APP --- //
-        init();
-
+        initialize();
     });
     </script>
-
 </body>
 </html>

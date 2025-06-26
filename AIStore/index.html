@@ -772,6 +772,8 @@
 
         const removePrompt = async (index) => {
             log("removePrompt:[" + index + "]");
+            const prompt = prompts[index];
+            log("removePrompt:[" +JSON.stringify(prompt, null, 2) + "]");
             const confirmed = await showConfirm('Delete Prompt', `Are you sure you want to delete the prompt "${prompts[index].promptName}"?`);
             log("removePrompt confirm:[" + confirmed + "]");
          

@@ -756,7 +756,7 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showMessage('Success', 'Prompt copied to clipboard!');
+                    //showMessage('Success', 'Prompt copied to clipboard!');
                 } catch (err) {
                     showMessage('Error', 'Failed to copy prompt.');
                 }
@@ -764,14 +764,17 @@
                 return;
             }
             navigator.clipboard.writeText(text).then(() => {
-                showMessage('Success', 'Prompt copied to clipboard!');
+                //showMessage('Success', 'Prompt copied to clipboard!');
             }).catch(err => {
                 showMessage('Error', 'Failed to copy prompt.');
             });
         };
 
         const removePrompt = async (index) => {
+            log("removePrompt:[" + index + "]");
             const confirmed = await showConfirm('Delete Prompt', `Are you sure you want to delete the prompt "${prompts[index].promptName}"?`);
+            log("removePrompt confirm:[" + confirmed + "]");
+         
             if (confirmed) {
                 prompts.splice(index, 1);
                 filterAndRender();

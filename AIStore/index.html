@@ -382,7 +382,7 @@
 
     <div class="container">
         <header>
-            <h1>AIStore</h1>
+            <h1 id="app-info">AIStore</h1>
             <button id="add-prompt-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
                 Add Prompt
@@ -548,6 +548,8 @@
         const modalTitle = document.getElementById('modal-title');
         const closePromptModalBtn = document.getElementById('close-prompt-modal');
         const addPromptBtn = document.getElementById('add-prompt-btn');
+        const addInfo = document.getElementById('app-info');
+
         const savePromptBtn = document.getElementById('save-prompt-btn');
         const cancelPromptBtn = document.getElementById('cancel-prompt-btn');
         const promptForm = document.getElementById('prompt-form');
@@ -737,6 +739,7 @@
                 return categoryMatch && aiNameMatch && queryMatch;
             });
             renderPrompts(filtered);
+            addInfo.innerHTML = "AIStore (" + filtered.length + ")";
         };
         
         const copyPromptText = (text) => {

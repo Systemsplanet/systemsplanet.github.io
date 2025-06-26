@@ -410,8 +410,8 @@
                 <thead>
                     <tr>
                         <th>Category</th>
-                        <th>Prompt Name</th>
                         <th>AI Name</th>
+                        <th>Prompt Name</th>
                         <th>Prompt Text</th>
                         <th>Notes</th>
                         <th>Updated</th>
@@ -667,8 +667,9 @@
                 log("prompt"+index+":" + JSON.stringify(prompt) )
                 row.innerHTML = `
                     <td>${prompt.category || ''}</td>
-                    <td>${prompt.promptName || ''}</td>
                     <td>${prompt.aiName || ''}</td>
+                    <td>${prompt.promptName || ''}</td>
+                    
                     <td><div class="truncate" title="${prompt.promptText || ''}">${(prompt.promptText?.length > 30 ? prompt.promptText.substring(0, 27) + '...' : prompt.promptText) || ''}</div></td>
                     <td><div class="truncate" title="${prompt.notes || ''}">${(prompt.notes?.length > 30 ? prompt.notes.substring(0, 27) + '...' : prompt.notes) || ''}</div></td>
                     <td>${prompt.dateUpdated ? new Date(prompt.dateUpdated).toLocaleDateString() : ''}</td>
@@ -926,8 +927,8 @@
                 
                 // 2. Prepare the content for upload
                 prompts.sort((a, b) => {
-                    const keyA = `${a.category}${a.promptName}${a.aiName}${a.promptText}`;
-                    const keyB = `${b.category}${b.promptName}${b.aiName}${b.promptText}`;
+                    const keyA = `${a.category}${a.aiName}${a.promptName}${a.promptText}`;
+                    const keyB = `${b.category}${b.aiName}${b.promptName}${b.promptText}`;
                     return keyA.localeCompare(keyB);
                 });
 

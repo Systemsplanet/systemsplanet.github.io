@@ -804,9 +804,9 @@
         const checkDuplicate = () => {
             const currentIndex = promptIndexInput.value;
             const currentKey = getPromptUniqueKey({
-                Category: promptCategoryInput.value,
-                PromptName: promptNameInput.value,
-                AIName: aiNameInput.value
+                category: promptCategoryInput.value,
+                promptName: promptNameInput.value,
+                aIName: aiNameInput.value
             });
 
             const isDuplicate = prompts.some((p, i) => {
@@ -833,13 +833,14 @@
             const now = new Date().toISOString();
             
             const promptData = {
-                Category: promptCategoryInput.value.trim(),
-                PromptName: promptNameInput.value.trim(),
-                AIName: aiNameInput.value.trim(),
-                PromptText: promptTextInput.value.trim(),
-                UserID: userIdInput.value.trim(),
-                Notes: notesInput.value.trim(),
-                DateUpdated: now,
+                category: promptCategoryInput.value.trim(),
+                promptName: promptNameInput.value.trim(),
+                aIName: aiNameInput.value.trim(),
+                promptText: promptTextInput.value.trim(),
+                userID: userIdInput.value.trim(),
+                notes: notesInput.value.trim(),
+                dateCreated: now,
+                dateUpdated: now
             };
             
             if (index) { // Editing existing prompt

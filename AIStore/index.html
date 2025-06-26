@@ -806,7 +806,7 @@
             const currentKey = getPromptUniqueKey({
                 category: promptCategoryInput.value,
                 promptName: promptNameInput.value,
-                aIName: aiNameInput.value
+                aiName: aiNameInput.value
             });
 
             const isDuplicate = prompts.some((p, i) => {
@@ -835,7 +835,7 @@
             const promptData = {
                 category: promptCategoryInput.value.trim(),
                 promptName: promptNameInput.value.trim(),
-                aIName: aiNameInput.value.trim(),
+                aiName: aiNameInput.value.trim(),
                 promptText: promptTextInput.value.trim(),
                 userID: userIdInput.value.trim(),
                 notes: notesInput.value.trim(),

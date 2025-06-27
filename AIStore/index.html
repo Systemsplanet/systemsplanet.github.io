@@ -692,7 +692,9 @@
                         </button>
                     </td>
                 `;
-                row.querySelector('.copy-cell').addEventListener('click', () => copyPromptText(prompt.promptText));
+                row.querySelectorAll('.copy-cell').forEach(cell => {
+                   cell.addEventListener('click', () => copyPromptText(prompt.promptText));
+                });
                 row.querySelector('.copy-btn').addEventListener('click', () => copyPromptText(prompt.promptText));
                 row.querySelector('.edit-btn').addEventListener('click', () => openPromptModal(originalIndex));
                 row.querySelector('.remove-btn').addEventListener('click', () => removePrompt(originalIndex));

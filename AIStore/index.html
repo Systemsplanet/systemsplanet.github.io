@@ -772,11 +772,11 @@
         };
 
         const removePrompt = async (index) => {
-            log("removePrompt:[" + index + "]");
+            //log("removePrompt:[" + index + "]");
             const prompt = prompts[index];
             log("removePrompt:[" +JSON.stringify(prompt, null, 2) + "]");
             const confirmed = await showConfirm('Delete Prompt', `Are you sure you want to delete the prompt "${prompts[index].promptName}"?`);
-            log("removePrompt confirm:[" + confirmed + "]");
+            //log("removePrompt confirm:[" + confirmed + "]");
          
             if (confirmed) {
                 prompts.splice(index, 1);
@@ -861,7 +861,7 @@
                 promptData.dateCreated = now;
                 prompts.push(promptData);
             }
-            
+            sortPrompt(prompts);
             filterAndRender();
             populateFilters();
             closePromptModal();
@@ -897,7 +897,15 @@
             githubConfig.apiKey = githubKeyInput.value.trim();
             setCookie('Github', githubConfig);
         };
-        
+
+        const sortPrompt = (prompts) => {
+           prompts.sort((a, b) => {
+             const keyA = `${a.category}${a.aiName}${a.promptName}${a.promptText}`;
+             const keyB = `${b.category}${b.aiName}${b.promptName}${b.promptText}`;
+             return keyA.localeCompare(keyB);
+           });
+        };
+
         const saveToGitHub = async () => {
             saveToGithubBtn.disabled = true;
             saveToGithubBtn.textContent = 'Saving...';
@@ -936,12 +944,8 @@
                 }
                 
                 // 2. Prepare the content for upload
-                prompts.sort((a, b) => {
-                    const keyA = `${a.category}${a.aiName}${a.promptName}${a.promptText}`;
-                    const keyB = `${b.category}${b.aiName}${b.promptName}${b.promptText}`;
-                    return keyA.localeCompare(keyB);
-                });
-
+                sortPrompt(prompts);
+                
                 const contentToSave = JSON.stringify(prompts, null, 2);
                 // encodeURIComponent is crucial for handling non-ASCII characters, then btoa for base64
                 const encodedContent = btoa(unescape(encodeURIComponent(contentToSave)));
@@ -966,7 +970,7 @@
                 if (putResponse.ok) {
                     log('Successfully saved to GitHub!', 'success');
                     log(`Commit URL: ${result.commit.html_url}`, 'info'); // Provide commit URL
-                    setTimeout(closeGitHubModal, 1500);
+                    setTimeout(closeGitHubModal, 3000);
                 } else {
                     throw new Error(`GitHub API Error: ${putResponse.status} - ${result.message || JSON.stringify(result)}`);
                 }
@@ -1002,7 +1006,8 @@
                 showMessage('Error', 'Could not load the initial set of prompts. The application may be empty.');
                 prompts = []; // Ensure prompts is an array even on fetch error
             }
-            
+                            
+            sortPrompt(prompts);
             filterAndRender();
             populateFilters();
             setupEventListeners();

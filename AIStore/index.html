@@ -670,13 +670,13 @@
 
                 log("prompt"+index+":" + JSON.stringify(prompt) )
                 row.innerHTML = `
-                    <td>${prompt.category || ''}</td>
-                    <td>${prompt.aiName || ''}</td>
-                    <td>${prompt.promptName || ''}</td>
+                    <td class="copy-cell" >${prompt.category || ''}</td>
+                    <td class="copy-cell" >${prompt.aiName || ''}</td>
+                    <td class="copy-cell" >${prompt.promptName || ''}</td>
                     
-                    <td><div class="truncate" title="${prompt.promptText || ''}">${(prompt.promptText?.length > 30 ? prompt.promptText.substring(0, 27) + '...' : prompt.promptText) || ''}</div></td>
-                    <td><div class="truncate" title="${prompt.notes || ''}">${(prompt.notes?.length > 30 ? prompt.notes.substring(0, 27) + '...' : prompt.notes) || ''}</div></td>
-                    <td>${prompt.dateUpdated ? new Date(prompt.dateUpdated).toLocaleDateString() : ''}</td>
+                    <td class="copy-cell" ><div class="truncate" title="${prompt.promptText || ''}">${(prompt.promptText?.length > 30 ? prompt.promptText.substring(0, 27) + '...' : prompt.promptText) || ''}</div></td>
+                    <td class="copy-cell" ><div class="truncate" title="${prompt.notes || ''}">${(prompt.notes?.length > 30 ? prompt.notes.substring(0, 27) + '...' : prompt.notes) || ''}</div></td>
+                    <td class="copy-cell" >${prompt.dateUpdated ? new Date(prompt.dateUpdated).toLocaleDateString() : ''}</td>
                     <td class="actions-cell">
                         <div class="tooltip">
                             <button class="copy-btn">
@@ -692,6 +692,7 @@
                         </button>
                     </td>
                 `;
+                row.querySelector('.copy-cell').addEventListener('click', () => copyPromptText(prompt.promptText));
                 row.querySelector('.copy-btn').addEventListener('click', () => copyPromptText(prompt.promptText));
                 row.querySelector('.edit-btn').addEventListener('click', () => openPromptModal(originalIndex));
                 row.querySelector('.remove-btn').addEventListener('click', () => removePrompt(originalIndex));

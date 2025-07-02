@@ -936,6 +936,9 @@
             };
 
             try {
+                if (prompts.length < 1 )
+                     throw new Error("GitHub API Error: cant save an empty list");
+                
                 // 1. Get the current file to get its SHA
                 log('Fetching current file SHA...', 'info');
                 const getFileResponse = await fetch(GITHUB_API_URL, { headers });

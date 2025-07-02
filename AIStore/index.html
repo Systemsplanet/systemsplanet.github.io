@@ -536,7 +536,12 @@
             path: 'prompts.json',
             apiKey: ''
         };
-        const PROMPTS_URL = 'https://raw.githubusercontent.com/Systemsplanet/AIStore/main/prompts.json';
+        
+        // https://raw.githubusercontent.com/Systemsplanet/AIStore/main/prompts.json
+        const getPromptsUrl = () => {
+            return "https://raw.githubusercontent.com/" + githubConfig.owner + "/" + githubConfig.store + "/main/" + githubConfig.path;
+        };
+
 
         // --- DOM ELEMENTS ---
         const promptsTbody = document.getElementById('prompts-tbody');
@@ -989,10 +994,12 @@
         // --- INITIALIZATION ---
         const initialize = async () => {
             loadGitHubConfig();
-            
-            console.log('Fetching initial prompts from default URL...');
+            console.log("githubConfig:" + githubConfig);
+            let promptsUrl = getPromptsUrl();
+            console.log("promptsUrl: [" + promptsUrl + "]");
             try {
-                const response = await fetch(PROMPTS_URL);
+                // https://raw.githubusercontent.com/Systemsplanet/AIStore/main/prompts.json
+                const response = await fetch(promptsUrl);
                 if (!response.ok) {
                     throw new Error(`Network response was not ok: ${response.statusText}`);
                 }

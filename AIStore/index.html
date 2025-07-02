@@ -491,6 +491,9 @@
                 <div class="form-group full-width">
                     <label for="github-key">GitHub API Key (Personal Access Token)</label>
                     <input type="password" id="github-key">
+                    <span id="githubHelpIcon" style="position: absolute; right: 5px; top: 50%; transform: translateY(-50%); cursor: pointer;">
+                      <img src="https://img.icons8.com/ios/24/000000/help--v1.png" alt="Help" title="Click for GitHub API Key instructions" style="width: 20px; height: 20px;">
+                    </span>
                 </div>
             </div>
             <div class="full-width">
@@ -591,6 +594,7 @@
         const confirmBoxText = document.getElementById('confirm-box-text');
         const confirmBoxYesBtn = document.getElementById('confirm-box-yes');
         const confirmBoxNoBtn = document.getElementById('confirm-box-no');
+        const helpIcon = document.getElementById('githubHelpIcon');
 
         // --- CUSTOM ALERT/CONFIRM ---
         const showMessage = (title, message) => {
@@ -994,6 +998,56 @@
             }
         };
 
+
+        if (helpIcon) {
+            helpIcon.addEventListener('click', function() {
+            const message = `
+                <h2>Here are the steps to add a new GitHub storage location for AIStore.</h2>
+                <p>Generate a new GitHub repo to store your prompts named <strong>AIStore</strong></p>
+                <p>Generate GitHub fine-grained personal access token:</p>
+                <ol>
+                    <li>Login to GitHub</li>
+                    <li>Click your profile photo in the upper-right corner</li>
+                    <li>Click "Developer settings"</li>
+                    <li>Click "Personal access tokens"</li>
+                    <li>Click "Fine-grained tokens"</li>
+                    <li>Click "Generate new token"</li>
+                    <li>Enter a unique "Token name"</li>
+                    <li>Set Expiration to "No expiration"</li>
+                    <li>Select "Only select repositories"</li>
+                    <li>Select your newly created repo</li>
+                    <li>Select "Repository permissions"</li>
+                    <li>Find "Contents"</li>
+                    <li>Select access "read and write"</li>
+                    <li>Select "Generate token"</li>
+                    <li>Select "Generate token" again</li>
+                    <li>Make sure to copy your personal access token now as you will not be able to see this again.</li>
+                    <li>Open AIStore app</li>
+                    <li>Click "Save" button</li>
+                    <li>Set "Repository Name" to your repo name</li>
+                    <li>Set the AIStore "GitHub API Key (Personal Access Token)" to your newly created token.</li>
+                    <li>Select "Save to Github"</li>
+                </ol>
+            `;
+
+            const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+            if (newWindow) {
+                newWindow.document.write('<!DOCTYPE html><html><head><title>AIStore GitHub Setup Help</title>');
+                newWindow.document.write('<style>');
+                newWindow.document.write('body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }');
+                newWindow.document.write('h2 { color: #333; }');
+                newWindow.document.write('ol { list-style-type: decimal; margin-left: 20px; }');
+                newWindow.document.write('</style>');
+                newWindow.document.write('</head><body>');
+                newWindow.document.write(message);
+                newWindow.document.write('</body></html>');
+                newWindow.document.close();
+            } else {
+                alert('Pop-up blocked! Please allow pop-ups for this site to view the help message.');
+            }
+        }); // addEventListener
+       } // if
+        
         // --- INITIALIZATION ---
         const initialize = async () => {
             loadGitHubConfig();

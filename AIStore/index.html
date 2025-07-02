@@ -997,7 +997,7 @@
         // --- INITIALIZATION ---
         const initialize = async () => {
             loadGitHubConfig();
-            console.log("githubConfig:" + githubConfig);
+            console.log("githubConfig:" +JSON.stringify(githubConfig));
             let promptsUrl = getPromptsUrl();
             console.log("promptsUrl: [" + promptsUrl + "]");
             try {

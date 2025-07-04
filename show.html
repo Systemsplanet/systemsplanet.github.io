@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Content Viewer</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: #1c1e21;
+        }
+        #loading-container {
+            text-align: center;
+            padding: 40px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        #error-message {
+            color: #fa383e;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="loading-container">
+        <h1>Loading content...</h1>
+        <p>Attempting to fetch the page specified in the URL.</p>
+        <div id="error-message"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get the filename from the URL after the '?'
+            const urlToFetch = window.location.search.substring(1);
+            const errorMessageElement = document.getElementById('error-message');
+
+            if (!urlToFetch) {
+                errorMessageElement.textContent = 'Error: No URL was provided in the query string. Append a ? followed by the URL you want to display.';
+                document.querySelector('h1').textContent = 'No URL Specified';
+                return;
+            }
+
+            // A basic check to ensure the URL seems valid.
+            if (!urlToFetch.startsWith('http://') && !urlToFetch.startsWith('https://')) {
+                errorMessageElement.textContent = 'Error: The provided URL is invalid. It must start with http:// or https://';
+                document.querySelector('h1').textContent = 'Invalid URL';
+                return;
+            }
+
+            // Fetch the content of the specified URL.
+            fetch(urlToFetch)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok. Status: ${response.status}`);
+                    }
+                    return response.text(); // Read the response as text (HTML)
+                })
+                .then(html => {
+                    // Replace the current document's DOM with the new HTML.
+                    document.open();
+                    document.write(html);
+                    document.close();
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    errorMessageElement.textContent = `Failed to load the content. This could be due to a network error or Cross-Origin Resource Sharing (CORS) restrictions. Check the browser console for more details.`;
+                    document.querySelector('h1').textContent = 'Content Load Failed';
+                });
+        });
+    </script>
+
+</body>
+</html>

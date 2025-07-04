@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AIStore2</title>
+    <title>AIStore</title>
     <style>
         :root {
             --primary-bg: #1a1a1a;
@@ -273,38 +273,6 @@
         #log-area .log-error { color: var(--error-color); }
         #log-area .log-info { color: var(--secondary-text); }
 
-        .tooltip {
-            position: relative;
-            display: inline-block;
-        }
-
-        .tooltip .tooltiptext {
-            visibility: hidden;
-            width: 140px;
-            background-color: var(--accent-color);
-            color: #fff;
-            text-align: center;
-            border-radius: 6px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-            bottom: 125%;
-            left: 50%;
-            margin-left: -70px;
-            opacity: 0;
-            transition: opacity 0.3s;
-        }
-
-        .tooltip .tooltiptext::after {
-            content: "";
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: var(--accent-color) transparent transparent transparent;
-        }
         /* Custom Message Box Styles */
         #message-box, #confirm-box {
             display: none;
@@ -379,16 +347,9 @@
         #githubHelpIcon {
             cursor:pointer; 
             background-color:green; 
-            width:25px; 
-            height:25px; 
-            padding:5px; 
-            border:0;
+            padding:12px 0 0 0; 
         }
 
-        #githubHelpIcon img {
-            width:20px; 
-            height:20px; 
-        }
     </style>
 </head>
 <body>
@@ -422,13 +383,14 @@
             <table>
                 <thead>
                     <tr>
+                        <th></th>  <!-- copy icon -->
                         <th>Category</th>
                         <th>AI Name</th>
                         <th>Prompt Name</th>
                         <th>Prompt Text</th>
                         <th>Notes</th>
                         <th>Updated</th>
-                        <th>Actions</th>
+                        <th></th>  <!-- remove icon -->
                     </tr>
                 </thead>
                 <tbody id="prompts-tbody">
@@ -674,7 +636,6 @@
         
         // --- DATA HANDLING ---
         const getPromptUniqueKey = (p) => `${p.category?.toLowerCase()}/${p.promptName?.toLowerCase()}/${p.aiName?.toLowerCase()}`;
-
         
         const renderPrompts = (filteredPrompts = prompts) => {
             promptsTbody.innerHTML = '';
@@ -689,10 +650,14 @@
             filteredPrompts.forEach((prompt, index) => {
                 const originalIndex = prompts.findIndex(p => p === prompt);
                 const row = promptsTbody.insertRow();
-                // Corrected property access from camelCase to PascalCase
-
                 log("prompt"+index+":" + JSON.stringify(prompt) )
                 row.innerHTML = `
+                    <td class="actions-cell">
+                        <button class="edit-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
+                        </button>
+                    </td>
+
                     <td class="copy-cell" >${prompt.category || ''}</td>
                     <td class="copy-cell" >${prompt.aiName || ''}</td>
                     <td class="copy-cell" >${prompt.promptName || ''}</td>
@@ -701,15 +666,6 @@
                     <td class="copy-cell" ><div class="truncate" title="${prompt.notes || ''}">${(prompt.notes?.length > 30 ? prompt.notes.substring(0, 27) + '...' : prompt.notes) || ''}</div></td>
                     <td class="copy-cell" >${prompt.dateUpdated ? new Date(prompt.dateUpdated).toLocaleDateString() : ''}</td>
                     <td class="actions-cell">
-                        <div class="tooltip">
-                            <button class="copy-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/><path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zM6 7a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7A.5.5 0 0 1 6 7z"/></svg>
-                            </button>
-                            <span class="tooltiptext">Copy Prompt</span>
-                        </div>
-                        <button class="edit-btn">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
-                        </button>
                         <button class="remove-btn">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
                         </button>
@@ -718,7 +674,6 @@
                 row.querySelectorAll('.copy-cell').forEach(cell => {
                    cell.addEventListener('click', () => copyPromptText(prompt.promptText));
                 });
-                row.querySelector('.copy-btn').addEventListener('click', () => copyPromptText(prompt.promptText));
                 row.querySelector('.edit-btn').addEventListener('click', () => openPromptModal(originalIndex));
                 row.querySelector('.remove-btn').addEventListener('click', () => removePrompt(originalIndex));
             });

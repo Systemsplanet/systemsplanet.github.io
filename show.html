@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URL Content Viewer</title>
     <style>
-    body {
+        body {
 		font: 12px 'Helvetica Neue', Helvetica, Arial, freesans, clean, sans-serif;
 		color: #333;
 	}
@@ -25,21 +25,9 @@
 		background-color: #FAFFA6;
 		padding: 0.1em;
 	}
-	#footer {
-		margin: 20px 0;
-		font-size: 10px;
-		color: #666;
-	}
     </style>
 </head>
 <body>
-
-    <div id="loading-container">
-        <h1>Loading content...</h1>
-        <p>Attempting to fetch the page specified in the URL.</p>
-        <div id="error-message"></div>
-    </div>
-
 	<form id="previewform" onsubmit="location.href='/?'+this.file.value;return false">
 		<h1>GitHub &amp; BitBucket HTML Preview</h1>
 		<p>
@@ -47,15 +35,12 @@
 			<input type="url" id="file" value="" placeholder="e.g. https://github.com/user/repo/blob/master/index.html" size="60" autofocus>
 			<input type="submit" value="Preview">
 		</p>
-		<p>or prepend to the URL: <code><strong>http://systemsplanet.github.io/show.html?</strong>https://github.com/twbs/bootstrap/blob/gh-pages/2.3.2/index.html</code></p>
+		<p>or prepend to the URL: <code><strong>http://systemsplanet.github.io/show.html?</strong>https://github.com/user/repo/blob/master/index.html</code></p>
 	</form>    
     <script>
    document.addEventListener('DOMContentLoaded', function() {
-  
 	var previewForm = document.getElementById('previewform');
-
 	var url = location.search.substring(1).replace(/\/\/github\.com/, '//raw.githubusercontent.com').replace(/\/blob\//, '/'); //Get URL of the raw file
-
 	var replaceAssets = function () {
 		var frame, a, link, links = [], script, scripts = [], i, href, src;
 		//Framesets

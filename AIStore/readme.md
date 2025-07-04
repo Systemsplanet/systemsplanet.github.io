@@ -1,1 +1,3 @@
-See: [systemsplanet.github.io/AIStore](https://systemsplanet.github.io/AIStore)
+AIStore
+   - [Application](https://systemsplanet.github.io/AIStore)
+   - [Source](https://github.com/Systemsplanet/AIStore)

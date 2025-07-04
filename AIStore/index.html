@@ -581,7 +581,7 @@
 
         const showConfirm = (title, message) => {
             confirmBoxTitle.textContent = title;
-            confirmBoxText.innerHTML  = message; // textContent
+            confirmBoxText.innerHTML  = message;
             confirmBox.style.display = 'flex';
             return new Promise((resolve) => {
                 confirmBoxYesBtn.onclick = () => {

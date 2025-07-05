@@ -1,5 +1,7 @@
 <comment>
 File: https://systemsplanet.github.io/AIStore/create-index.html.md
+
+Initial prompt used to create this app
 </comment>
 
 As a Senior web developer 

@@ -753,7 +753,7 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    showStatus('Prompt Text copied to clipboard');
+                    showStatus('copied to clipboard');
                 } catch (err) {
                     showMessage('Error', 'Failed to copy prompt.');
                 }
@@ -761,7 +761,7 @@
                 return;
             }
             navigator.clipboard.writeText(text).then(() => {
-                showStatus('Prompt Text copied to clipboard');
+                showStatus('copied to clipboard');
             }).catch(err => {
                 showMessage('Error', 'Failed to copy prompt.');
             });

@@ -8,8 +8,7 @@ AIStore uses github as both a webserver and persistent file store using Github A
 
 Saving requires a configured Github repo to save your prompts.
 
-   - [Application](https://systemsplanet.github.io/AIStore)
-   - [Application Proxied](https://systemsplanet.github.io/show.html?https://github.com/Systemsplanet/systemsplanet.github.io/blob/main/AIStore/index.html)
+   - [Application](https://systemsplanet.github.io/AIStore)   [Proxied](https://systemsplanet.github.io/show.html?https://github.com/Systemsplanet/systemsplanet.github.io/blob/main/AIStore/index.html)
    - [Source](https://github.com/Systemsplanet/systemsplanet.github.io/blob/main/AIStore/index.html)
    - [Storage](https://github.com/Systemsplanet/AIStore)
      

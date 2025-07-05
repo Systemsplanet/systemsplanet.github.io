@@ -350,7 +350,7 @@
         }
 
         #status-msg { 
-            display: none;            
+          height: 1em;
         }
     </style>
 </head>
@@ -576,10 +576,9 @@
         const confirmBoxNoBtn = document.getElementById('confirm-box-no');
         const helpIcon = document.getElementById('githubHelpIcon');
 
-        const hideStatus = () => { statusMsg.style.display = 'none'; }
+        const hideStatus = () => { statusMsg.innerHTML =""; }
         const showStatus = (message) => {
             statusMsg.innerHTML = message;
-            statusMsg.style.display = 'flex';
             setTimeout(hideStatus, 3000);    
         };
 

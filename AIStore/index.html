@@ -349,12 +349,16 @@
             padding:12px 0 0 0; 
         }
 
+        #status-msg { 
+            display: none;            
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
             <h1 id="app-info">AIStore</h1>
+            <p id="status-msg"></p>
             <button id="add-prompt-btn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
                 Add Prompt
@@ -522,6 +526,7 @@
 
 
         // --- DOM ELEMENTS ---
+        const statusMsg = document.getElementById('status-msg');
         const promptsTbody = document.getElementById('prompts-tbody');
         const searchQuery = document.getElementById('search-query');
         const categoryFilter = document.getElementById('category-filter');
@@ -571,12 +576,21 @@
         const confirmBoxNoBtn = document.getElementById('confirm-box-no');
         const helpIcon = document.getElementById('githubHelpIcon');
 
+        const hideStatus = () => { statusMsg.style.display = 'none'; }
+        const showStatus = (message) => {
+            statusMsg.innerHTML = message;
+            statusMsg.style.display = 'flex';
+            setTimeout(hideStatus, 3000);    
+        };
+
         // --- CUSTOM ALERT/CONFIRM ---
         const showMessage = (title, message) => {
             messageBoxTitle.textContent = title;
             messageBoxText.textContent = message;
             messageBox.style.display = 'flex';
         };
+        
+
 
         const showConfirm = (title, message) => {
             confirmBoxTitle.textContent = title;
@@ -737,7 +751,7 @@
                 textArea.select();
                 try {
                     document.execCommand('copy');
-                    //showMessage('Success', 'Prompt copied to clipboard!');
+                    showStatus('Prompt Text copied to clipboard');
                 } catch (err) {
                     showMessage('Error', 'Failed to copy prompt.');
                 }
@@ -745,7 +759,7 @@
                 return;
             }
             navigator.clipboard.writeText(text).then(() => {
-                //showMessage('Success', 'Prompt copied to clipboard!');
+                showStatus('Prompt Text copied to clipboard');
             }).catch(err => {
                 showMessage('Error', 'Failed to copy prompt.');
             });

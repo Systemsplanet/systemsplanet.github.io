@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sortable Vacuum Cleaner Comparison</title>
+    <style>
+        /* Basic styling for readability and sort indicators */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+            cursor: pointer;
+            position: relative;
+        }
+        th:hover {
+            background-color: #e0e0e0;
+        }
+        th .sort-indicator {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.8em;
+            color: #888;
+        }
+        th.asc .sort-indicator::after {
+            content: " ▲"; /* Up arrow for ascending */
+        }
+        th.desc .sort-indicator::after {
+            content: " ▼"; /* Down arrow for descending */
+        }
+        /* Style for the active sorted column */
+        th.asc, th.desc {
+            background-color: #cceeff; /* Light blue for active column */
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Vacuum Cleaner Comparison</h1>
+
+    <table id="sortableTable" border="1">
+        <thead>
+            <tr>
+                <th data-type="string">Brand <span class="sort-indicator"></span></th>
+                <th data-type="number">Weight (lbs) <span class="sort-indicator"></span></th>
+                <th data-type="number">Noise (dB) <span class="sort-indicator"></span></th>
+                <th data-type="number">Steps to Empty the Dust Bin <span class="sort-indicator"></span></th>
+                <th data-type="string">Run Time (minutes) <span class="sort-indicator"></span></th>
+                <th data-type="string">Suction (Inches of Water) <span class="sort-indicator"></span></th>
+                <th data-type="string">Air Flow (CFM) <span class="sort-indicator"></span></th>
+                <th data-type="string">Air Watts ((Inches of Water x CFM)/8.5) <span class="sort-indicator"></span></th>
+                <th data-type="string">Nuts Completely Vacuumed <span class="sort-indicator"></span></th>
+                <th data-type="string">Vacuuming Sand from Crevice (seconds) <span class="sort-indicator"></span></th>
+                <th data-type="string">Subjective Rating of Dust Bin Performance <span class="sort-indicator"></span></th>
+                <th data-type="string">Subjective Deep Carpet Cleaning Finishing Order <span class="sort-indicator"></span></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Black+Decker QuickClean, $29</td><td>1.45</td><td>90.1</td><td>2</td><td>C</td><td>C</td><td>A-</td><td>B+</td><td>C</td><td>D</td><td>C</td><td>D</td></tr>
+            <tr><td>Ryobi, $35</td><td>3.67</td><td>93.9</td><td>2</td><td>B</td><td>C</td><td>B</td><td>C</td><td>A</td><td>A</td><td>B</td><td>A</td></tr>
+            <tr><td>Vaclife, $36</td><td>1.49</td><td>84.9</td><td>2</td><td>B</td><td>C</td><td>B</td><td>C</td><td>B</td><td>C</td><td>D</td><td>C</td></tr>
+            <tr><td>KMM, $40</td><td>0.75</td><td>83.7</td><td>2</td><td>B</td><td>C</td><td>D</td><td>D</td><td>C</td><td>D</td><td>D</td><td>A</td></tr>
+            <tr><td>Knockoff Milwaukee, $47</td><td>3.28</td><td>86.3</td><td>2</td><td>B</td><td>A-</td><td>A</td><td>A+</td><td>A-</td><td>A</td><td>A+</td><td>A+</td></tr>
+            <tr><td>Black+Decker Dustbuster, $50</td><td>2.57</td><td>94.5</td><td>2</td><td>C</td><td>C</td><td>A-</td><td>B</td><td>B</td><td>B</td><td>D</td><td>C</td></tr>
+            <tr><td>Knockoff DeWalt, $55</td><td>3.25</td><td>88.1</td><td>2</td><td>B</td><td>C</td><td>B</td><td>C</td><td>B</td><td>B</td><td>A</td><td>B</td></tr>
+            <tr><td>Ridgid, $60</td><td>3.99</td><td>96.4</td><td>1</td><td>B+</td><td>B</td><td>A-</td><td>B+</td><td>A</td><td>A-</td><td>A</td><td>B</td></tr>
+            <tr><td>Shark, $60</td><td>1.52</td><td>86.7</td><td>2</td><td>C</td><td>C</td><td>D</td><td>C</td><td>D</td><td>C</td><td>B</td><td>B</td></tr>
+            <tr><td>Bissell, $64</td><td>2.61</td><td>82.4</td><td>2</td><td>B</td><td>B+</td><td>B</td><td>B</td><td>A-</td><td>A-</td><td>A</td><td>A-</td></tr>
+            <tr><td>Black+Decker 20V, $70</td><td>2.94</td><td>87.7</td><td>1</td><td>C</td><td>B</td><td>A</td><td>B+</td><td>A</td><td>A-</td><td>A</td><td>A</td></tr>
+            <tr><td>Milwaukee, $129</td><td>5.89</td><td>85.2</td><td>1</td><td>C</td><td>A</td><td>A</td><td>A</td><td>A+</td><td>A</td><td>A+</td><td>A+</td></tr>
+            <tr><td>Makita, $129</td><td>3.47</td><td>84.8</td><td>3</td><td>A+</td><td>B</td><td>A</td><td>B+</td><td>A+</td><td>A-</td><td>A</td><td>B</td></tr>
+            <tr><td>DeWalt, $148</td><td>4.60</td><td>93.9</td><td>2</td><td>B</td><td>A</td><td>A</td><td>A</td><td>A+</td><td>A+</td><td>A</td><td>A+</td></tr>
+        </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const getCellValue = (tr, idx) => {
+                const cell = tr.children[idx];
+                const text = cell.textContent.trim();
+                const dataType = cell.closest('table').querySelector('th:nth-child(' + (idx + 1) + ')').dataset.type;
+
+                if (dataType === 'number') {
+                    // Try to parse as float, fall back to original text if not a valid number
+                    const num = parseFloat(text.replace(/[^0-9.-]/g, '')); // Remove non-numeric chars except . and -
+                    return isNaN(num) ? text : num;
+                }
+                // For 'string' or other types, return as is (case-insensitive for comparison)
+                return text.toLowerCase();
+            };
+
+            const sorter = (idx, asc) => (a, b) => {
+                const valA = getCellValue(asc ? a : b, idx);
+                const valB = getCellValue(asc ? b : a, idx);
+
+                // Handle mixed types: if one is number and other is string, treat string as larger
+                if (typeof valA === 'number' && typeof valB === 'string') return -1;
+                if (typeof valA === 'string' && typeof valB === 'number') return 1;
+
+                // Actual comparison
+                return (typeof valA === 'number' && typeof valB === 'number')
+                    ? valA - valB
+                    : valA.localeCompare(valB);
+            };
+
+            document.querySelectorAll('th').forEach(th => th.addEventListener('click', () => {
+                const table = th.closest('table');
+                const tbody = table.querySelector('tbody');
+                const headerCells = Array.from(th.parentNode.children);
+                const currentColumnIndex = headerCells.indexOf(th);
+
+                // Determine sort order
+                const isAsc = !th.classList.contains('asc'); // If it doesn't have 'asc', it's ascending for this click
+
+                // Remove previous sort classes from all headers
+                headerCells.forEach(header => {
+                    header.classList.remove('asc', 'desc');
+                });
+
+                // Add current sort class
+                th.classList.toggle('asc', isAsc);
+                th.classList.toggle('desc', !isAsc);
+
+                Array.from(tbody.querySelectorAll('tr'))
+                    .sort(sorter(currentColumnIndex, isAsc))
+                    .forEach(tr => tbody.appendChild(tr));
+            }));
+
+            // Initial sort (optional, e.g., sort by brand ascending on load)
+            // document.querySelector('th[data-type="string"]').click(); // Clicks the first string column (Brand)
+        });
+    </script>
+
+</body>
+</html>

@@ -1,26 +1,14 @@
 <!DOCTYPE html>
 <html>
-
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
   <style>
-    p {
-      display: block;
-      margin-top: 0;
-      margin-bottom: 1em;
-      margin-left: 2em;
-      margin-right: 0;
-    }
-
-    .logo_img {
-      margin-right: 36px;
-      width: 40px;
-      height: 40px;
-    }
+    p           { display: block; margin-top: 0; margin-bottom: 1em; margin-left: 2em; margin-right: 0;    }
+    .logo_img   { margin-right: 36px; width: 40px; height: 40px;    }
   </style>
 </head>
-
+ 
 <body>
   <div class="w3-container">
     <h2 class=logo_box><img class=logo_img src="./img/logo.gif">Systems Planet</h2>
@@ -36,157 +24,189 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      // Data structure for all links and headings
-      const linkSections = [{
-        targetId: 'col1',
+      const data = [
+
+      // Column 1
+      {
+        column: 'col1',
         heading: 'Quick',
         links: [
-          { text: 'amazon', href: 'https://amazon.com' },
-          { text: 'zerohedge', href: 'https://www.zerohedge.com' },
+          { text: 'amazon',           href: 'https://amazon.com' },
+          { text: 'zerohedge',        href: 'https://www.zerohedge.com' },
           { text: 'citizenfreepress', href: 'https://citizenfreepress.com' },
-          { text: 'drudgereport', href: 'https://drudgereport.com' },
-          { text: 'thelibertydaily', href: 'https://thelibertydaily.com' },
-          { text: 'weather', href: 'https://weather.com/weather/hourbyhour/l/c3c90c35ffc3d3e3c19e5823cf20725a5b900cbf556493c749abd1d4de18fbe8' }
+          { text: 'drudgereport',     href: 'https://drudgereport.com' },
+          { text: 'thelibertydaily',  href: 'https://thelibertydaily.com' },
+          { text: 'weather',          href: 'https://weather.com/weather/hourbyhour/l/c3c90c35ffc3d3e3c19e5823cf20725a5b900cbf556493c749abd1d4de18fbe8' }
         ]
       }, {
-        targetId: 'col1',
+        column: 'col1',
         heading: 'Search',
         links: [
-          { text: 'brave', href: 'https://search.brave.com/search?q=' },
-          { text: 'google', href: 'https://google.com' },
-          { text: 'google bard ai', href: 'https://bard.google.com/' },
-          { text: 'yandex', href: 'https://yandex.com/' },
-          { text: 'seekr', href: 'https://www.seekr.com/' },
-          { text: 'mojeek', href: 'https://www.mojeek.com/' }
+          { text: 'brave',           href: 'https://search.brave.com/search?q=' },
+          { text: 'google',          href: 'https://google.com' },
+          { text: 'yandex',          href: 'https://yandex.com/' },
+          { text: 'seekr',           href: 'https://www.seekr.com/' },
+          { text: 'mojeek',          href: 'https://www.mojeek.com/' }
         ]
       }, {
-        targetId: 'col1',
+        column: 'col1',
         heading: 'AI',
         links: [
-          { text: 'claude', href: 'https://claude.ai/new' },
-          { text: 'grok', href: 'https://x.ai/grok' },
-          { text: 'gemini', href: 'https://gemini.google.com/app' },
-          { text: 'googleAIStudio', href: 'https://aistudio.google.com/prompts/new_chat' },
-          { text: 'lmarena.ai', href: 'https://chat.lmsys.org/' },
-          { group: [
-                  { text: 'aistore', href: 'https://systemsplanet.github.io/AIStore/' }, 
-                  { text: 'edit', href: 'https://github.com/Systemsplanet/systemsplanet.github.io/tree/main/AIStore' }
-                  ] 
-          },
-          { label: 'OpenRouter', 
-             group: [
-                     { text: 'keys', href: 'https://openrouter.ai/settings/keys' }, 
-                     { text: 'usage', href: 'https://openrouter.ai/settings/credits' }
-             ] 
+          { text: 'claude',         href: 'https://claude.ai/new' },
+          { text: 'grok',           href: 'https://x.ai/grok' },
+          { label: 'Google', 
+            group: [
+                    { text: 'gemini',         href: 'https://gemini.google.com/app' },
+                    { text: 'googleAIStudio', href: 'https://aistudio.google.com/prompts/new_chat' },
+            ]
           },
           { label: 'OpenIa', 
              group: [
-                     { text: 'status', href: 'https://status.openai.com' }, 
-                     { text: 'usage', href: 'https://platform.openai.com/settings/organization/usage' }, 
-                     { text: 'chatGPT', href: 'https://chatgpt.com/' }
+                     { text: 'chatGPT',   href: 'https://chatgpt.com/' }
+                     { text: 'status',    href: 'https://status.openai.com' }, 
+                     { text: 'usage',     href: 'https://platform.openai.com/settings/organization/usage' }, 
              ] 
           },
-          { text: 'a0 branch', href: 'https://github.com/Systemsplanet/agent-zero/tree/main' }
+          { text: 'lmarena.ai',          href: 'https://chat.lmsys.org/' },
+          { label: 'AIStore', 
+             group: [
+                  { text: 'app',         href: 'https://systemsplanet.github.io/AIStore/' }, 
+                  { text: 'edit',        href: 'https://github.com/Systemsplanet/systemsplanet.github.io/tree/main/AIStore' }
+            ] 
+          },
+          { label: 'OpenRouter', 
+             group: [
+                     { text: 'keys',     href: 'https://openrouter.ai/settings/keys' }, 
+                     { text: 'usage',    href: 'https://openrouter.ai/settings/credits' }
+             ] 
+          },
+          { label: 'Agent Zero', 
+            group: [
+                    { text: 'github',     href: 'https://github.com/agent0ai/agent-zero' }
+                    { text: 'branch',     href: 'https://github.com/Systemsplanet/agent-zero/tree/main' }
+            ]
+          },
+     ]
+      } , {
+        column: 'col1',
+        heading: 'Examples',
+        links: [          
+          { text: 'Sphere',                href: 'https://systemsplanet.github.io/sphere.html' },
+          { text: 'Tesseract',             href: 'https://systemsplanet.github.io/tesseract.html' },
+          { text: 'Rubix Cube',            href: 'https://systemsplanet.github.io/rubix.html' }
         ]
-      }, {
-        targetId: 'col2',
+      },
+
+        
+      // Column 2                      
+      {
+        column: 'col2',
         heading: 'News',
         links: [
-          { text: 'rumble', href: 'https://rumble.com' },
-          { text: 'rokfin', href: 'https://rokfin.com' },
-          { text: 'timcast', href: 'https://timcast.com/members-area/section/timcast-irl/' }
+          { text: 'rumble',           href: 'https://rumble.com' },
+          { text: 'rokfin',           href: 'https://rokfin.com' },
+          { text: 'timcast',          href: 'https://timcast.com/members-area/section/timcast-irl/' }
         ]
       }, {
-        targetId: 'col2',
+        column: 'col2',
         heading: 'Stocks',
         links: [
-          { text: 'fidelity.com', href: 'https://digital.fidelity.com/prgw/digital/login/full-page?AuthRedUrl=digital.fidelity.com/ftgw/digital/portfolio/summary' },
-          { text: 'coinbase', href: 'https://www.coinbase.com/home' },
-          { text: 'Google finance', href: 'https://www.google.com/finance/portfolio/watchlist' },
-          { text: 'RUM', href: 'https://www.google.com/finance/quote/RUM:NASDAQ' },
-          { text: 'OLN', href: 'https://www.google.com/finance/quote/OLN:NYSE' },
-          { text: 'ZIM', href: 'https://www.google.com/finance/quote/ZIM:NYSE' },
-          { text: 'SQQQ', href: 'https://www.google.com/finance/quote/SQQQ:NASDAQ' },
-          { text: 'HEINY', href: 'https://www.google.com/finance/quote/HEINY:OTCMKTS' },
-          { text: 'TITN', href: 'https://www.google.com/finance/quote/TITN:NASDAQ' },
-          { text: 'GDX', href: 'https://www.google.com/finance/quote/GDX:NYSEARCA' },
-          { text: 'gold price', href: 'https://goldprice.org' },
-          { text: 'gold', href: 'https://www.bullionvault.com/gold-price-chart.do' },
-          { text: 'futures', href: 'https://www.investing.com/indices/indices-futures' }
+          { text: 'fidelity.com',          href: 'https://digital.fidelity.com/prgw/digital/login/full-page?AuthRedUrl=digital.fidelity.com/ftgw/digital/portfolio/summary' },
+          { text: 'coinbase',              href: 'https://www.coinbase.com/home' },
+          { text: 'Google finance',        href: 'https://www.google.com/finance/portfolio/watchlist' },
+          { text: 'RUM',                   href: 'https://www.google.com/finance/quote/RUM:NASDAQ' },
+          { text: 'OLN',                   href: 'https://www.google.com/finance/quote/OLN:NYSE' },
+          { text: 'ZIM',                   href: 'https://www.google.com/finance/quote/ZIM:NYSE' },
+          { text: 'SQQQ',                  href: 'https://www.google.com/finance/quote/SQQQ:NASDAQ' },
+          { text: 'HEINY',                 href: 'https://www.google.com/finance/quote/HEINY:OTCMKTS' },
+          { text: 'TITN',                  href: 'https://www.google.com/finance/quote/TITN:NASDAQ' },
+          { text: 'GDX',                   href: 'https://www.google.com/finance/quote/GDX:NYSEARCA' },
+          { text: 'gold price',            href: 'https://goldprice.org' },
+          { text: 'gold',                  href: 'https://www.bullionvault.com/gold-price-chart.do' },
+          { text: 'futures',               href: 'https://www.investing.com/indices/indices-futures' }
         ]
-      }, {
-        targetId: 'col3',
+      },
+
+        
+      // Column 3
+      {
+        column: 'col3',
         heading: 'Crypto',
         links: [
-          { text: 'coinbase', href: 'https://coinbase.com' },
-          { text: 'HUT', href: 'https://www.google.com/finance/quote/HUT:NASDAQ' },
-          { text: 'BITCOIN', href: 'https://coinmarketcap.com/currencies/bitcoin' },
-          { text: 'tradeogre', href: 'https://tradeogre.com' },
-          { text: 'eth', href: 'https://ethereumprice.org' },
-          { text: 'bitcoin', href: 'https://bitcoinprice.org' }
+          { text: 'coinbase',              href: 'https://coinbase.com' },
+          { text: 'HUT',                   href: 'https://www.google.com/finance/quote/HUT:NASDAQ' },
+          { text: 'BITCOIN',               href: 'https://coinmarketcap.com/currencies/bitcoin' },
+          { text: 'tradeogre',             href: 'https://tradeogre.com' },
+          { text: 'eth',                   href: 'https://ethereumprice.org' },
+          { text: 'bitcoin',               href: 'https://bitcoinprice.org' }
         ]
-      }, {
-        targetId: 'col4',
+      },
+        
+        
+      // Column 4  
+      {
+        column: 'col4',
         heading: 'Admin',
         links: [
-          { text: 'Edit this page', href: 'https://github.com/Systemsplanet/systemsplanet.github.io/blob/main/index.html' },
-          { text: 'linktree', href: 'https://linktr.ee/admin/appearance' }
+          { text: 'Edit this page',        href: 'https://github.com/Systemsplanet/systemsplanet.github.io/blob/main/index.html' },
+          { text: 'linktree',              href: 'https://linktr.ee/admin/appearance' }
         ]
-      }, {
-        targetId: 'col5',
+      }, 
+
+        
+      // Column 5
+      {
+        column: 'col5',
         heading: 'Misc',
         links: [
-          { text: 'virustotal', href: 'https://www.virustotal.com/gui/home/upload' },
-          { text: 'bandcamp', href: 'https://bandcamp.com/systemsplanet' },
-          { text: 'systemsplanet.com', href: 'https://www.systemsplanet.com' },
-          { text: 'site', href: 'site/index.html' },
-          { text: 'html', href: 'https://www.w3schools.com/html/html_examples.asp' },
-          { text: 'acid', href: 'https://www.laballey.com/collections/sulfuric-acid' },
-          { text: 'griddownpowerup.com', href: 'https://griddownpowerup.com' },
-          { text: 'fmovies.to', href: 'https://fmovies.to/movies?page=2' },
-          { text: 'manly movies', href: 'https://www.glennbeck.com/blog/14-manly-movies' },
-          { text: 'voltage drop', href: 'https://www.calculator.net/voltage-drop-calculator.html?necmaterial=copper&necwiresize=2&necconduit=pvc&necpf=0.85&material=copper&wiresize=0.4066&resistance=1.2&resistanceunit=okm&voltage=48&phase=dc&noofconductor=1&distance=10000&distanceunit=feet&amperes=2&x=86&y=20&ctype=nec' },
-          { text: 'metals depot', href: 'https://www.metalsdepot.com/aluminum-products/aluminum-pipe' },
-          { text: 'myalro', href: 'https://www.myalro.com/ShoppingCart.aspx' },
-          { text: 'solar', href: 'https://solar-assistant.io/shop/products/software' },
-          { text: 'eda', href: 'https://m.youtube.com/watch?v=LbLIPSFi52o&list=PLbKMtvtYbdPMZfzGuVTdc0MWKrFvU4nsu&index=12' },
-          { text: 'easyeda', href: 'https://m.youtube.com/@easyeda2164/videos' },
-          { text: 'pcb', href: 'https://m.jlcpcb.com/pcbAssembly' },
-          { text: 'easyeda', href: 'https://easyeda.com' },
-          { text: 'saas', href: 'https://www.saashub.com' },
-          { text: 'lucysrausch', href: 'https://twitter.com/lucysrausch/status/1158106370186649600' },
-          { text: 'harvest right', href: 'https://harvestright.com/faqs' },
-          { text: 'containers', href: 'https://theprovidentprepper.org/long-term-food-storage-best-containers-and-treatment-methods' },
-          { text: 'freeze dryer', href: 'https://harvestright.com/product/home-freeze-dryer/?attribute_pa_attribute-size=attribute-size-medium&attribute_pa_attribute-color=attribute-color-black&attribute_pa_attribute-pump=premier-pump' },
-          { text: 'jase medical', href: 'https://jasemedical.com/pricing' },
-          { text: 'med freeze dryer', href: 'https://harvestright.com/product/home-freeze-dryer/?attribute_pa_attribute-size=attribute-size-medium&attribute_pa_attribute-color=attribute-color-black&attribute_pa_attribute-pump=premier-pump' },
-          { text: 'clear span', href: 'https://www.grizzlysteelstructures.com/clear-span-commercial-grade?page=3' },
-          { text: 'barn no medium', href: 'https://www.heritagebuildings.com/building-solutions/barndominium-kits/the-austin' },
-          { text: 'metal roof', href: 'https://www.bestbuymetals.com/category/metal-roof-photos' },
-          { text: 'drive through garage', href: 'https://www.grizzlysteelstructures.com/product-page/24-x-41-x-9-vertical-drive-thru-garage' },
-          { text: 'Bridge crane', href: 'https://www.practicalmachinist.com/forum/threads/homemade-bridge-crane.90408' },
-          { text: 'structures', href: 'https://greatwesternbuildings.com/steel-buildings/industrial-structures' },
-          { text: 'wheel barrow', href: 'https://www.amazon.com/Utility-Wheelbarrow-Electric-Capacity-Bed%EF%BC%88Red%EF%BC%89/dp/B0C1MYHB6V/ref=sr_1_17?crid=1KX689PRAA8HE&keywords=electric%2Bdump%2Bcart&qid=1681586316&sprefix=%2Caps%2C158&sr=8-17&ufe=app_do%3Aamzn1.fos.ac2169a1-b668-44b9-8bd0-5ec63b24bcb5&th=' },
-          { text: 'motor', href: 'https://sdp-si.com/contact-forms/configure-motor-solution.php' },
-          { text: 'nr3', href: 'https://shop.sdp-si.com/catalog/product/?id=NR3-AGV060B02' },
-          { text: 'ventrac blade bolt', href: 'https://search.brave.com/search?q=1%2F2-20+SAE+1+3%2F4%22+reverse+thread+bolt&source=web' },
-          { text: '833tv', href: 'https://www.precisionmatthews.com/shop/pm-833tv-ultra-precision-milling-machine' },
-          { text: '1340gt', href: 'https://www.precisionmatthews.com/shop/pm-1340gt/' },
-          { text: 'air compressor', href: 'https://eatoncompressor.com/product/5-hp-quiet-air-compressor-2-stage-80-gallon-vertical-industrial/#user-manual' },
-          { text: 'prod', href: 'https://www.amazon.com/gp/aw/d/B0887ZK9PK?ref=ppx_pt2_mob_b_prod_image' },
-          { text: 'voron', href: 'https://www.ratrig.com/3d-printing-cnc/3d-printer-kits/complete-kits/v-core3configurable.html' },
-          { text: 'ratrig', href: 'https://v-core.ratrig.com' },
-          { text: 'v core', href: 'https://github.com/Rat-Rig/V-core-3' },
-          { text: 'stl', href: 'https://www.reddit.com/r/voroncorexy/comments/fyzypl/voron24_stls_now_available' },
-          { text: 'vid', href: 'https://www.youtube.com/watch?v=XoTxFs3BGuk' },
-          { text: 'ebay', href: 'https://www.ebay.com/itm/393215354276?chn=ps&norover=1&mkevt=1&mkrid=711-213727-13078-0&mkcid=2&itemid=393215354276&targetid=4581115207302801&device=m&mktype=&googleloc=&poi=&campaignid=410490120&mkgroupid=1240249342282574&rlsatarget=pla-4581115207302801&abcId=9300491&merchantid=51291' },
-          { text: 'design', href: 'https://www.vorondesign.com/voron2.4' },
-          { text: 'enclosure', href: 'https://whambam3d.com/products/hotbox-3d-printer-enclosure?aff=15' },
-          { text: 'powdercoat', href: 'https://www.columbiacoatings.com/products/powder-coating-bundles/startkit' },
-          { text: 'Whitney web', href: 'https://rokfin.com/stream/7184/Ep325-The-Shared-Principles-of-Global-Control-wWhitney-Webb--Johnny-Vedmore' },
-          { text: 'Sphere', href: 'https://systemsplanet.github.io/sphere.html' },
-          { text: 'Tesseract', href: 'https://systemsplanet.github.io/tesseract.html' },
-          { text: 'Rubix Cube', href: 'https://systemsplanet.github.io/rubix.html' }
+          { text: 'virustotal',            href: 'https://www.virustotal.com/gui/home/upload' },
+          { text: 'bandcamp',              href: 'https://bandcamp.com/systemsplanet' },
+          { text: 'systemsplanet.com',     href: 'https://www.systemsplanet.com' },
+          { text: 'site',                  href: 'site/index.html' },
+          { text: 'html',                  href: 'https://www.w3schools.com/html/html_examples.asp' },
+          { text: 'acid',                  href: 'https://www.laballey.com/collections/sulfuric-acid' },
+          { text: 'griddownpowerup.com',   href: 'https://griddownpowerup.com' },
+          { text: 'fmovies.to',            href: 'https://fmovies.to/movies?page=2' },
+          { text: 'manly movies',          href: 'https://www.glennbeck.com/blog/14-manly-movies' },
+          { text: 'voltage drop',          href: 'https://www.calculator.net/voltage-drop-calculator.html?necmaterial=copper&necwiresize=2&necconduit=pvc&necpf=0.85&material=copper&wiresize=0.4066&resistance=1.2&resistanceunit=okm&voltage=48&phase=dc&noofconductor=1&distance=10000&distanceunit=feet&amperes=2&x=86&y=20&ctype=nec' },
+          { text: 'metals depot',          href: 'https://www.metalsdepot.com/aluminum-products/aluminum-pipe' },
+          { text: 'myalro',                href: 'https://www.myalro.com/ShoppingCart.aspx' },
+          { text: 'solar',                 href: 'https://solar-assistant.io/shop/products/software' },
+          { text: 'eda',                   href: 'https://m.youtube.com/watch?v=LbLIPSFi52o&list=PLbKMtvtYbdPMZfzGuVTdc0MWKrFvU4nsu&index=12' },
+          { text: 'easyeda',               href: 'https://m.youtube.com/@easyeda2164/videos' },
+          { text: 'pcb',                   href: 'https://m.jlcpcb.com/pcbAssembly' },
+          { text: 'easyeda',               href: 'https://easyeda.com' },
+          { text: 'saas',                  href: 'https://www.saashub.com' },
+          { text: 'lucysrausch',           href: 'https://twitter.com/lucysrausch/status/1158106370186649600' },
+          { text: 'harvest right',         href: 'https://harvestright.com/faqs' },
+          { text: 'containers',            href: 'https://theprovidentprepper.org/long-term-food-storage-best-containers-and-treatment-methods' },
+          { text: 'freeze dryer',          href: 'https://harvestright.com/product/home-freeze-dryer/?attribute_pa_attribute-size=attribute-size-medium&attribute_pa_attribute-color=attribute-color-black&attribute_pa_attribute-pump=premier-pump' },
+          { text: 'jase medical',          href: 'https://jasemedical.com/pricing' },
+          { text: 'med freeze dryer',      href: 'https://harvestright.com/product/home-freeze-dryer/?attribute_pa_attribute-size=attribute-size-medium&attribute_pa_attribute-color=attribute-color-black&attribute_pa_attribute-pump=premier-pump' },
+          { text: 'clear span',            href: 'https://www.grizzlysteelstructures.com/clear-span-commercial-grade?page=3' },
+          { text: 'barn no medium',        href: 'https://www.heritagebuildings.com/building-solutions/barndominium-kits/the-austin' },
+          { text: 'metal roof',            href: 'https://www.bestbuymetals.com/category/metal-roof-photos' },
+          { text: 'drive through garage',  href: 'https://www.grizzlysteelstructures.com/product-page/24-x-41-x-9-vertical-drive-thru-garage' },
+          { text: 'Bridge crane',          href: 'https://www.practicalmachinist.com/forum/threads/homemade-bridge-crane.90408' },
+          { text: 'structures',            href: 'https://greatwesternbuildings.com/steel-buildings/industrial-structures' },
+          { text: 'wheel barrow',          href: 'https://www.amazon.com/Utility-Wheelbarrow-Electric-Capacity-Bed%EF%BC%88Red%EF%BC%89/dp/B0C1MYHB6V/ref=sr_1_17?crid=1KX689PRAA8HE&keywords=electric%2Bdump%2Bcart&qid=1681586316&sprefix=%2Caps%2C158&sr=8-17&ufe=app_do%3Aamzn1.fos.ac2169a1-b668-44b9-8bd0-5ec63b24bcb5&th=' },
+          { text: 'motor',                 href: 'https://sdp-si.com/contact-forms/configure-motor-solution.php' },
+          { text: 'nr3',                   href: 'https://shop.sdp-si.com/catalog/product/?id=NR3-AGV060B02' },
+          { text: 'ventrac blade bolt',    href: 'https://search.brave.com/search?q=1%2F2-20+SAE+1+3%2F4%22+reverse+thread+bolt&source=web' },
+          { text: '833tv',                 href: 'https://www.precisionmatthews.com/shop/pm-833tv-ultra-precision-milling-machine' },
+          { text: '1340gt',                href: 'https://www.precisionmatthews.com/shop/pm-1340gt/' },
+          { text: 'air compressor',        href: 'https://eatoncompressor.com/product/5-hp-quiet-air-compressor-2-stage-80-gallon-vertical-industrial/#user-manual' },
+          { text: 'prod',                  href: 'https://www.amazon.com/gp/aw/d/B0887ZK9PK?ref=ppx_pt2_mob_b_prod_image' },
+          { text: 'voron',                 href: 'https://www.ratrig.com/3d-printing-cnc/3d-printer-kits/complete-kits/v-core3configurable.html' },
+          { text: 'ratrig',                href: 'https://v-core.ratrig.com' },
+          { text: 'v core',                href: 'https://github.com/Rat-Rig/V-core-3' },
+          { text: 'stl',                   href: 'https://www.reddit.com/r/voroncorexy/comments/fyzypl/voron24_stls_now_available' },
+          { text: 'vid',                   href: 'https://www.youtube.com/watch?v=XoTxFs3BGuk' },
+          { text: 'ebay',                  href: 'https://www.ebay.com/itm/393215354276?chn=ps&norover=1&mkevt=1&mkrid=711-213727-13078-0&mkcid=2&itemid=393215354276&targetId=4581115207302801&device=m&mktype=&googleloc=&poi=&campaignid=410490120&mkgroupid=1240249342282574&rlsatarget=pla-4581115207302801&abcId=9300491&merchantid=51291' },
+          { text: 'design',                href: 'https://www.vorondesign.com/voron2.4' },
+          { text: 'enclosure',             href: 'https://whambam3d.com/products/hotbox-3d-printer-enclosure?aff=15' },
+          { text: 'powdercoat',            href: 'https://www.columbiacoatings.com/products/powder-coating-bundles/startkit' },
+          { text: 'Whitney web',           href: 'https://rokfin.com/stream/7184/Ep325-The-Shared-Principles-of-Global-Control-wWhitney-Webb--Johnny-Vedmore' },
         ]
       }];
 
@@ -200,8 +220,8 @@
       }
 
       // Loop through each section and build the HTML
-      linkSections.forEach(section => {
-        const targetDiv = document.getElementById(section.targetId);
+      data.forEach(section => {
+        const targetDiv = document.getElementById(section.column);
 
         if (targetDiv) {
           // Create and append heading

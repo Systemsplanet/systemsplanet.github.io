@@ -1,252 +1,526 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>3D Rubik's Cube Simulation</title>
-<style>
-  body { margin: 0; overflow: hidden; background-color: white; }
-  canvas { display: block; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Rubik's Cube Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            height: 100vh;
+            width: 100vw;
+            padding: 20px;
+        }
+
+        .cube-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 1000px;
+        }
+
+        .cube {
+            width: 300px;
+            height: 300px;
+            position: relative;
+            transform-style: preserve-3d;
+            transform: rotateX(-15deg) rotateY(25deg);
+            transition: transform 0.5s;
+        }
+
+        .face {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2px;
+            padding: 5px;
+            border: 3px solid #222;
+        }
+
+        .square {
+            border: 1px solid #333;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .square:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Face positions */
+        .front { transform: rotateY(0deg) translateZ(150px); }
+        .back { transform: rotateY(180deg) translateZ(150px); }
+        .right { transform: rotateY(90deg) translateZ(150px); }
+        .left { transform: rotateY(-90deg) translateZ(150px); }
+        .top { transform: rotateX(90deg) translateZ(150px); }
+        .bottom { transform: rotateX(-90deg) translateZ(150px); }
+
+        /* Colors */
+        .white { background-color: #fff; }
+        .yellow { background-color: #ffd700; }
+        .red { background-color: #ff4444; }
+        .orange { background-color: #ff8800; }
+        .blue { background-color: #4444ff; }
+        .green { background-color: #44ff44; }
+
+        .controls {
+            width: 300px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            color: white;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls h2 {
+            margin-bottom: 25px;
+            text-align: center;
+            font-size: 24px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.3);
+            outline: none;
+            -webkit-appearance: none;
+            margin-bottom: 10px;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .value-display {
+            text-align: center;
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 15px;
+        }
+
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .rotation-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .rotation-btn {
+            padding: 8px;
+            font-size: 12px;
+            border-radius: 6px;
+        }
+
+        @keyframes scrambleAnimation {
+            0% { transform: rotateX(-15deg) rotateY(25deg); }
+            25% { transform: rotateX(45deg) rotateY(135deg); }
+            50% { transform: rotateX(-45deg) rotateY(225deg); }
+            75% { transform: rotateX(15deg) rotateY(315deg); }
+            100% { transform: rotateX(-15deg) rotateY(385deg); }
+        }
+
+        .scrambling {
+            animation: scrambleAnimation 2s ease-in-out;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                gap: 20px;
+                overflow-y: auto;
+            }
+            
+            .cube {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .face {
+                width: 250px;
+                height: 250px;
+            }
+            
+            .front, .back, .right, .left, .top, .bottom {
+                transform-origin: center;
+            }
+            
+            .front { transform: rotateY(0deg) translateZ(125px); }
+            .back { transform: rotateY(180deg) translateZ(125px); }
+            .right { transform: rotateY(90deg) translateZ(125px); }
+            .left { transform: rotateY(-90deg) translateZ(125px); }
+            .top { transform: rotateX(90deg) translateZ(125px); }
+            .bottom { transform: rotateX(-90deg) translateZ(125px); }
+            
+            .controls {
+                width: 90%;
+            }
+        }
+    </style>
 </head>
 <body>
-  <canvas id="rubiksCanvas"></canvas>
+    <div class="container">
+        <div class="cube-container">
+            <div class="cube" id="cube">
+                <div class="face front" id="front"></div>
+                <div class="face back" id="back"></div>
+                <div class="face right" id="right"></div>
+                <div class="face left" id="left"></div>
+                <div class="face top" id="top"></div>
+                <div class="face bottom" id="bottom"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <h2>Cube Controls</h2>
+            
+            <div class="control-group">
+                <label for="rotationSpeed">Rotation Speed</label>
+                <input type="range" id="rotationSpeed" class="slider" min="0" max="5" value="1" step="0.1">
+                <div class="value-display" id="speedValue">1.0x</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="rotationX">Rotation X</label>
+                <input type="range" id="rotationX" class="slider" min="-180" max="180" value="-15">
+                <div class="value-display" id="rotationXValue">-15°</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="rotationY">Rotation Y</label>
+                <input type="range" id="rotationY" class="slider" min="-180" max="180" value="25">
+                <div class="value-display" id="rotationYValue">25°</div>
+            </div>
+            
+            <div class="control-group">
+                <label for="perspective">Perspective</label>
+                <input type="range" id="perspective" class="slider" min="500" max="2000" value="1000">
+                <div class="value-display" id="perspectiveValue">1000px</div>
+            </div>
+            
+            <div class="buttons">
+                <button class="btn" onclick="scrambleCube()">Scramble</button>
+                <button class="btn" onclick="resetCube()">Reset</button>
+                <button class="btn" onclick="toggleAutoRotate()">Toggle Auto-Rotate</button>
+            </div>
+            
+            <div class="rotation-controls">
+                <button class="btn rotation-btn" onclick="rotateFace('F')">F</button>
+                <button class="btn rotation-btn" onclick="rotateFace('B')">B</button>
+                <button class="btn rotation-btn" onclick="rotateFace('R')">R</button>
+                <button class="btn rotation-btn" onclick="rotateFace('L')">L</button>
+                <button class="btn rotation-btn" onclick="rotateFace('U')">U</button>
+                <button class="btn rotation-btn" onclick="rotateFace('D')">D</button>
+            </div>
+        </div>
+    </div>
 
-  <script>
-    function RubiksCube(canvasId, rows) {
-      this.canvas = document.getElementById(canvasId);
-      this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
-      this.scene = new THREE.Scene();
-      this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-      this.rows = Math.max(2, Math.floor(rows)); // Ensure at least 2 rows
-      this.cellSize = 1;
-      this.spacing = 0.05;
-      this.cubeSize = this.rows * this.cellSize + (this.rows - 1) * this.spacing;
-      this.cubes = [];
-      this.animating = false;
-      this.animationQueue = [];
-      this.currentRotationAxis = null;
-      this.currentRotationDirection = 0;
-      this.currentRotationAngle = 0;
-      this.rotationSpeed = 0.1;
-      this.targetRotationAngle = Math.PI / 2; // 90 degrees
-
-      this.colors = [
-        0xff0000, // Red
-        0x00ff00, // Green
-        0x0000ff, // Blue
-        0xffff00, // Yellow
-        0xffa500, // Orange
-        0xffffff  // White
-      ];
-
-      this._initialize();
-      this._setupEventListeners();
-      this._animate();
-    }
-
-    RubiksCube.prototype._initialize = function() {
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-      this.camera.position.z = this.cubeSize * 2;
-      this.scene.add(new THREE.AmbientLight(0x404040));
-      const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-      directionalLight.position.set(1, 1, 1).normalize();
-      this.scene.add(directionalLight);
-
-      const halfCubeSize = this.cubeSize / 2;
-      for (let x = 0; x < this.rows; x++) {
-        for (let y = 0; y < this.rows; y++) {
-          for (let z = 0; z < this.rows; z++) {
-            const geometry = new THREE.BoxGeometry(this.cellSize, this.cellSize, this.cellSize);
-            const materials = [];
-            const colorMap = [null, null, null, null, null, null];
-
-            // Assign colors based on position (crude but effective for visualization)
-            if (z === this.rows - 1) colorMap[0] = this.colors[0]; // Front (Red)
-            if (z === 0) colorMap[1] = this.colors[2];           // Back (Blue)
-            if (x === this.rows - 1) colorMap[2] = this.colors[1]; // Right (Green)
-            if (x === 0) colorMap[3] = this.colors[3];           // Left (Yellow)
-            if (y === this.rows - 1) colorMap[4] = this.colors[4]; // Top (Orange)
-            if (y === 0) colorMap[5] = this.colors[5];           // Bottom (White)
-
-            for (let i = 0; i < 6; i++) {
-              materials.push(new THREE.MeshBasicMaterial({ color: colorMap[i] }));
+    <script>
+        class RubiksCube {
+            constructor() {
+                this.cube = document.getElementById('cube');
+                this.isAutoRotating = false;
+                this.autoRotateInterval = null;
+                this.currentRotationX = -15;
+                this.currentRotationY = 25;
+                this.rotationSpeed = 1;
+                
+                this.initializeCube();
+                this.setupEventListeners();
+                this.setupMouseControls();
             }
-            const faceColors = new THREE.MeshFaceMaterial(materials);
-            const cube = new THREE.Mesh(geometry, faceColors);
-
-            const positionOffset = (this.cellSize + this.spacing) * (this.rows - 1) / 2;
-            cube.position.set(
-              x * (this.cellSize + this.spacing) - positionOffset,
-              y * (this.cellSize + this.spacing) - positionOffset,
-              z * (this.cellSize + this.spacing) - positionOffset
-            );
-            this.scene.add(cube);
-            this.cubes.push(cube);
-            cube.originalPosition = new THREE.Vector3(cube.position.x, cube.position.y, cube.position.z);
-          }
+            
+            initializeCube() {
+                const faces = ['front', 'back', 'right', 'left', 'top', 'bottom'];
+                const colors = ['white', 'yellow', 'red', 'orange', 'blue', 'green'];
+                
+                faces.forEach((face, faceIndex) => {
+                    const faceElement = document.getElementById(face);
+                    faceElement.innerHTML = '';
+                    
+                    for (let i = 0; i < 9; i++) {
+                        const square = document.createElement('div');
+                        square.className = `square ${colors[faceIndex]}`;
+                        square.dataset.originalColor = colors[faceIndex];
+                        faceElement.appendChild(square);
+                    }
+                });
+            }
+            
+            setupEventListeners() {
+                const speedSlider = document.getElementById('rotationSpeed');
+                const rotationXSlider = document.getElementById('rotationX');
+                const rotationYSlider = document.getElementById('rotationY');
+                const perspectiveSlider = document.getElementById('perspective');
+                
+                speedSlider.addEventListener('input', (e) => {
+                    this.rotationSpeed = parseFloat(e.target.value);
+                    document.getElementById('speedValue').textContent = `${this.rotationSpeed.toFixed(1)}x`;
+                });
+                
+                rotationXSlider.addEventListener('input', (e) => {
+                    this.currentRotationX = parseInt(e.target.value);
+                    document.getElementById('rotationXValue').textContent = `${this.currentRotationX}°`;
+                    this.updateCubeRotation();
+                });
+                
+                rotationYSlider.addEventListener('input', (e) => {
+                    this.currentRotationY = parseInt(e.target.value);
+                    document.getElementById('rotationYValue').textContent = `${this.currentRotationY}°`;
+                    this.updateCubeRotation();
+                });
+                
+                perspectiveSlider.addEventListener('input', (e) => {
+                    const perspective = e.target.value;
+                    document.getElementById('perspectiveValue').textContent = `${perspective}px`;
+                    document.querySelector('.cube-container').style.perspective = `${perspective}px`;
+                });
+            }
+            
+            setupMouseControls() {
+                let isDragging = false;
+                let startX, startY;
+                let startRotationX, startRotationY;
+                
+                this.cube.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    startRotationX = this.currentRotationX;
+                    startRotationY = this.currentRotationY;
+                    this.cube.style.cursor = 'grabbing';
+                });
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const deltaX = e.clientX - startX;
+                    const deltaY = e.clientY - startY;
+                    
+                    this.currentRotationY = startRotationY + deltaX * 0.5;
+                    this.currentRotationX = startRotationX - deltaY * 0.5;
+                    
+                    // Update sliders
+                    document.getElementById('rotationX').value = this.currentRotationX;
+                    document.getElementById('rotationY').value = this.currentRotationY;
+                    document.getElementById('rotationXValue').textContent = `${Math.round(this.currentRotationX)}°`;
+                    document.getElementById('rotationYValue').textContent = `${Math.round(this.currentRotationY)}°`;
+                    
+                    this.updateCubeRotation();
+                });
+                
+                document.addEventListener('mouseup', () => {
+                    isDragging = false;
+                    this.cube.style.cursor = 'grab';
+                });
+                
+                this.cube.style.cursor = 'grab';
+            }
+            
+            updateCubeRotation() {
+                if (!this.isAutoRotating) {
+                    this.cube.style.transform = `rotateX(${this.currentRotationX}deg) rotateY(${this.currentRotationY}deg)`;
+                }
+            }
+            
+            scrambleCube() {
+                this.cube.classList.add('scrambling');
+                
+                // Randomize colors
+                const faces = document.querySelectorAll('.face');
+                const colors = ['white', 'yellow', 'red', 'orange', 'blue', 'green'];
+                
+                faces.forEach(face => {
+                    const squares = face.querySelectorAll('.square');
+                    squares.forEach(square => {
+                        // Remove current color class
+                        square.className = 'square';
+                        // Add random color
+                        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                        square.classList.add(randomColor);
+                    });
+                });
+                
+                setTimeout(() => {
+                    this.cube.classList.remove('scrambling');
+                }, 2000);
+            }
+            
+            resetCube() {
+                this.cube.classList.remove('scrambling');
+                this.initializeCube();
+                
+                // Reset rotation
+                this.currentRotationX = -15;
+                this.currentRotationY = 25;
+                document.getElementById('rotationX').value = -15;
+                document.getElementById('rotationY').value = 25;
+                document.getElementById('rotationXValue').textContent = '-15°';
+                document.getElementById('rotationYValue').textContent = '25°';
+                
+                this.updateCubeRotation();
+            }
+            
+            toggleAutoRotate() {
+                if (this.isAutoRotating) {
+                    clearInterval(this.autoRotateInterval);
+                    this.isAutoRotating = false;
+                    this.updateCubeRotation();
+                } else {
+                    this.isAutoRotating = true;
+                    this.autoRotateInterval = setInterval(() => {
+                        this.currentRotationY += this.rotationSpeed;
+                        this.cube.style.transform = `rotateX(${this.currentRotationX}deg) rotateY(${this.currentRotationY}deg)`;
+                        
+                        // Update slider
+                        const normalizedY = ((this.currentRotationY % 360) + 360) % 360;
+                        const sliderY = normalizedY > 180 ? normalizedY - 360 : normalizedY;
+                        document.getElementById('rotationY').value = sliderY;
+                        document.getElementById('rotationYValue').textContent = `${Math.round(sliderY)}°`;
+                    }, 50);
+                }
+            }
+            
+            rotateFace(face) {
+                // Visual feedback for face rotation
+                const faceElement = document.getElementById(this.getFaceId(face));
+                if (faceElement) {
+                    faceElement.style.transform += ' rotateZ(90deg)';
+                    setTimeout(() => {
+                        faceElement.style.transform = faceElement.style.transform.replace(' rotateZ(90deg)', '');
+                    }, 300);
+                }
+                
+                // Add some visual effect
+                const squares = faceElement.querySelectorAll('.square');
+                squares.forEach((square, index) => {
+                    setTimeout(() => {
+                        square.style.transform = 'scale(1.1)';
+                        setTimeout(() => {
+                            square.style.transform = '';
+                        }, 150);
+                    }, index * 30);
+                });
+            }
+            
+            getFaceId(notation) {
+                const faceMap = {
+                    'F': 'front',
+                    'B': 'back',
+                    'R': 'right',
+                    'L': 'left',
+                    'U': 'top',
+                    'D': 'bottom'
+                };
+                return faceMap[notation];
+            }
         }
-      }
-    };
-
-    RubiksCube.prototype._setupEventListeners = function() {
-      window.addEventListener('resize', this._onWindowResize.bind(this), false);
-      document.addEventListener('keydown', this._onKeyDown.bind(this));
-    };
-
-    RubiksCube.prototype._onWindowResize = function() {
-      this.camera.aspect = window.innerWidth / window.innerHeight;
-      this.camera.updateProjectionMatrix();
-      this.renderer.setSize(window.innerWidth, window.innerHeight);
-    };
-
-    RubiksCube.prototype._onKeyDown = function(event) {
-      if (this.animating) return;
-
-      const key = event.key.toLowerCase();
-      let layer = Math.floor(this.rows / 2); // Default middle layer
-
-      // Allow specifying layer with number keys (1 to rows)
-      const layerNumber = parseInt(key);
-      if (!isNaN(layerNumber) && layerNumber >= 1 && layerNumber <= this.rows) {
-        layer = layerNumber - 1;
-      }
-
-      switch (key) {
-        // Rotate X-axis (Red/Orange faces)
-        case 'r': this._queueRotation('x', layer, 1); break;   // Right clockwise
-        case 'l': this._queueRotation('x', layer, -1); break;  // Left clockwise
-        case 'u': this._queueRotation('y', layer, 1); break;   // Up clockwise
-        case 'd': this._queueRotation('y', layer, -1); break;  // Down clockwise
-        case 'f': this._queueRotation('z', layer, 1); break;   // Front clockwise
-        case 'b': this._queueRotation('z', layer, -1); break;  // Back clockwise
-
-        case 'r\'': // Right counter-clockwise
-        case 'r\'\'': this._queueRotation('x', layer, -1); break;
-        case 'l\'': // Left counter-clockwise
-        case 'l\'\'': this._queueRotation('x', layer, 1); break;
-        case 'u\'': // Up counter-clockwise
-        case 'u\'\'': this._queueRotation('y', layer, -1); break;
-        case 'd\'': // Down counter-clockwise
-        case 'd\'\'': this._queueRotation('y', layer, 1); break;
-        case 'f\'': // Front counter-clockwise
-        case 'f\'\'': this._queueRotation('z', layer, -1); break;
-        case 'b\'': // Back counter-clockwise
-        case 'b\'\'': this._queueRotation('z', layer, 1); break;
-
-        // Whole cube rotations
-        case 'x': this._queueRotation('wholeX', 0, 1); break;
-        case 'y': this._queueRotation('wholeY', 0, 1); break;
-        case 'z': this._queueRotation('wholeZ', 0, 1); break;
-        case 'x\'': this._queueRotation('wholeX', 0, -1); break;
-        case 'y\'': this._queueRotation('wholeY', 0, -1); break;
-        case 'z\'': this._queueRotation('wholeZ', 0, -1); break;
-      }
-    };
-
-    RubiksCube.prototype._queueRotation = function(axis, layer, direction) {
-      this.animationQueue.push({ axis: axis, layer: layer, direction: direction });
-      if (!this.animating) {
-        this._startRotation();
-      }
-    };
-
-    RubiksCube.prototype._startRotation = function() {
-      if (this.animationQueue.length === 0) {
-        this.animating = false;
-        this.currentRotationAxis = null;
-        return;
-      }
-
-      this.animating = true;
-      const rotation = this.animationQueue.shift();
-      this.currentRotationAxis = rotation.axis;
-      this.currentRotationLayer = rotation.layer;
-      this.currentRotationDirection = rotation.direction;
-      this.currentRotationAngle = 0;
-
-      this.rotatingCubes = this.cubes.filter(cube => {
-        const position = cube.originalPosition;
-        const layerThreshold = this.currentRotationLayer * (this.cellSize + this.spacing);
-        const nextLayerThreshold = layerThreshold + this.cellSize;
-
-        if (this.currentRotationAxis === 'x') {
-          return position.x >= layerThreshold && position.x < nextLayerThreshold;
-        } else if (this.currentRotationAxis === 'y') {
-          return position.y >= layerThreshold && position.y < nextLayerThreshold;
-        } else if (this.currentRotationAxis === 'z') {
-          return position.z >= layerThreshold && position.z < nextLayerThreshold;
-        } else if (this.currentRotationAxis === 'wholeX') {
-          return true;
-        } else if (this.currentRotationAxis === 'wholeY') {
-          return true;
-        } else if (this.currentRotationAxis === 'wholeZ') {
-          return true;
+        
+        // Global functions for button clicks
+        let rubiksCube;
+        
+        function scrambleCube() {
+            rubiksCube.scrambleCube();
         }
-        return false;
-      });
-    };
-
-    RubiksCube.prototype._rotateLayer = function(deltaTime) {
-      if (!this.animating || this.currentRotationAxis === null) return;
-
-      const deltaAngle = this.rotationSpeed * deltaTime * this.currentRotationDirection;
-      this.currentRotationAngle += Math.abs(deltaAngle);
-
-      this.rotatingCubes.forEach(cube => {
-        const worldPosition = new THREE.Vector3();
-        cube.getWorldPosition(worldPosition);
-
-        if (this.currentRotationAxis === 'x') {
-          cube.position.sub(worldPosition); // Move to origin for rotation
-          cube.position.applyAxisAngle(new THREE.Vector3(1, 0, 0), deltaAngle);
-          cube.position.add(worldPosition); // Move back
-          cube.rotateX(deltaAngle);
-        } else if (this.currentRotationAxis === 'y') {
-          cube.position.sub(worldPosition);
-          cube.position.applyAxisAngle(new THREE.Vector3(0, 1, 0), deltaAngle);
-          cube.position.add(worldPosition);
-          cube.rotateY(deltaAngle);
-        } else if (this.currentRotationAxis === 'z') {
-          cube.position.sub(worldPosition);
-          cube.position.applyAxisAngle(new THREE.Vector3(0, 0, 1), deltaAngle);
-          cube.position.add(worldPosition);
-          cube.rotateZ(deltaAngle);
-        } else if (this.currentRotationAxis === 'wholeX') {
-          this.scene.rotateX(deltaAngle);
-        } else if (this.currentRotationAxis === 'wholeY') {
-          this.scene.rotateY(deltaAngle);
-        } else if (this.currentRotationAxis === 'wholeZ') {
-          this.scene.rotateZ(deltaAngle);
+        
+        function resetCube() {
+            rubiksCube.resetCube();
         }
-      });
-
-      if (this.currentRotationAngle >= this.targetRotationAngle) {
-        this.animating = false;
-        this.rotatingCubes.forEach(cube => {
-          cube.updateMatrixWorld();
-          cube.originalPosition.copy(cube.position);
+        
+        function toggleAutoRotate() {
+            rubiksCube.toggleAutoRotate();
+        }
+        
+        function rotateFace(face) {
+            rubiksCube.rotateFace(face);
+        }
+        
+        // Initialize the cube when the page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            rubiksCube = new RubiksCube();
         });
-        this._startRotation(); // Start the next rotation in the queue
-      }
-    };
-
-    RubiksCube.prototype._animate = function() {
-      requestAnimationFrame(this._animate.bind(this));
-      this._rotateLayer(16 / 1000); // Assuming ~60 FPS
-      this.renderer.render(this.scene, this.camera);
-    };
-
-    // Instantiate the Rubik's Cube with a specified number of rows
-    const rubiksCube = new RubiksCube('rubiksCanvas', 3); // Example: 3x3x3 cube
-
-    // Handle window resizing
-    window.addEventListener('resize', () => {
-      rubiksCube.camera.aspect = window.innerWidth / window.innerHeight;
-      rubiksCube.camera.updateProjectionMatrix();
-      rubiksCube.renderer.setSize(window.innerWidth, window.innerHeight);
-    });
-  </script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.js"></script>
-4
+    </script>
 </body>
 </html>

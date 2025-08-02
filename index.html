@@ -5,7 +5,7 @@
   <!-- <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">  -->
 <style>
 
-/* normalize.css by Nicolas Gallagher and Jonathan Neal git.io/normalize */
+/* normalize.css START */
 /* HTML5 display-role reset for older browsers */
 html {
   -ms-text-size-adjust: 100%;
@@ -219,8 +219,8 @@ textarea {
   -webkit-appearance: button;
   font: inherit;
 }
-/* End normalize.css */
 
+/* normalize.css END */
 
 
 
@@ -270,20 +270,22 @@ body {
 /* Container and panel styles */
 .w3-container{
   padding: 0.01em 16px;
-  font-size: 1.5em;
 }
 
 /* Typography styles */
-p {
+lnk {
   margin-left: 2em;
+  display: inline;
 }
 
+app {
+  font-size: 1.5em;
+  display: inline;
+  margin-left:10px;
+}
+  
 h3 {
   font-size: 1em;
-}
-
-.logo_img {
-  margin-right: 36px;
 }
 
 </style>
@@ -291,8 +293,8 @@ h3 {
  
 <body>
   <div class="w3-container">
-      <img class=logo_img src="./img/logo.gif">
-      Systems Planet 
+      <img src="./img/logo.gif">
+      <app>Systems Planet</app> 
       <a target=_self href="https://github.com/Systemsplanet/systemsplanet.github.io/blob/main/index.html"> [edit] </a>
   </div>
 
@@ -521,7 +523,7 @@ h3 {
 
           // Create and append links
           section.links.forEach(item => {
-            const p = document.createElement('p');
+            const p = document.createElement('lnk');
 
             if (item.group) { // Handles items with multiple links in one <p>
               if (item.label) {

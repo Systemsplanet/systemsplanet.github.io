@@ -281,12 +281,12 @@ lnk {
 app {
   font-size: 1.5em;
   display: inline;
-  margin-left:10px;
+  margin: 0 12px 0 10px;
 }
   
-h3 {
+heading {
   font-size: 1em;
-  margin: 0 0 4px 0;
+  margin: 2px 0 2px 0;
 }
 
 </style>
@@ -518,7 +518,7 @@ h3 {
 
         if (targetDiv) {
           // Create and append heading
-          const h3 = document.createElement('h3');
+          const h3 = document.createElement('heading');
           h3.textContent = section.heading;
           targetDiv.appendChild(h3);
 

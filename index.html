@@ -273,9 +273,9 @@ body {
 }
 
 /* Typography styles */
-lnk {
+p {
   margin-left: 2em;
-  display: inline;
+/*  display: inline;*/
 }
 
 app {
@@ -523,7 +523,7 @@ h3 {
 
           // Create and append links
           section.links.forEach(item => {
-            const p = document.createElement('lnk');
+            const p = document.createElement('p');
 
             if (item.group) { // Handles items with multiple links in one <p>
               if (item.label) {

@@ -876,7 +876,6 @@
         filterAndRender();
         populateFilters();
         closePromptModal();
-        showMessage('Saved', 'Prompt saved successfully!');
         saveToGitHub(); // <-- ADDED LINE: automatically syncs to GitHub after saving a prompt
       };
 
@@ -921,6 +920,7 @@
 
         const saveToGitHub = async () => {
             log('Starting save process to GitHub...', 'info');
+            openGitHubModal();
             const { owner, repo, path, apiKey } = githubConfig;
             if (!owner || !repo || !path || !apiKey) {
                 log('GitHub configuration is incomplete. Please fill all fields.', 'error');
@@ -980,7 +980,7 @@
                 if (putResponse.ok) {
                     log('Successfully saved to GitHub!', 'success');
                     log(`Commit URL: ${result.commit.html_url}`, 'info'); // Provide commit URL
-                    setTimeout(closeGitHubModal, 3000);
+                    //setTimeout(closeGitHubModal, 3000);
                 } else {
                     throw new Error(`GitHub API Error: ${putResponse.status} - ${result.message || JSON.stringify(result)}`);
                 }
@@ -988,6 +988,7 @@
                 log(`Error: ${error.message}`, 'error');
                 console.error(error);
             } finally {
+              //closeGitHubModal();
             }
         };
 

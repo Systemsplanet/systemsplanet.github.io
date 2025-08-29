@@ -4,8 +4,380 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AIStore</title>
-  <style>
-    /* ... (CSS unchanged) ... */
+      <style>
+    :root {
+      --primary-bg: #1a1a1a;
+      --secondary-bg: #2b2b2b;
+      --tertiary-bg: #3c3c3c;
+      --primary-text: #f0f0f0;
+      --secondary-text: #b0b0b0;
+      --accent-color: #4a90e2;
+      --accent-hover: #5aa1f2;
+      --error-color: #e24a4a;
+      --success-color: #4ae28a;
+      --font-family: 'Inter', sans-serif;
+      --border-radius: 8px;
+      --box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    body {
+      font-family: var(--font-family);
+      background-color: var(--primary-bg);
+      color: var(--primary-text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      box-sizing: border-box;
+    }
+
+    .container {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 0px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 10px;
+      background-color: var(--secondary-bg);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+    }
+
+    header h1 {
+      margin: 0;
+      color: var(--accent-color);
+    }
+
+    #status-msg {
+      color: green;
+      height: 1em;
+      width: 50%;
+    }
+
+    .controls {
+      display: flex;
+      gap: 15px;
+      background-color: var(--secondary-bg);
+      border-radius: var(--border-radius);
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-group {
+      flex-grow: 1;
+      display: flex;
+    }
+
+    .search-group input {
+      border-radius: var(--border-radius) 0 0 var(--border-radius);
+      border-right: none;
+    }
+
+    .search-group button {
+      border-radius: 0 var(--border-radius) var(--border-radius) 0;
+    }
+
+    input,
+    select {
+      padding: 10px;
+      border: 1px solid var(--tertiary-bg);
+      background-color: var(--primary-bg);
+      color: var(--primary-text);
+      border-radius: var(--border-radius);
+      font-size: 1em;
+      box-sizing: border-box;
+    }
+
+    input:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    button {
+      padding: 4px 12px;
+      border: none;
+      background-color: var(--accent-color);
+      color: white;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      font-size: 1em;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    button:hover {
+      background-color: var(--accent-hover);
+    }
+
+    button:disabled {
+      background-color: var(--tertiary-bg);
+      cursor: not-allowed;
+    }
+
+    .results-grid {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background-color: var(--secondary-bg);
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: var(--box-shadow);
+    }
+
+    th,
+    td {
+      padding: 1px 8px 0px 0px;
+      text-align: left;
+      border-bottom: 0px solid var(--tertiary-bg);
+      white-space: nowrap;
+    }
+
+    th {
+      background-color: var(--tertiary-bg);
+    }
+
+    tbody tr:hover {
+      background-color: #253344;
+    }
+
+    .truncate {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: inline-block;
+      vertical-align: middle;
+    }
+
+    .actions-cell {
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0, 0, 0, 0.6);
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background-color: var(--secondary-bg);
+      margin: auto;
+      padding: 25px;
+      border: 1px solid var(--tertiary-bg);
+      width: 90%;
+      max-width: 600px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      color: var(--accent-color);
+    }
+
+    .close-button {
+      color: var(--secondary-text);
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close-button:hover {
+      color: var(--primary-text);
+    }
+
+    .modal-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .modal-form .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .modal-form .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .modal-form label {
+      font-weight: bold;
+      color: var(--secondary-text);
+    }
+
+    .modal-form input,
+    .modal-form textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px;
+      border: 1px solid var(--tertiary-bg);
+      background-color: var(--primary-bg);
+      color: var(--primary-text);
+      border-radius: var(--border-radius);
+    }
+
+    .modal-form textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    #log-area {
+      background-color: var(--primary-bg);
+      border: 1px solid var(--tertiary-bg);
+      border-radius: var(--border-radius);
+      padding: 10px;
+      height: 150px;
+      overflow-y: auto;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.9em;
+      white-space: pre-wrap;
+      margin-top: 10px;
+    }
+
+    #log-area .log-success {
+      color: var(--success-color);
+    }
+
+    #log-area .log-error {
+      color: var(--error-color);
+    }
+
+    #log-area .log-info {
+      color: var(--secondary-text);
+    }
+
+    #message-box,
+    #confirm-box {
+      display: none;
+      position: fixed;
+      z-index: 1001;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      align-items: center;
+      justify-content: center;
+    }
+
+    #message-box-content,
+    #confirm-box-content {
+      background-color: var(--secondary-bg);
+      padding: 25px;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      max-width: 400px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    #message-box-content h3,
+    #confirm-box-content h3 {
+      color: var(--accent-color);
+      margin-top: 0;
+    }
+
+    #message-box-content p,
+    #confirm-box-content p {
+      color: var(--primary-text);
+      margin-bottom: 0;
+    }
+
+    #message-box-buttons,
+    #confirm-box-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    #message-box-buttons button,
+    #confirm-box-buttons button {
+      min-width: 80px;
+    }
+
+    #githubHelpIcon {
+      cursor: pointer;
+      background-color: green;
+      padding: 12px 0 0 0;
+    }
+
+    @media (max-width: 768px) {
+      .modal-form {
+        grid-template-columns: 1fr;
+      }
+      .search-group {
+        flex-direction: column;
+      }
+      .search-group input {
+        border-radius: var(--border-radius);
+        border-right: 1px solid var(--tertiary-bg);
+      }
+      .search-group button {
+        border-radius: var(--border-radius);
+      }
+      .controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .controls>*:not(.search-group) {
+        width: 100%;
+      }
+    }
   </style>
 </head>
 <body>

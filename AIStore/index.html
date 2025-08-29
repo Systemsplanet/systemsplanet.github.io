@@ -1009,16 +1009,16 @@
         };
 
         const saveToGitHub = async () => {
-            saveToGithubBtn.disabled = true;
-            saveToGithubBtn.textContent = 'Saving...';
+            //saveToGithubBtn.disabled = true;
+            //saveToGithubBtn.textContent = 'Saving...';
             log('Starting save process to GitHub...', 'info');
 
             const { owner, repo, path, apiKey } = githubConfig;
 
             if (!owner || !repo || !path || !apiKey) {
                 log('GitHub configuration is incomplete. Please fill all fields.', 'error');
-                saveToGithubBtn.disabled = false;
-                saveToGithubBtn.textContent = 'Save to GitHub';
+                //saveToGithubBtn.disabled = false;
+                //saveToGithubBtn.textContent = 'Save to GitHub';
                 return;
             }
             

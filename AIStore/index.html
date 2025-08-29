@@ -722,13 +722,242 @@
       };
 
       // --- (remainder of initialization/setup code unchanged) ---
-      // Event listeners for other components...
-      // Modal handling...
-      // Message box, Confirm box...
-      // Initialization bucket...
-      // etc.
+        const openGitHubModal = () => {
+            logArea.innerHTML = ''; // Clear logs
+            loadGitHubConfig();
+            githubModal.style.display = 'flex';
+        };
 
-      // All other logic matches your original unchanged code.
+        const closeGitHubModal = () => {
+            githubModal.style.display = 'none';
+        };
+        
+        // --- GITHUB INTEGRATION ---
+        const loadGitHubConfig = () => {
+            const storedConfig = getCookie('Github');
+            if(storedConfig) {
+                githubConfig = { ...githubConfig, ...storedConfig };
+            }
+            githubOwnerInput.value = githubConfig.owner;
+            githubRepoInput.value = githubConfig.repo;
+            githubPathInput.value = githubConfig.path;
+            githubKeyInput.value = githubConfig.apiKey;
+        };
+        
+        const saveGitHubConfig = () => {
+            githubConfig.owner = githubOwnerInput.value.trim();
+            githubConfig.repo = githubRepoInput.value.trim();
+            githubConfig.path = githubPathInput.value.trim();
+            githubConfig.apiKey = githubKeyInput.value.trim();
+            setCookie('Github', githubConfig);
+        };
+
+        const sortPrompt = (prompts) => {
+           prompts.sort((a, b) => {
+             const keyA = `${a.category}${a.aiName}${a.promptName}${a.promptText}`;
+             const keyB = `${b.category}${b.aiName}${b.promptName}${b.promptText}`;
+             return keyA.localeCompare(keyB);
+           });
+        };
+
+        const saveToGitHub = async () => {
+            saveToGithubBtn.disabled = true;
+            saveToGithubBtn.textContent = 'Saving...';
+            log('Starting save process to GitHub...', 'info');
+
+            const { owner, repo, path, apiKey } = githubConfig;
+
+            if (!owner || !repo || !path || !apiKey) {
+                log('GitHub configuration is incomplete. Please fill all fields.', 'error');
+                saveToGithubBtn.disabled = false;
+                saveToGithubBtn.textContent = 'Save to GitHub';
+                return;
+            }
+            
+            const GITHUB_API_URL = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
+            const headers = {
+                'Authorization': `token ${apiKey}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'X-GitHub-Api-Version': '2022-11-28'
+            };
+
+            try {
+                if (prompts.length < 1 )
+                     throw new Error("GitHub API Error: cant save an empty list");
+                
+                // 1. Get the current file to get its SHA
+                log('Fetching current file SHA...', 'info');
+                const getFileResponse = await fetch(GITHUB_API_URL, { headers });
+                
+                let sha;
+                if (getFileResponse.ok) {
+                    const fileData = await getFileResponse.json();
+                    sha = fileData.sha;
+                    log(`File found. Current SHA: ${sha.substring(0,7)}...`, 'success');
+                } else if (getFileResponse.status === 404) {
+                    log('File not found. This will be a new commit.', 'info');
+                } else {
+                    throw new Error(`Failed to fetch file: ${getFileResponse.status} ${await getFileResponse.text()}`);
+                }
+                
+                // 2. Prepare the content for upload
+                sortPrompt(prompts);
+                
+                const contentToSave = JSON.stringify(prompts, null, 2);
+                // encodeURIComponent is crucial for handling non-ASCII characters, then btoa for base64
+                const encodedContent = btoa(unescape(encodeURIComponent(contentToSave)));
+
+                // 3. Create or update the file
+                const body = {
+                    message: `AIStore: Updated prompts.json on ${new Date().toLocaleString()}`, // More readable date
+                    content: encodedContent,
+                    sha: sha // Include SHA if updating
+                };
+                if (!sha) delete body.sha; // Don't send SHA for new files
+
+                log('Uploading new content...', 'info');
+                const putResponse = await fetch(GITHUB_API_URL, {
+                    method: 'PUT',
+                    headers,
+                    body: JSON.stringify(body)
+                });
+                
+                const result = await putResponse.json();
+                
+                if (putResponse.ok) {
+                    log('Successfully saved to GitHub!', 'success');
+                    log(`Commit URL: ${result.commit.html_url}`, 'info'); // Provide commit URL
+                    setTimeout(closeGitHubModal, 3000);
+                } else {
+                    throw new Error(`GitHub API Error: ${putResponse.status} - ${result.message || JSON.stringify(result)}`);
+                }
+            } catch (error) {
+                log(`Error: ${error.message}`, 'error');
+                console.error(error);
+            } finally {
+                saveToGithubBtn.disabled = false;
+                saveToGithubBtn.textContent = 'Save to GitHub';
+            }
+        };
+
+
+        if (helpIcon) {
+            helpIcon.addEventListener('click', function() {
+            const message = `
+                <h2>Here are the steps to add a new GitHub storage location for AIStore.</h2>
+                <p>Generate a new GitHub repo to store your prompts named <strong>AIStore</strong></p>
+                <p>Generate GitHub fine-grained personal access token:</p>
+                <ol>
+                    <li>Login to GitHub</li>
+                    <li>Click your profile photo in the upper-right corner</li>
+                    <li>Click "Developer settings"</li>
+                    <li>Click "Personal access tokens"</li>
+                    <li>Click "Fine-grained tokens"</li>
+                    <li>Click "Generate new token"</li>
+                    <li>Enter a unique "Token name"</li>
+                    <li>Set Expiration to "No expiration"</li>
+                    <li>Select "Only select repositories"</li>
+                    <li>Select your newly created repo</li>
+                    <li>Select "Repository permissions"</li>
+                    <li>Find "Contents"</li>
+                    <li>Select access "read and write"</li>
+                    <li>Select "Generate token"</li>
+                    <li>Select "Generate token" again</li>
+                    <li>Make sure to copy your personal access token now as you will not be able to see this again.</li>
+                    <li>Open AIStore app</li>
+                    <li>Click "Save" button</li>
+                    <li>Set "Repository Name" to your repo name</li>
+                    <li>Set the AIStore "GitHub API Key (Personal Access Token)" to your newly created token.</li>
+                    <li>Select "Save to Github"</li>
+                </ol>
+            `;
+
+            const newWindow = window.open('', '_blank', 'width=800,height=600,scrollbars=yes,resizable=yes');
+            if (newWindow) {
+                newWindow.document.write('<!DOCTYPE html><html><head><title>AIStore GitHub Setup Help</title>');
+                newWindow.document.write('<style>');
+                newWindow.document.write('body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }');
+                newWindow.document.write('h2 { color: #333; }');
+                newWindow.document.write('ol { list-style-type: decimal; margin-left: 20px; }');
+                newWindow.document.write('</style>');
+                newWindow.document.write('</head><body>');
+                newWindow.document.write(message);
+                newWindow.document.write('</body></html>');
+                newWindow.document.close();
+            } else {
+                alert('Pop-up blocked! Please allow pop-ups for this site to view the help message.');
+            }
+        }); // addEventListener
+       } // if
+        
+        // --- INITIALIZATION ---
+        const initialize = async () => {
+            loadGitHubConfig();
+            console.log("githubConfig:" +JSON.stringify(githubConfig));
+            let promptsUrl = getPromptsUrl();
+            console.log("promptsUrl: [" + promptsUrl + "]");
+            try {
+                // https://raw.githubusercontent.com/Systemsplanet/AIStore/main/prompts.json
+                const response = await fetch(promptsUrl);
+                if (!response.ok) {
+                    throw new Error(`Network response was not ok: ${response.statusText}`);
+                }
+                const initialPrompts = await response.json();
+                if(Array.isArray(initialPrompts)) {
+                    prompts = initialPrompts;
+                    console.log(`Successfully fetched ${prompts.length} prompts.`);
+                } else {
+                    console.error("Fetched data is not an array. Initializing with empty prompts.");
+                    prompts = []; // Ensure prompts is an array even if fetch fails or returns non-array
+                }
+            } catch (error) {
+                console.error('Failed to fetch initial prompts:', error);
+                showMessage('Error', 'Could not load the initial set of prompts. The application may be empty.');
+                prompts = []; // Ensure prompts is an array even on fetch error
+            }
+                            
+            sortPrompt(prompts);
+            filterAndRender();
+            populateFilters();
+            setupEventListeners();
+        };
+        
+        const setupEventListeners = () => {
+            // Filters
+            searchQuery.addEventListener('input', filterAndRender);
+            categoryFilter.addEventListener('change', filterAndRender);
+            aiNameFilter.addEventListener('change', filterAndRender);
+            
+            // Prompt Modal
+            addPromptBtn.addEventListener('click', () => openPromptModal());
+            closePromptModalBtn.addEventListener('click', closePromptModal);
+            cancelPromptBtn.addEventListener('click', closePromptModal);
+            savePromptBtn.addEventListener('click', savePrompt);
+            [promptCategoryInput, promptNameInput, aiNameInput].forEach(input => {
+                input.addEventListener('input', checkDuplicate);
+            });
+            
+            // GitHub Modal
+            githubSettingsBtn.addEventListener('click', openGitHubModal);
+            closeGithubModalBtn.addEventListener('click', closeGitHubModal);
+            [githubOwnerInput, githubRepoInput, githubPathInput, githubKeyInput].forEach(input => {
+                input.addEventListener('input', saveGitHubConfig); // Changed to input for real-time saving
+            });
+            saveToGithubBtn.addEventListener('click', saveToGitHub);
+            
+            // Custom Message Box
+            messageBoxOkBtn.addEventListener('click', () => messageBox.style.display = 'none');
+            
+            // Close modals on outside click
+            window.addEventListener('click', (event) => {
+                if (event.target === promptModal) closePromptModal();
+                if (event.target === githubModal) closeGitHubModal();
+                if (event.target === messageBox) messageBox.style.display = 'none';
+                if (event.target === confirmBox) confirmBox.style.display = 'none';
+            });
+        };
+
+        initialize();
     });
   </script>
 </body>

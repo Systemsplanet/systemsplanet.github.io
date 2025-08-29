@@ -594,7 +594,255 @@
       const confirmBoxYesBtn = document.getElementById('confirm-box-yes');
       const confirmBoxNoBtn = document.getElementById('confirm-box-no');
 
-      
+      const helpIcon = document.getElementById('githubHelpIcon');
+
+        const hideStatus = () => { statusMsg.innerHTML =""; }
+        const showStatus = (message) => {
+            statusMsg.innerHTML = message;
+            setTimeout(hideStatus, 3000);    
+        };
+
+        // --- CUSTOM ALERT/CONFIRM ---
+        const showMessage = (title, message) => {
+            messageBoxTitle.textContent = title;
+            messageBoxText.textContent = message;
+            messageBox.style.display = 'flex';
+        };
+        
+
+
+        const showConfirm = (title, message) => {
+            confirmBoxTitle.textContent = title;
+            confirmBoxText.innerHTML  = message;
+            confirmBox.style.display = 'flex';
+            return new Promise((resolve) => {
+                confirmBoxYesBtn.onclick = () => {
+                    confirmBox.style.display = 'none';
+                    resolve(true);
+                };
+                confirmBoxNoBtn.onclick = () => {
+                    confirmBox.style.display = 'none';
+                    resolve(false);
+                };
+            });
+        };
+
+        // --- COOKIE HELPERS ---
+        const setCookie = (name, value, days) => {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            // Use a very long expiry for "never expires"
+            document.cookie = name + "=" + (JSON.stringify(value) || "") + "; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+        };
+
+        const getCookie = (name) => {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) {
+                    try {
+                        return JSON.parse(c.substring(nameEQ.length, c.length));
+                    } catch(e) {
+                        return c.substring(nameEQ.length, c.length);
+                    }
+                }
+            }
+            return null;
+        };
+
+        // --- LOGGING ---
+        const log = (message, type = 'info') => {
+            console.log(message);
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEntry.className = `log-${type}`;
+            logArea.appendChild(logEntry);
+            logArea.scrollTop = logArea.scrollHeight;
+        };
+        
+        // --- DATA HANDLING ---
+        const getPromptUniqueKey = (p) => `${p.category?.toLowerCase()}/${p.promptName?.toLowerCase()}/${p.aiName?.toLowerCase()}`;
+        
+        const renderPrompts = (filteredPrompts = prompts) => {
+            promptsTbody.innerHTML = '';
+            if (filteredPrompts.length === 0) {
+                const row = promptsTbody.insertRow();
+                const cell = row.insertCell();
+                cell.colSpan = 7;
+                cell.textContent = "No prompts found.";
+                cell.style.textAlign = 'center';
+                return;
+            }
+            filteredPrompts.forEach((prompt, index) => {
+                const originalIndex = prompts.findIndex(p => p === prompt);
+                const row = promptsTbody.insertRow();
+                log("prompt"+index+":" + JSON.stringify(prompt) )
+                row.innerHTML = `
+                    <td class="actions-cell">
+                        <button class="edit-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">innerHTML CONath d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/><path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5v11z"/></svg>
+                        </button>
+                    </td>
+
+                    <td class="copy-cell" >${prompt.category || ''}</td>
+                    <td class="copy-cell" >${prompt.aiName || ''}</td>
+                    <td class="copy-cell" >${prompt.promptName || ''}</td>
+                    
+                    <td class="copy-cell" ><div class="truncate" title="${prompt.promptText || ''}">${(prompt.promptText?.length > 30 ? prompt.promptText.substring(0, 27) + '...' : prompt.promptText) || ''}</div></td>
+                    <td class="copy-cell" ><div class="truncate" title="${prompt.notes || ''}">${(prompt.notes?.length > 30 ? prompt.notes.substring(0, 27) + '...' : prompt.notes) || ''}</div></td>
+                    <td class="copy-cell" >${prompt.dateUpdated ? new Date(prompt.dateUpdated).toLocaleDateString() : ''}</td>
+                    <td class="actions-cell">
+                        <button class="remove-btn">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/><path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/></svg>
+                        </button>
+                    </td>
+                `;
+                row.querySelectorAll('.copy-cell').forEach(cell => {
+                   cell.addEventListener('click', () => copyPromptText(prompt.promptText));
+                });
+                row.querySelector('.edit-btn').addEventListener('click', () => openPromptModal(originalIndex));
+                row.querySelector('.remove-btn').addEventListener('click', () => removePrompt(originalIndex));
+            });
+        };
+
+        
+        const populateFilters = () => {
+            // Use PascalCase for mapping to match prompt object properties
+            const categories = [...new Set(prompts.map(p => p.category))].sort();
+            const aiNames = [...new Set(prompts.map(p => p.aiName))].sort();
+
+            // Clear existing options except for the "All" option
+            categoryFilter.innerHTML = '<option value="*">All Categories</option>';
+            aiNameFilter.innerHTML = '<option value="*">All AI Names</option>';
+
+            categories.forEach(cat => {
+                if(cat) {
+                    const option = new Option(cat, cat);
+                    categoryFilter.add(option);
+                }
+            });
+            aiNames.forEach(name => {
+                if(name) {
+                    const option = new Option(name, name);
+                    aiNameFilter.add(option);
+                }
+            });
+        };
+
+        const filterAndRender = () => {
+            const query = searchQuery.value.toLowerCase();
+            const category = categoryFilter.value;
+            const aiName = aiNameFilter.value;
+
+            const filtered = prompts.filter(p => {
+                // Use PascalCase for comparison with prompt object properties
+                const categoryMatch = category === '*' || p.category === category;
+                const aiNameMatch = aiName === '*' || p.aiName === aiName;
+                const queryMatch = !query || 
+                    p.category?.toLowerCase().includes(query) ||
+                    p.promptName?.toLowerCase().includes(query) ||
+                    p.aiName?.toLowerCase().includes(query) ||
+                    p.promptText?.toLowerCase().includes(query) ||
+                    p.notes?.toLowerCase().includes(query); // Added notes to search
+                
+                return categoryMatch && aiNameMatch && queryMatch;
+            });
+            renderPrompts(filtered);
+            addInfo.innerHTML = "AIStore (" + filtered.length + ")";
+        };
+        
+        const copyPromptText = (text) => {
+            if (!navigator.clipboard) {
+                // Fallback for older browsers (document.execCommand is deprecated but more widely supported in sandboxed iframes)
+                const textArea = document.createElement("textarea");
+                textArea.value = text;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px"; // Hide off-screen
+                textArea.style.top = "0";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                try {
+                    document.execCommand('copy');
+                    showStatus('copied to clipboard');
+                } catch (err) {
+                    showMessage('Error', 'Failed to copy prompt.');
+                }
+                document.body.removeChild(textArea);
+                return;
+            }
+            navigator.clipboard.writeText(text).then(() => {
+                showStatus('copied to clipboard');
+            }).catch(err => {
+                showMessage('Error', 'Failed to copy prompt.');
+            });
+        };
+
+        const removePrompt = async (index) => {
+            const prompt = prompts[index];
+            log("removePrompt:[" +JSON.stringify(prompt, null, 2) + "]");
+            const confirmed = await showConfirm('Delete Prompt', `Are you sure you want to delete the prompt? <p>Category: "${prompts[index].category}"  <p>AI Name: "${prompts[index].aiName}"  <p>Prompt Name: "${prompts[index].promptName}"    `);            
+            if (confirmed) {
+                prompts.splice(index, 1);
+                filterAndRender();
+                populateFilters();
+                showMessage('Deleted', 'Prompt successfully deleted.');
+            }
+        };
+
+        // --- MODAL HANDLING ---
+        const openPromptModal = (index = null) => {
+            promptForm.reset();
+            duplicateWarning.style.display = 'none';
+            if (index !== null) {
+                const prompt = prompts[index];
+                modalTitle.textContent = 'Edit Prompt';
+                promptIndexInput.value = index;
+                promptCategoryInput.value = prompt.category || '';
+                promptNameInput.value = prompt.promptName || '';
+                aiNameInput.value = prompt.aiName || '';
+                userIdInput.value = prompt.userID || '';
+                promptTextInput.value = prompt.promptText || '';
+                notesInput.value = prompt.notes || '';
+            } else {
+                modalTitle.textContent = 'Add New Prompt';
+                promptIndexInput.value = '';
+            }
+            promptModal.style.display = 'flex';
+            checkDuplicate(); // Check duplicates immediately when opening for add/edit
+        };
+
+        const closePromptModal = () => {
+            promptModal.style.display = 'none';
+        };
+        
+        const checkDuplicate = () => {
+            const currentIndex = promptIndexInput.value;
+            const currentKey = getPromptUniqueKey({
+                category: promptCategoryInput.value,
+                promptName: promptNameInput.value,
+                aiName: aiNameInput.value
+            });
+
+            const isDuplicate = prompts.some((p, i) => {
+                // It's a duplicate if the key exists and it's not the prompt we are currently editing
+                return getPromptUniqueKey(p) === currentKey && i.toString() !== currentIndex;
+            });
+
+            if (isDuplicate) {
+                duplicateWarning.style.display = 'block';
+                savePromptBtn.disabled = true;
+            } else {
+                duplicateWarning.style.display = 'none';
+                savePromptBtn.disabled = false;
+            }
+        };
 /*  dup
       const sortPrompt = (prompts) => {
         prompts.sort((a, b) => {

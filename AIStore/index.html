@@ -843,96 +843,7 @@
                 savePromptBtn.disabled = false;
             }
         };
-/*  dup
-      const sortPrompt = (prompts) => {
-        prompts.sort((a, b) => {
-          const keyA = `${a.category}${a.aiName}${a.promptName}${a.promptText}`;
-          const keyB = `${b.category}${b.aiName}${b.promptName}${b.promptText}`;
-          return keyA.localeCompare(keyB);
-        });
-      };
 
-      // --- GITHUB INTEGRATION ---
-
-      const saveToGitHub = async () => {
-        // saveToGithubBtn (button) code removed below, since button doesn't exist
-        // saveToGithubBtn.disabled = true;
-        // saveToGithubBtn.textContent = 'Saving...';
-        log('Starting save process to GitHub...', 'info');
-
-        const {
-          owner,
-          repo,
-          path,
-          apiKey
-        } = githubConfig;
-        if (!owner || !repo || !path || !apiKey) {
-          log('GitHub configuration is incomplete. Please fill all fields.', 'error');
-          // saveToGithubBtn.disabled = false;
-          // saveToGithubBtn.textContent = 'Save to GitHub';
-          return;
-        }
-
-        const GITHUB_API_URL = `https://api.github.com/repos/${owner}/${repo}/contents/${path}`;
-        const headers = {
-          'Authorization': `token ${apiKey}`,
-          'Accept': 'application/vnd.github.v3+json',
-          'X-GitHub-Api-Version': '2022-11-28'
-        };
-
-        try {
-          if (prompts.length < 1) throw new Error("GitHub API Error: cant save an empty list");
-
-          log('Fetching current file SHA...', 'info');
-          const getFileResponse = await fetch(GITHUB_API_URL, {
-            headers
-          });
-          let sha;
-          if (getFileResponse.ok) {
-            const fileData = await getFileResponse.json();
-            sha = fileData.sha;
-            log(`File found. Current SHA: ${sha.substring(0,7)}...`, 'success');
-          } else if (getFileResponse.status === 404) {
-            log('File not found. This will be a new commit.', 'info');
-          } else {
-            throw new Error(`Failed to fetch file: ${getFileResponse.status} ${await getFileResponse.text()}`);
-          }
-
-          sortPrompt(prompts);
-          const contentToSave = JSON.stringify(prompts, null, 2);
-          const encodedContent = btoa(unescape(encodeURIComponent(contentToSave)));
-
-          const body = {
-            message: `AIStore: Updated prompts.json on ${new Date().toLocaleString()}`,
-            content: encodedContent,
-            sha: sha,
-          };
-          if (!sha) delete body.sha;
-
-          log('Uploading new content...', 'info');
-          const putResponse = await fetch(GITHUB_API_URL, {
-            method: 'PUT',
-            headers,
-            body: JSON.stringify(body)
-          });
-          const result = await putResponse.json();
-
-          if (putResponse.ok) {
-            log('Successfully saved to GitHub!', 'success');
-            log(`Commit URL: ${result.commit.html_url}`, 'info');
-            setTimeout(closeGitHubModal, 3000);
-          } else {
-            throw new Error(`GitHub API Error: ${putResponse.status} - ${result.message || JSON.stringify(result)}`);
-          }
-        } catch (error) {
-          log(`Error: ${error.message}`, 'error');
-          console.error(error);
-        } finally {
-          // saveToGithubBtn.disabled = false;
-          // saveToGithubBtn.textContent = 'Save to GitHub';
-        }
-      };
-*/
       // --- PROMPT HANDLING ---
 
       const savePrompt = () => {
@@ -1009,16 +920,10 @@
         };
 
         const saveToGitHub = async () => {
-            //saveToGithubBtn.disabled = true;
-            //saveToGithubBtn.textContent = 'Saving...';
             log('Starting save process to GitHub...', 'info');
-
             const { owner, repo, path, apiKey } = githubConfig;
-
             if (!owner || !repo || !path || !apiKey) {
                 log('GitHub configuration is incomplete. Please fill all fields.', 'error');
-                //saveToGithubBtn.disabled = false;
-                //saveToGithubBtn.textContent = 'Save to GitHub';
                 return;
             }
             
@@ -1083,8 +988,6 @@
                 log(`Error: ${error.message}`, 'error');
                 console.error(error);
             } finally {
-              //  saveToGithubBtn.disabled = false;
-              //  saveToGithubBtn.textContent = 'Save to GitHub';
             }
         };
 

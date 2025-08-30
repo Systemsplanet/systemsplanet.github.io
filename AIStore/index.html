@@ -53,7 +53,9 @@
       margin: 0;
       color: var(--accent-color);
     }
-
+    #add-prompt-btn {
+      margin-right:7px;
+    }
     #status-msg {
       color: green;
       height: 1em;
@@ -349,7 +351,12 @@
     #confirm-box-buttons button {
       min-width: 80px;
     }
-
+    #close-github-modal {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
     #githubHelpIcon {
       cursor: pointer;
       background-color: green;
@@ -389,6 +396,9 @@
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
           <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z" />
         </svg> Add
+      </button>
+      <button id="settings-btn">
+        Settings
       </button>
     </header>
 
@@ -469,10 +479,7 @@
 
   <div id="github-modal" class="modal">
     <div class="modal-content">
-      <div class="modal-header">
-        <h2>Save to GitHub</h2>
-        <span class="close-button" id="close-github-modal">&times;</span>
-      </div>
+        
       <div id="github-form" class="modal-form">
         <div class="form-group">
           <label for="github-owner">GitHub Owner</label>
@@ -495,12 +502,18 @@
           <input type="password" id="github-key">
         </div>
       </div>
-      <div class="full-width">
+      <div id="githubLog" class="full-width">
         <label>Log</label>
         <div id="log-area"></div>
       </div>
+      <button id="close-github-modal">
+         Ok
+      </button>
     </div>
   </div>
+  
+  
+  
 
   <div id="message-box" class="modal">
     <div id="message-box-content" class="modal-content">
@@ -550,6 +563,7 @@
       const promptModal = document.getElementById('prompt-modal');
       const modalTitle = document.getElementById('modal-title');
       const closePromptModalBtn = document.getElementById('close-prompt-modal');
+      const settingsBtn = document.getElementById('settings-btn');
       const addPromptBtn = document.getElementById('add-prompt-btn');
       const savePromptBtn = document.getElementById('save-prompt-btn');
       const cancelPromptBtn = document.getElementById('cancel-prompt-btn');
@@ -878,10 +892,11 @@
       };
 
       // --- (remainder of initialization/setup code unchanged) ---
-        const openGitHubModal = () => {
+        const openGitHubModal = (showLog) => {
             logArea.innerHTML = ''; // Clear logs
             loadGitHubConfig();
             githubModal.style.display = 'flex';
+            githubLog.style.display = showLog ? 'flex' : 'none';
         };
 
         const closeGitHubModal = () => {
@@ -918,7 +933,7 @@
 
         const saveToGitHub = async () => {
             log('Starting save process to GitHub...', 'info');
-            openGitHubModal();
+            openGitHubModal(true);
             const { owner, repo, path, apiKey } = githubConfig;
             if (!owner || !repo || !path || !apiKey) {
                 log('GitHub configuration is incomplete. Please fill all fields.', 'error');
@@ -1078,6 +1093,7 @@
             
             // Prompt Modal
             addPromptBtn.addEventListener('click', () => openPromptModal());
+            settingsBtn.addEventListener('click', () => openGitHubModal(false));
             closePromptModalBtn.addEventListener('click', closePromptModal);
             cancelPromptBtn.addEventListener('click', closePromptModal);
             savePromptBtn.addEventListener('click', savePrompt);

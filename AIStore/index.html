@@ -602,7 +602,7 @@
 
         const showConfirm = (title, message) => {
             confirmBoxTitle.textContent = title;
-            confirmBoxText.innerHTML  = message;
+            confirmBoxText.innerHTML = message;
             confirmBox.style.display = 'flex';
             return new Promise((resolve) => {
                 confirmBoxYesBtn.onclick = () => {
@@ -671,7 +671,7 @@
             filteredPrompts.forEach((prompt, index) => {
                 const originalIndex = prompts.findIndex(p => p === prompt);
                 const row = promptsTbody.insertRow();
-                log("prompt"+index+":" + JSON.stringify(prompt) )
+                //log("prompt"+index+":" + JSON.stringify(prompt) )
                 row.innerHTML = `
                     <td class="actions-cell">
                         <button class="edit-btn">
@@ -691,7 +691,10 @@
                     </td>
                 `;
                 row.querySelectorAll('.copy-cell').forEach(cell => {
-                   cell.addEventListener('click', () => copyPromptText(prompt.promptText));
+                   cell.addEventListener('click', () => {
+                     copiedRowData = Object.assign({}, prompt );                
+                     copyPromptText(prompt.promptText);
+                   });
                 });
                 row.querySelector('.edit-btn').addEventListener('click', () => openPromptModal(originalIndex));
                 row.querySelector('.remove-btn').addEventListener('click', () => removePrompt(originalIndex));
@@ -774,7 +777,7 @@
         const removePrompt = async (index) => {
             const prompt = prompts[index];
             log("removePrompt:[" +JSON.stringify(prompt, null, 2) + "]");
-            const confirmed = await showConfirm('Delete Prompt', `Are you sure you want to delete the prompt? <p>Category: "${prompts[index].category}"  <p>AI Name: "${prompts[index].aiName}"  <p>Prompt Name: "${prompts[index].promptName}"    `);            
+            const confirmed = await showConfirm('Delete Prompt', `Are you sure you want to delete the prompt? <p>Category: "${prompts[index].category}" <p>AI Name: "${prompts[index].aiName}" <p>Prompt Name: "${prompts[index].promptName}" `);            
             if (confirmed) {
                 prompts.splice(index, 1);
                 filterAndRender();
@@ -800,6 +803,14 @@
             } else {
                 modalTitle.textContent = 'Add New Prompt';
                 promptIndexInput.value = '';
+                if (copiedRowData) {
+                  promptCategoryInput.value = copiedRowData.category || '';
+                  promptNameInput.value = copiedRowData.promptName || '';
+                  aiNameInput.value = copiedRowData.aiName || '';
+                  userIdInput.value = copiedRowData.userID || '';
+                  promptTextInput.value = copiedRowData.promptText || '';
+                  notesInput.value = copiedRowData.notes || '';
+                }
             }
             promptModal.style.display = 'flex';
             checkDuplicate(); // Check duplicates immediately when opening for add/edit

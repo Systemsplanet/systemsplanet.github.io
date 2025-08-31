@@ -796,7 +796,8 @@
                 prompts.splice(index, 1);
                 filterAndRender();
                 populateFilters();
-                showMessage('Deleted', 'Prompt successfully deleted.');
+                //showMessage('Deleted', 'Prompt successfully deleted.');
+                saveToGitHub(); 
             }
         };
 

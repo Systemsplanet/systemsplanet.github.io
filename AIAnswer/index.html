@@ -655,6 +655,14 @@
                     stopListening();
                 } else {
                     // Value is 'off', so turn it 'on'
+                    
+                    // Loop through the data and uncheck all items
+                    questionListData.forEach(q => {
+                        q.isSelected = false;
+                    });
+                    
+                    // Re-render the list to show the changes
+                    renderQuestionList();
                     startListening();
                 }
             });

@@ -69,6 +69,9 @@
             display: flex;
             flex-direction: column;
         }
+        .form-group.span-2 {
+            grid-column: span 2;
+        }
         .form-group label {
             margin-bottom: 6px;
             font-size: 0.9em;
@@ -187,19 +190,24 @@
     <div class="container">
         <h1>Voice AI Assistant</h1>
         <a href="https://github.com/Systemsplanet/systemsplanet.github.io/edit/main/AIAnswer/index.html">edit</a>
+
         <div class="settings">
             <details>
                 <summary>Settings</summary>
                 <div class="settings-grid">
                     <div class="form-group">
-                        <label for="aiSelect">AI Model</label>
-                        <select id="aiSelect">
-                            <option value="gpt-4o">OpenAI - GPT-4o</option>
-                            <option value="gpt-3.5-turbo">OpenAI - GPT-3.5-Turbo</option>
-                            <option value="claude-3-haiku">Anthropic - Claude 3 Haiku</option>
-                            </select>
+                        <label for="aiProvider">AI Provider</label>
+                        <select id="aiProvider">
+                            <option value="openrouter" selected>OpenRouter</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="anthropic">Anthropic</option>
+                        </select>
                     </div>
                     <div class="form-group">
+                        <label for="aiModel">AI Model</label>
+                        <input type="text" id="aiModel" value="meta-llama/llama-3-8b-instruct">
+                    </div>
+                    <div class="form-group span-2">
                         <label for="apiKey">API Key</label>
                         <input type="password" id="apiKey" placeholder="Your API Key">
                     </div>
@@ -247,7 +255,8 @@
         const transcriptionBox = document.getElementById('transcription');
         const lastQuestionBox = document.getElementById('lastQuestion');
         const aiReplyBox = document.getElementById('aiReply');
-        const aiSelect = document.getElementById('aiSelect');
+        const aiProviderSelect = document.getElementById('aiProvider');
+        const aiModelInput = document.getElementById('aiModel');
         const apiKeyInput = document.getElementById('apiKey');
         const readAloudCheckbox = document.getElementById('readAloud');
 
@@ -282,6 +291,10 @@
                 console.error("Speech recognition error:", event.error);
                 if (event.error === 'no-speech') {
                     transcriptionBox.placeholder = "No speech detected. Try again.";
+                }
+                // Handle 'aborted' error which happens when we call recognition.stop()
+                if (event.error === 'aborted') {
+                    console.log("Listening stopped by user.");
                 }
             };
 
@@ -341,13 +354,24 @@
         // --- 3. Send to AI ---
 
         askBtn.addEventListener('click', () => {
+            // *** NEW: Stop listening when ASK is pressed ***
+            if (isListening) {
+                recognition.stop();
+            }
+
             if (!lastQuestion) return;
 
             const apiKey = apiKeyInput.value;
-            const model = aiSelect.value;
+            const provider = aiProviderSelect.value;
+            const model = aiModelInput.value;
+
 
             if (!apiKey) {
                 alert("Please enter your API Key in the Settings.");
+                return;
+            }
+            if (!model) {
+                alert("Please enter an AI Model in the Settings.");
                 return;
             }
 
@@ -357,48 +381,60 @@
             aiReplyBox.innerHTML = '<span class="status">Sending to AI...</span>';
 
             // Function to call the AI
-            callAI(lastQuestion, model, apiKey);
+            callAI(lastQuestion, provider, model, apiKey);
         });
 
-        async function callAI(question, model, key) {
+        async function callAI(question, provider, model, key) {
             let apiUrl = '';
-            let apiProvider = '';
             let headers = {
                 'Content-Type': 'application/json'
             };
             let body;
+            let providerIdForParsing = provider; // To handle response parsing
 
             // --- API Configuration ---
-            // This structure supports multiple AI providers
-            if (model.startsWith('gpt-')) {
-                // --- OpenAI Configuration ---
-                apiProvider = 'openai';
-                apiUrl = 'https://api.openai.com/v1/chat/completions';
-                headers['Authorization'] = `Bearer ${key}`;
-                body = JSON.stringify({
-                    model: model,
-                    messages: [
-                        { role: "system", content: "You are a helpful assistant." },
-                        { role: "user", content: question }
-                    ]
-                });
-            } else if (model.startsWith('claude-')) {
-                // --- Anthropic Configuration ---
-                apiProvider = 'anthropic';
-                apiUrl = 'https://api.anthropic.com/v1/messages'; // Note: Anthropic's API endpoint
-                headers['x-api-key'] = key;
-                headers['anthropic-version'] = '2023-06-01';
-                body = JSON.stringify({
-                    model: model,
-                    max_tokens: 1024,
-                    messages: [
-                        { role: "user", content: question }
-                    ]
-                });
-            } else {
-                aiReplyBox.textContent = "Error: Selected AI model is not configured.";
-                resetAskButton();
-                return;
+            switch (provider) {
+                case 'openrouter':
+                    apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+                    headers['Authorization'] = `Bearer ${key}`;
+                    body = JSON.stringify({
+                        model: model,
+                        messages: [
+                            { role: "system", content: "You are a helpful assistant." },
+                            { role: "user", content: question }
+                        ]
+                    });
+                    break;
+
+                case 'openai':
+                    apiUrl = 'https://api.openai.com/v1/chat/completions';
+                    headers['Authorization'] = `Bearer ${key}`;
+                    body = JSON.stringify({
+                        model: model,
+                        messages: [
+                            { role: "system", content: "You are a helpful assistant." },
+                            { role: "user", content: question }
+                        ]
+                    });
+                    break;
+                
+                case 'anthropic':
+                    apiUrl = 'https://api.anthropic.com/v1/messages';
+                    headers['x-api-key'] = key;
+                    headers['anthropic-version'] = '2023-06-01';
+                    body = JSON.stringify({
+                        model: model,
+                        max_tokens: 1024,
+                        messages: [
+                            { role: "user", content: question }
+                        ]
+                    });
+                    break;
+
+                default:
+                    aiReplyBox.textContent = "Error: Selected AI provider is not configured.";
+                    resetAskButton();
+                    return;
             }
             
             // --- Fetch Call ---
@@ -418,9 +454,9 @@
                 
                 // Extract the reply text based on the provider's response structure
                 let replyText = '';
-                if (apiProvider === 'openai') {
+                if (providerIdForParsing === 'openai' || providerIdForParsing === 'openrouter') {
                     replyText = data.choices[0].message.content;
-                } else if (apiProvider === 'anthropic') {
+                } else if (providerIdForParsing === 'anthropic') {
                     replyText = data.content[0].text;
                 }
 

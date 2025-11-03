@@ -558,9 +558,8 @@
              * @returns {string} - The cleaned text.
              */
             function cleanAiReply(text) {
-                console.info ("prompt:["+ text+ "]");
                 if (!text) return ""; // Handle empty or null input
-return text;
+                return text;
                 // Regex to find and remove common LLM control tokens
                 // It matches:
                 // <s>, </s>
@@ -598,7 +597,8 @@ return text;
                 // --- OpenRouter Specific Implementation ---
                 if (selectedAI === 'openrouter') {
                     const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-                    const model = "mistralai/mistral-7b-instruct:free"; // Use a free, fast model
+                    const model =
+                        "mistralai/mistral-7b-instruct:free"; // Use a free, fast model
 
                     try {
                         answerOutput.textContent = 'Thinking...';
@@ -615,7 +615,7 @@ return text;
                                 'X-Title': 'AI Question Capture'
                             },
                             body: JSON.stringify({
-                                model: model,
+                               // model: model, default to openrouters defaults
                                 messages: [
                                     { role: 'user', content: promptText }
                                 ]

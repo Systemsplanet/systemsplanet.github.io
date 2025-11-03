@@ -712,12 +712,25 @@
 
                 // "If length of trim promptText > 0"
                 if (promptText.length > 0) {
+                    // "Prime" the SpeechSynthesis API before the async call.
+                    // This is required by many browsers (especially mobile)
+                    // which block speech not directly initiated by a user click.
+                    if (readAloudCheckbox.checked && 'speechSynthesis' in window) {
+                        window.speechSynthesis.cancel(); // Clear any old queue
+                        const primingUtterance = new SpeechSynthesisUtterance(' '); // Speak a single space
+                        primingUtterance.volume = 0; // Make it silent
+                        window.speechSynthesis.speak(primingUtterance);
+                    }
+                    
+
                     // "Send promptText to AI API... Display AI reply..."
-                    // We use `await` to ensure the button state is set *after*
+                    // Now, the call *after* the await is more likely to work.
                     await sendToAI(promptText);
+
                 } else {
                     answerOutput.textContent = 'No selected questions with text to answer.';
                 }
+
 
                 // "answerBtn value = off." (This runs after AI call finishes or fails)
                 answerBtn.dataset.value = 'off';

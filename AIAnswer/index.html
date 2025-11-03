@@ -644,7 +644,7 @@
                         
                         if (data.choices && data.choices.length > 0) {
                             console.info("out0:["+ data.choices[0].message.content + "]");
-                            aiModel.textContent = "AI (" + data.provider + ":" + data.model + ") Reply";
+                            aiModel.textContent = "AI Reply (" + data.provider + ":" + data.model + ")";
                             const reply = cleanAiReply(data.choices[0].message.content);
                             console.info("out1:["+ reply + "]");
                             answerOutput.textContent = reply;

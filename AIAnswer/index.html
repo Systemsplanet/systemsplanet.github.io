@@ -39,6 +39,20 @@
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
         }
 
+        /* --- NEW: Edit Link Style --- */
+        #editLink {
+            display: block;
+            text-align: right;
+            font-size: 0.9em;
+            color: var(--primary-color);
+            text-decoration: none;
+            margin-bottom: -10px; /* Pulls title up slightly */
+            padding-bottom: 10px;
+        }
+        #editLink:hover {
+            text-decoration: underline;
+        }
+
         h1 {
             text-align: center;
             margin-top: 0;
@@ -188,8 +202,9 @@
 <body>
 
     <div class="container">
+        <a href="https://github.com/Systemsplanet/systemsplanet.github.io/blob/main/AIAnswer/index.html" target="_blank" id="editLink">edit</a>
+        
         <h1>Voice AI Assistant</h1>
-        <a href="https://github.com/Systemsplanet/systemsplanet.github.io/edit/main/AIAnswer/index.html">edit</a>
 
         <div class="settings">
             <details>
@@ -354,7 +369,7 @@
         // --- 3. Send to AI ---
 
         askBtn.addEventListener('click', () => {
-            // *** NEW: Stop listening when ASK is pressed ***
+            // *** Stop listening when ASK is pressed ***
             if (isListening) {
                 recognition.stop();
             }

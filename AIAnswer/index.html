@@ -2,515 +2,738 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Voice AI Assistant</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AI Question Capture</title>
+    
     <style>
-        /* A simple, modern, dark-mode-first design */
-        :root {
-            --bg-color: #1a1a1a;
-            --text-color: #f0f0f0;
-            --primary-color: #007aff;
-            --primary-hover: #0056b3;
-            --secondary-color: #333;
-            --border-color: #444;
-            --error-color: #ff3b30;
-            --listen-color: #34c759;
-            --listen-active: #2a9e4a;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
+        /* Basic Reset */
+        * {
             margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        .container {
-            width: 100%;
-            max-width: 700px;
-            background-color: var(--secondary-color);
-            border-radius: 12px;
-            padding: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        /* App Body & Font */
+        html, body {
+            height: 100%;
+            overflow: hidden; /* Prevent scrolling on the body */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #1c1e21;
         }
 
-        /* --- NEW: Edit Link Style --- */
-        #editLink {
-            display: block;
-            text-align: right;
-            font-size: 0.9em;
-            color: var(--primary-color);
-            text-decoration: none;
-            margin-bottom: -10px; /* Pulls title up slightly */
-            padding-bottom: 10px;
-        }
-        #editLink:hover {
-            text-decoration: underline;
-        }
-
-        h1 {
-            text-align: center;
-            margin-top: 0;
-            color: var(--text-color);
-        }
-
-        /* --- Settings Area --- */
-        .settings {
-            background: rgba(0,0,0,0.2);
-            padding: 16px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-        .settings details {
-            cursor: pointer;
-        }
-        .settings summary {
-            font-weight: bold;
-            font-size: 1.1em;
-        }
-        .settings-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-top: 16px;
-        }
-        .form-group {
+        /* Main App Container */
+        #app-container {
             display: flex;
             flex-direction: column;
-        }
-        .form-group.span-2 {
-            grid-column: span 2;
-        }
-        .form-group label {
-            margin-bottom: 6px;
-            font-size: 0.9em;
-            color: #aaa;
-        }
-        .form-group input, .form-group select {
-            background: var(--bg-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            padding: 10px;
-            font-size: 1em;
-        }
-        .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px var(--primary-color);
+            height: 100vh; /* Full viewport height */
         }
 
-        /* --- Main App UI --- */
-        textarea {
-            width: 100%;
-            box-sizing: border-box;
-            min-height: 120px;
-            background: var(--bg-color);
-            color: var(--text-color);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 12px;
-            font-size: 1.1em;
-            margin-bottom: 12px;
-            resize: vertical;
-        }
-
-        .button-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        button {
-            padding: 14px 20px;
-            font-size: 1em;
-            font-weight: 600;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        #listenBtn {
-            background-color: var(--listen-color);
-            color: white;
-        }
-        /* Style for when listening is active */
-        #listenBtn.listening {
-            background-color: var(--error-color);
-            box-shadow: 0 0 15px var(--error-color);
-        }
-
-        #askBtn {
-            background-color: var(--primary-color);
-            color: white;
-        }
-        #askBtn:hover {
-            background-color: var(--primary-hover);
-        }
-        #askBtn:disabled {
-            background-color: #555;
-            cursor: not-allowed;
-        }
-
-        /* --- AI Reply Area --- */
-        .reply-header {
+        /* Header Area */
+        header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-top: 20px;
-            border-bottom: 1px solid var(--border-color);
-            padding-bottom: 8px;
+            padding: 10px 12px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #dddfe2;
+            flex-shrink: 0; /* Prevent header from shrinking */
         }
-        .reply-header h3 {
-            margin: 0;
+
+        #edit-link {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #007bff;
+            text-decoration: none;
         }
-        .reply-header .toggle-label {
+
+        #ai-controls {
             display: flex;
             align-items: center;
-            font-size: 0.9em;
-            color: #aaa;
-            cursor: pointer;
-        }
-        #readAloud {
-            margin-left: 8px;
+            gap: 6px;
         }
 
-        #aiReply {
-            margin-top: 16px;
-            background: var(--bg-color);
-            padding: 16px;
-            border-radius: 8px;
-            min-height: 100px;
-            border: 1px solid var(--border-color);
-            white-space: pre-wrap; /* Preserves line breaks from AI */
+        #ai-controls label {
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        #ai-controls select,
+        #ai-controls input,
+        #ai-controls button {
+            font-size: 0.8rem;
+            padding: 4px 6px;
+            border: 1px solid #ccd0d5;
+            border-radius: 4px;
+            background-color: #f5f6f7;
         }
         
-        .status {
-            font-style: italic;
-            color: #888;
+        #ai-controls input[type="password"] {
+            width: 80px;
         }
 
+        #ai-controls button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #ai-controls button:hover {
+            background-color: #0069d9;
+        }
+
+        /* Main Content Area */
+        main {
+            flex-grow: 1; /* Take up remaining space */
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevent main from scrolling */
+        }
+
+        /* Control Buttons (Listen/Answer) */
+        #controls {
+            display: flex;
+            justify-content: space-around;
+            padding: 12px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #dddfe2;
+            flex-shrink: 0;
+        }
+
+        #controls button {
+            width: 45%;
+            padding: 12px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, opacity 0.2s ease;
+        }
+
+        #listenBtn {
+            color: white;
+        }
+        /* "off" state - ready to listen */
+        #listenBtn[data-value="off"] {
+            background-color: #42b72a;
+        }
+        #listenBtn[data-value="off"]:hover {
+            background-color: #36a420;
+        }
+        /* "on" state - currently listening */
+        #listenBtn[data-value="on"] {
+            background-color: #fa383e;
+        }
+        #listenBtn[data-value="on"]:hover {
+            background-color: #e02c30;
+        }
+
+        #answerBtn {
+            background-color: #007bff;
+            color: white;
+        }
+        #answerBtn:hover {
+            background-color: #0069d9;
+        }
+        #answerBtn:disabled,
+        #answerBtn[data-value="on"] {
+            background-color: #9dbfff;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        /* Question List */
+        #questionList-container {
+            flex-grow: 1; /* This is the main scrolling area */
+            overflow-y: auto; /* Allow internal scrolling */
+            background-color: #ffffff;
+            padding: 10px;
+        }
+
+        #questionList {
+            list-style: none;
+        }
+
+        #questionList li {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            padding: 6px;
+            background: #f7f8fa;
+            border: 1px solid #dddfe2;
+            border-radius: 6px;
+        }
+        
+        #questionList li input[type="checkbox"] {
+            margin-right: 10px;
+            flex-shrink: 0;
+            /* Larger, easier-to-tap checkbox */
+            width: 18px;
+            height: 18px;
+        }
+        
+        #questionList li input[type="text"] {
+            flex-grow: 1;
+            border: 1px solid #ccd0d5;
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 0.95rem;
+            min-width: 0; /* Fix flexbox overflow */
+        }
+        #questionList li input[type="text"]:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+        }
+
+        /* Answer Area */
+        #answer-container {
+            flex-shrink: 0; /* Prevent shrinking */
+            padding: 10px;
+            background-color: #ffffff;
+            border-top: 1px solid #dddfe2;
+            max-height: 40vh; /* Limit answer height */
+            overflow-y: auto; /* Scrollable answer area */
+        }
+        
+        #answer-container h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        #answer-output {
+            background: #f0f2f5;
+            border: 1px solid #dddfe2;
+            padding: 10px;
+            border-radius: 6px;
+            min-height: 40px;
+            white-space: pre-wrap; /* Preserve newlines from AI */
+            word-wrap: break-word;
+            font-size: 0.9rem;
+        }
+
+        #read-aloud-toggle {
+            display: block;
+            margin-top: 8px;
+            font-size: 0.9rem;
+            color: #4b4f56;
+        }
+        #read-aloud-toggle input {
+            margin-right: 5px;
+            vertical-align: middle;
+        }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <a href="https://github.com/Systemsplanet/systemsplanet.github.io/blob/main/AIAnswer/index.html" target="_blank" id="editLink">edit</a>
+    <div id="app-container">
         
-        <h1>Voice AI Assistant</h1>
+        <header>
+            <a href="https://github.com/Systemsplanet/systemsplanet.github.io/blob/main/AIAnswer/index.html" target="_blank" id="edit-link">edit</a>
+            <div id="ai-controls">
+                <label for="ai-select">AI:</label>
+                <select id="ai-select">
+                    <option value="openrouter" selected>OpenRouter</option>
+                    </select>
+                <label for="api-key-input">Key:</label>
+                <input type="password" id="api-key-input" placeholder="API Key">
+                <button id="save-api-key-btn" title="Save Key & AI Choice">Save</button>
+            </div>
+        </header>
 
-        <div class="settings">
-            <details>
-                <summary>Settings</summary>
-                <div class="settings-grid">
-                    <div class="form-group">
-                        <label for="aiProvider">AI Provider</label>
-                        <select id="aiProvider">
-                            <option value="openrouter" selected>OpenRouter</option>
-                            <option value="openai">OpenAI</option>
-                            <option value="anthropic">Anthropic</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="aiModel">AI Model</label>
-                        <input type="text" id="aiModel" value="meta-llama/llama-3-8b-instruct">
-                    </div>
-                    <div class="form-group span-2">
-                        <label for="apiKey">API Key</label>
-                        <input type="password" id="apiKey" placeholder="Your API Key">
-                    </div>
-                </div>
-                <small style="color: #aaa; margin-top: 10px; display: block;">
-                    <strong>Security Note:</strong> Your API key is stored in your browser. Do not use this on a public computer.
-                </small>
-            </details>
-        </div>
+        <main>
+            
+            <div id="controls">
+                <button id="listenBtn" data-value="off">LISTEN</button>
+                <button id="answerBtn" data-value="off">ANSWER</button>
+            </div>
 
-        <label for="transcription" class="form-group-label"><strong>1. Your Transcription</strong> (Press LISTEN)</label>
-        <textarea id="transcription" placeholder="Press 'Listen' and start speaking..."></textarea>
+            <div id="questionList-container">
+                <ul id="questionList">
+                    </ul>
+            </div>
 
-        <div class="button-group">
-            <button id="listenBtn">LISTEN</button>
-            <button id="askBtn" disabled>ASK AI</button>
-        </div>
-
-        <label for="lastQuestion" class="form-group-label"><strong>2. Last Question Identified</strong></label>
-        <textarea id="lastQuestion" readonly placeholder="The last question you asked will appear here..."></textarea>
+            <div id="answer-container">
+                <h3>AI Answer:</h3>
+                <div id="answer-output">Your AI answer will appear here...</div>
+                <label id="read-aloud-toggle">
+                    <input type="checkbox" id="read-aloud-checkbox">
+                    Read AI reply out loud
+                </label>
+            </div>
+            
+        </main>
         
-        <div class="reply-header">
-            <h3>3. AI Reply</h3>
-            <label for="readAloud" class="toggle-label">
-                Read Aloud
-                <input type="checkbox" id="readAloud" checked>
-            </label>
-        </div>
-        <div id="aiReply" class="status">The AI's response will be displayed here...</div>
-
     </div>
 
     <script>
-        // Check for browser support
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        const SpeechSynthesis = window.speechSynthesis;
+        // Wait for the DOM to be fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
 
-        if (!SpeechRecognition || !SpeechSynthesis) {
-            alert("Sorry, your browser does not support the Web Speech API. Please try Chrome or Edge.");
-        }
+            // --- DOM Element References ---
+            const listenBtn = document.getElementById('listenBtn');
+            const answerBtn = document.getElementById('answerBtn');
+            const questionListUL = document.getElementById('questionList');
+            const questionListContainer = document.getElementById('questionList-container');
+            const answerOutput = document.getElementById('answer-output');
+            const aiSelect = document.getElementById('ai-select');
+            const apiKeyInput = document.getElementById('api-key-input');
+            const saveApiKeyBtn = document.getElementById('save-api-key-btn');
+            const readAloudCheckbox = document.getElementById('read-aloud-checkbox');
 
-        // --- DOM Elements ---
-        const listenBtn = document.getElementById('listenBtn');
-        const askBtn = document.getElementById('askBtn');
-        const transcriptionBox = document.getElementById('transcription');
-        const lastQuestionBox = document.getElementById('lastQuestion');
-        const aiReplyBox = document.getElementById('aiReply');
-        const aiProviderSelect = document.getElementById('aiProvider');
-        const aiModelInput = document.getElementById('aiModel');
-        const apiKeyInput = document.getElementById('apiKey');
-        const readAloudCheckbox = document.getElementById('readAloud');
+            // --- App State ---
+            let questionListData = []; // Array of { id, text, isSelected }
+            const MAX_QUESTIONS = 50;
+            let recognition; // SpeechRecognition instance
+            let isListening = false;
+            let currentAbortController = null; // To cancel fetch requests
 
-        // --- State ---
-        let recognition;
-        let isListening = false;
-        let lastQuestion = "";
-
-        // --- 1. Speech-to-Text (Recognition) ---
-        
-        function initializeRecognition() {
-            recognition = new SpeechRecognition();
-            recognition.continuous = true; // Keep listening even after a pause
-            recognition.interimResults = true; // Show results as they come in
-            recognition.lang = 'en-US';
-
-            recognition.onstart = () => {
-                isListening = true;
-                listenBtn.textContent = 'STOP LISTENING';
-                listenBtn.classList.add('listening');
-                transcriptionBox.placeholder = "Listening...";
-            };
-
-            recognition.onend = () => {
-                isListening = false;
-                listenBtn.textContent = 'LISTEN';
-                listenBtn.classList.remove('listening');
-                transcriptionBox.placeholder = "Press 'Listen' and start speaking...";
-            };
-
-            recognition.onerror = (event) => {
-                console.error("Speech recognition error:", event.error);
-                if (event.error === 'no-speech') {
-                    transcriptionBox.placeholder = "No speech detected. Try again.";
-                }
-                // Handle 'aborted' error which happens when we call recognition.stop()
-                if (event.error === 'aborted') {
-                    console.log("Listening stopped by user.");
-                }
-            };
-
-            recognition.onresult = (event) => {
-                let interimTranscript = '';
-                let finalTranscript = '';
-
-                for (let i = event.resultIndex; i < event.results.length; ++i) {
-                    if (event.results[i].isFinal) {
-                        finalTranscript += event.results[i][0].transcript + ' ';
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
-                    }
-                }
-                
-                // Display the live transcript
-                transcriptionBox.value = finalTranscript + interimTranscript;
-
-                // If we have a final transcript, check if it's a question
-                if (finalTranscript) {
-                    checkForQuestion(finalTranscript.trim());
-                }
-            };
-        }
-
-        listenBtn.addEventListener('click', () => {
-            if (!SpeechRecognition) return;
-
-            if (isListening) {
-                recognition.stop();
-            } else {
-                // We re-initialize every time to clear old results
-                initializeRecognition();
+            // --- LocalStorage Helper Functions (Replaces Cookies) ---
+            /**
+             * Saves a setting to localStorage.
+             * @param {string} name - The name of the setting.
+             * @param {string} value - The value of the setting.
+             */
+            function saveSetting(name, value) {
                 try {
-                    recognition.start();
+                    localStorage.setItem(name, value);
                 } catch (e) {
-                    console.error("Error starting recognition:", e);
+                    console.error("Failed to save setting to localStorage", e);
+                    alert("Error: Could not save settings. Storage might be full.");
                 }
             }
-        });
 
-        // --- 2. Question Identification ---
-        
-        function checkForQuestion(text) {
-            // Simple check for question patterns
-            const questionWords = ['who', 'what', 'where', 'when', 'why', 'how', 'is', 'are', 'do', 'does', 'can', 'could', 'would', 'should'];
-            const lowerText = text.toLowerCase();
+            /**
+             * Gets a setting from localStorage.
+             * @param {string} name - The name of the setting.
+             * @returns {string | null} - The setting value or null.
+             */
+            function getSetting(name) {
+                try {
+                    return localStorage.getItem(name);
+                } catch (e) {
+                    console.error("Failed to get setting from localStorage", e);
+                    return null;
+                }
+            }
+
+            // --- Settings & Storage Management (Updated) ---
             
-            // Check for question mark or starting with a question word
-            if (text.endsWith('?') || questionWords.some(word => lowerText.startsWith(word + ' '))) {
-                lastQuestion = text;
-                lastQuestionBox.value = lastQuestion;
-                askBtn.disabled = false;
-            }
-        }
-
-        // --- 3. Send to AI ---
-
-        askBtn.addEventListener('click', () => {
-            // *** Stop listening when ASK is pressed ***
-            if (isListening) {
-                recognition.stop();
+            /**
+             * Loads the API key for the currently selected AI from localStorage.
+             */
+            function loadApiKeyForSelectedAI() {
+                const selectedAI = aiSelect.value;
+                const savedKey = getSetting(`apiKey_${selectedAI}`); // USE getSetting
+                apiKeyInput.value = savedKey || '';
             }
 
-            if (!lastQuestion) return;
-
-            const apiKey = apiKeyInput.value;
-            const provider = aiProviderSelect.value;
-            const model = aiModelInput.value;
-
-
-            if (!apiKey) {
-                alert("Please enter your API Key in the Settings.");
-                return;
-            }
-            if (!model) {
-                alert("Please enter an AI Model in the Settings.");
-                return;
+            /**
+             * Loads all saved settings from localStorage on page load.
+             */
+            function loadSettings() {
+                const savedAI = getSetting('activeAI'); // USE getSetting
+                if (savedAI) {
+                    aiSelect.value = savedAI;
+                }
+                loadApiKeyForSelectedAI();
             }
 
-            // Disable button and show loading state
-            askBtn.disabled = true;
-            askBtn.textContent = "THINKING...";
-            aiReplyBox.innerHTML = '<span class="status">Sending to AI...</span>';
-
-            // Function to call the AI
-            callAI(lastQuestion, provider, model, apiKey);
-        });
-
-        async function callAI(question, provider, model, key) {
-            let apiUrl = '';
-            let headers = {
-                'Content-Type': 'application/json'
-            };
-            let body;
-            let providerIdForParsing = provider; // To handle response parsing
-
-            // --- API Configuration ---
-            switch (provider) {
-                case 'openrouter':
-                    apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
-                    headers['Authorization'] = `Bearer ${key}`;
-                    body = JSON.stringify({
-                        model: model,
-                        messages: [
-                            { role: "system", content: "You are a helpful assistant." },
-                            { role: "user", content: question }
-                        ]
-                    });
-                    break;
-
-                case 'openai':
-                    apiUrl = 'https://api.openai.com/v1/chat/completions';
-                    headers['Authorization'] = `Bearer ${key}`;
-                    body = JSON.stringify({
-                        model: model,
-                        messages: [
-                            { role: "system", content: "You are a helpful assistant." },
-                            { role: "user", content: question }
-                        ]
-                    });
-                    break;
+            /**
+             * Saves the current AI selection and API key to localStorage.
+             */
+            function saveSettings() {
+                const selectedAI = aiSelect.value;
+                const newKey = apiKeyInput.value.trim(); // Trim whitespace
                 
-                case 'anthropic':
-                    apiUrl = 'https://api.anthropic.com/v1/messages';
-                    headers['x-api-key'] = key;
-                    headers['anthropic-version'] = '2023-06-01';
-                    body = JSON.stringify({
-                        model: model,
-                        max_tokens: 1024,
-                        messages: [
-                            { role: "user", content: question }
-                        ]
-                    });
-                    break;
-
-                default:
-                    aiReplyBox.textContent = "Error: Selected AI provider is not configured.";
-                    resetAskButton();
-                    return;
+                saveSetting(`apiKey_${selectedAI}`, newKey); // USE saveSetting
+                saveSetting('activeAI', selectedAI);      // USE saveSetting
+                
+                alert('Settings saved.');
+                apiKeyInput.blur(); // Remove focus
             }
-            
-            // --- Fetch Call ---
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: headers,
-                    body: body
+
+            // --- Question List Management ---
+
+            /**
+             * Re-draws the entire question list UL from the questionListData array.
+             */
+            function renderQuestionList() {
+                questionListUL.innerHTML = ''; // Clear existing list
+                
+                // Only render the last 5 visible questions as per requirement
+                // But the data model `questionListData` holds up to 50
+                const visibleQuestions = questionListData.slice(-5);
+
+                visibleQuestions.forEach(q => {
+                    const li = document.createElement('li');
+                    li.dataset.id = q.id;
+
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = q.isSelected;
+                    checkbox.addEventListener('change', () => handleCheckboxChange(q.id));
+
+                    const textInput = document.createElement('input');
+                    textInput.type = 'text';
+                    textInput.value = q.text;
+                    // Update data model on 'input' for live changes
+                    textInput.addEventListener('input', (e) => handleTextChange(q.id, e.target.value));
+
+                    li.appendChild(checkbox);
+                    li.appendChild(textInput);
+                    questionListUL.appendChild(li);
+                });
+            }
+
+            /**
+             * Updates the isSelected state in the data model.
+             * @param {number} id - The ID of the question to update.
+             */
+            function handleCheckboxChange(id) {
+                const question = questionListData.find(q => q.id === id);
+                if (question) {
+                    question.isSelected = !question.isSelected;
+                }
+                // Re-render to reflect state, as the `li` might be outside the visible window
+                renderQuestionList();
+            }
+
+            /**
+             * Updates the text in the data model.
+             * @param {number} id - The ID of the question to update.
+             * @param {string} newText - The new text value.
+             */
+            function handleTextChange(id, newText) {
+                const question = questionListData.find(q => q.id === id);
+                if (question) {
+                    question.text = newText;
+                }
+            }
+
+            /**
+             * Adds a new question to the list.
+             * @param {string} text - The text of the question.
+             */
+            function addQuestion(text) {
+                const trimmedText = text.trim();
+                if (!trimmedText) return; // Don't add empty questions
+
+                // "Scroll up" - Discard the first entry if at max
+                if (questionListData.length >= MAX_QUESTIONS) {
+                    questionListData.shift(); 
+                }
+
+                // Add new question to the bottom
+                questionListData.push({
+                    id: Date.now(), // Simple unique ID
+                    text: trimmedText,
+                    isSelected: false
                 });
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(`API Error (${response.status}): ${errorData.error ? errorData.error.message : 'Unknown error'}`);
-                }
-
-                const data = await response.json();
+                renderQuestionList(); // Re-draw the UI
                 
-                // Extract the reply text based on the provider's response structure
-                let replyText = '';
-                if (providerIdForParsing === 'openai' || providerIdForParsing === 'openrouter') {
-                    replyText = data.choices[0].message.content;
-                } else if (providerIdForParsing === 'anthropic') {
-                    replyText = data.content[0].text;
-                }
-
-                // Display and optionally read the reply
-                aiReplyBox.textContent = replyText;
-                if (readAloudCheckbox.checked) {
-                    speak(replyText);
-                }
-
-            } catch (error) {
-                console.error("Error calling AI:", error);
-                aiReplyBox.textContent = `Error: ${error.message}`;
-            } finally {
-                resetAskButton();
+                // Scroll GUI to bottom
+                questionListContainer.scrollTop = questionListContainer.scrollHeight;
             }
-        }
 
-        function resetAskButton() {
-            askBtn.disabled = lastQuestion ? false : true; // Re-enable only if there's a question
-            askBtn.textContent = "ASK AI";
-        }
-
-        // --- 4. Text-to-Speech (Synthesis) ---
-
-        function speak(text) {
-            if (!SpeechSynthesis || !text) return;
-
-            // Stop any speaking in progress
-            SpeechSynthesis.cancel();
+            // --- Speech Recognition (Listen Mode) ---
             
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.lang = 'en-US'; // You can make this configurable
-            
-            // Optional: Log voices to console to see options
-            // console.log(SpeechSynthesis.getVoices());
+            /**
+             * Initializes the SpeechRecognition API.
+             */
+            function setupSpeechRecognition() {
+                window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+                
+                if (!window.SpeechRecognition) {
+                    alert('Speech Recognition is not supported by this browser. Please use Chrome or Firefox.');
+                    listenBtn.disabled = true;
+                    listenBtn.textContent = 'NOT SUPPORTED';
+                    return;
+                }
 
-            SpeechSynthesis.speak(utterance);
-        }
+                recognition = new SpeechRecognition();
+                recognition.continuous = true;  // Keep listening even after speech ends
+                recognition.interimResults = false; // Only get final results
+                recognition.lang = 'en-US';
 
+                /**
+                 * Fired when a final speech result is available.
+                 */
+                recognition.onresult = (event) => {
+                    let transcript = '';
+                    // Loop through results (though with continuous=true, we often just care about the last)
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        transcript += event.results[i][0].transcript + ' ';
+                    }
+                    
+                    // "for each question identified... Add question to bottom"
+                    // We interpret each final transcript as a "question"
+                    addQuestion(transcript);
+                };
+
+                /**
+                 * Handle errors.
+                 */
+                recognition.onerror = (event) => {
+                    console.error('Speech recognition error:', event.error);
+                    if (event.error === 'no-speech' || event.error === 'audio-capture' || event.error === 'network') {
+                        // Don't necessarily stop, but log it
+                    } else {
+                        // A more fatal error
+                        stopListening();
+                    }
+                };
+
+                /**
+                 * Fired when recognition ends (e.g., manually aborted or network loss).
+                 */
+                recognition.onend = () => {
+                    // Automatically restart if we were *supposed* to be listening
+                    if (isListening) {
+                        try {
+                            recognition.start();
+                        } catch (e) {
+                            console.error("Could not restart recognition:", e);
+                            stopListening(); // Give up and reset UI
+                        }
+                    }
+                };
+            }
+
+            /**
+             * Starts the speech recognition.
+             */
+            function startListening() {
+                if (!recognition) return; // Not supported
+
+                try {
+                    // Stop answering if it's running
+                    if (answerBtn.dataset.value === 'on') {
+                        // Cancel any ongoing AI request
+                        if (currentAbortController) {
+                            currentAbortController.abort();
+                        }
+                        // Reset answer button
+                        answerBtn.dataset.value = 'off';
+                        answerBtn.disabled = false;
+                        answerBtn.textContent = 'ANSWER';
+                    }
+                    
+                    recognition.start();
+                    isListening = true;
+                    listenBtn.dataset.value = "on";
+                    listenBtn.textContent = "LISTENING...";
+                } catch (e) {
+                    // Handle "already started" error, which can happen
+                    console.warn("Recognition already started or error starting:", e.message);
+                    if (e.name === 'InvalidStateError') {
+                        // It's already running, which matches our state
+                    }
+                }
+            }
+
+            /**
+             * Stops the speech recognition.
+             */
+            function stopListening() {
+                if (isListening) {
+                    isListening = false; // Set state *before* aborting to prevent onend restart
+                    if (recognition) {
+                        recognition.abort();
+                    }
+                }
+                listenBtn.dataset.value = "off";
+                listenBtn.textContent = "LISTEN";
+            }
+
+            // --- AI Interaction (Answer Mode) ---
+
+            /**
+             * Sends the combined prompt text to the selected AI API.
+             * @param {string} promptText - The full prompt to send.
+             */
+            async function sendToAI(promptText) {
+                const selectedAI = aiSelect.value;
+                const apiKey = getSetting(`apiKey_${selectedAI}`); // USE getSetting
+
+                if (!apiKey) {
+                    answerOutput.textContent = `Error: API key for ${selectedAI} is not set. Please set it at the top and click Save.`;
+                    return; // Return a resolved promise
+                }
+                
+                // Set up for cancellation
+                currentAbortController = new AbortController();
+                const signal = currentAbortController.signal;
+
+                // --- OpenRouter Specific Implementation ---
+                if (selectedAI === 'openrouter') {
+                    const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+                    const model = "mistralai/mistral-7b-instruct:free"; // Use a free, fast model
+
+                    try {
+                        answerOutput.textContent = 'Thinking...';
+                        
+                        const response = await fetch(API_URL, {
+                            method: 'POST',
+                            headers: {
+                                'Authorization': `Bearer ${apiKey}`,
+                                'Content-Type': 'application/json',
+                                // Recommended headers for OpenRouter
+                                'HTTP-Referer': 'https://github.com/Systemsplanet/systemsplanet.github.io', 
+                                'X-Title': 'AI Question Capture'
+                            },
+                            body: JSON.stringify({
+                                model: model,
+                                messages: [
+                                    { role: 'user', content: promptText }
+                                ]
+                            }),
+                            signal: signal // Pass the abort signal
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json().catch(() => ({})); // Handle non-json errors
+                            const errorMsg = errorData.error?.message || response.statusText;
+                            throw new Error(`API Error (${response.status}): ${errorMsg}`);
+                        }
+
+                        const data = await response.json();
+                        
+                        if (data.choices && data.choices.length > 0) {
+                            const reply = data.choices[0].message.content;
+                            answerOutput.textContent = reply;
+
+                            // Optionally read reply out loud
+                            if (readAloudCheckbox.checked) {
+                                readAloud(reply);
+                            }
+                        } else {
+                            throw new Error("Invalid response format from AI.");
+                        }
+
+                    } catch (error) {
+                        if (error.name === 'AbortError') {
+                            console.log('AI request was cancelled.');
+                            answerOutput.textContent = 'Answer cancelled.';
+                        } else {
+                            console.error('OpenRouter API error:', error);
+                            answerOutput.textContent = `Error: ${error.message}`;
+                        }
+                    }
+                } else {
+                    answerOutput.textContent = `Error: AI provider '${selectedAI}' is not implemented.`;
+                }
+            }
+
+            /**
+             * Reads the provided text using browser's SpeechSynthesis.
+             * @param {string} text - The text to speak.
+             */
+            function readAloud(text) {
+                if (!('speechSynthesis' in window)) {
+                    console.warn('Speech Synthesis not supported.');
+                    return;
+                }
+                // Cancel any speech that is currently playing
+                window.speechSynthesis.cancel();
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US'; // Use system default
+                window.speechSynthesis.speak(utterance);
+            }
+
+            // --- Event Listeners ---
+
+            // Listen Button Click
+            listenBtn.addEventListener('click', () => {
+                if (listenBtn.dataset.value === 'on') {
+                    // Value is 'on', so turn it 'off'
+                    stopListening();
+                } else {
+                    // Value is 'off', so turn it 'on'
+                    startListening();
+                }
+            });
+
+            // Answer Button Click
+            answerBtn.addEventListener('click', async () => {
+                if (answerBtn.dataset.value === 'on') {
+                    // "if answerBtn value == on then answerBtn value = off."
+                    // This acts as a CANCEL button
+                    if (currentAbortController) {
+                        currentAbortController.abort(); // Abort the fetch
+                    }
+                    answerBtn.dataset.value = 'off';
+                    answerBtn.disabled = false;
+                    answerBtn.textContent = 'ANSWER';
+                    return;
+                }
+                
+                // --- This is the "else" block (value == 'off') ---
+                answerBtn.dataset.value = 'on'; // Set to 'on' (busy) state
+                answerBtn.disabled = true; // Disable to prevent double-click
+                answerBtn.textContent = 'CANCEL'; // Now it's a cancel button
+
+                // "Stop Transcription API"
+                stopListening();
+
+                // "if questionList has no entries where isSelected == on"
+                let selectedQuestions = questionListData.filter(q => q.isSelected);
+
+                if (selectedQuestions.length === 0) {
+                    // "for each questionList entry ql in reverse order... break."
+                    for (let i = questionListData.length - 1; i >= 0; i--) {
+                        if (questionListData[i].text.trim()) {
+                            questionListData[i].isSelected = true; // Select it in the data
+                            break;
+                        }
+                    }
+                    // Update the UI to show the new selection
+                    renderQuestionList();
+                }
+
+                // "let promptText = ''"
+                let promptText = "";
+                // "for each questionList entry ql..."
+                questionListData.forEach(ql => {
+                    if (ql.isSelected) {
+                        const prompt = ql.text.trim();
+                        if (prompt.length > 0) {
+                            promptText += prompt + "\n"; // Use newline
+                        }
+                    }
+                });
+                
+                promptText = promptText.trim();
+
+                // "If length of trim promptText > 0"
+                if (promptText.length > 0) {
+                    // "Send promptText to AI API... Display AI reply..."
+                    // We use `await` to ensure the button state is set *after*
+                    await sendToAI(promptText);
+                } else {
+                    answerOutput.textContent = 'No selected questions with text to answer.';
+                }
+
+                // "answerBtn value = off." (This runs after AI call finishes or fails)
+                answerBtn.dataset.value = 'off';
+                answerBtn.disabled = false;
+                answerBtn.textContent = 'ANSWER';
+            });
+
+            // AI Selection Change
+            aiSelect.addEventListener('change', loadApiKeyForSelectedAI);
+
+            // Save Button Click
+            saveApiKeyBtn.addEventListener('click', saveSettings);
+
+            // --- Initialization ---
+            loadSettings();
+            setupSpeechRecognition();
+        });
     </script>
 </body>
 </html>

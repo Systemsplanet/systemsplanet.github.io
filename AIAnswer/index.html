@@ -24,9 +24,10 @@
 
         /* Main App Container */
         #app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh; /* Full viewport height */
+          display: flex;
+          flex-direction: column;
+        height: 100vh; /* Fallback for older browsers */
+        height: 100dvh; /* Dynamic height, handles keyboard */
         }
 
         /* Header Area */
@@ -361,32 +362,32 @@
              * Re-draws the entire question list UL from the questionListData array.
              */
             function renderQuestionList() {
-                questionListUL.innerHTML = ''; // Clear existing list
-                
-                // Only render the last 5 visible questions as per requirement
-                // But the data model `questionListData` holds up to 50
-                const visibleQuestions = questionListData.slice(-5);
+    questionListUL.innerHTML = ''; // Clear existing list
+    
+    // Render ALL questions from the data model.
+    // The CSS container (#questionList-container) will correctly
+    // grow, shrink, and add scrollbars as needed.
+    questionListData.forEach(q => {
+        const li = document.createElement('li');
+        li.dataset.id = q.id;
 
-                visibleQuestions.forEach(q => {
-                    const li = document.createElement('li');
-                    li.dataset.id = q.id;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = q.isSelected;
+        checkbox.addEventListener('change', () => handleCheckboxChange(q.id));
 
-                    const checkbox = document.createElement('input');
-                    checkbox.type = 'checkbox';
-                    checkbox.checked = q.isSelected;
-                    checkbox.addEventListener('change', () => handleCheckboxChange(q.id));
+        const textInput = document.createElement('input');
+        textInput.type = 'text';
+        textInput.value = q.text;
+        // Update data model on 'input' for live changes
+        textInput.addEventListener('input', (e) => handleTextChange(q.id, e.target.value));
 
-                    const textInput = document.createElement('input');
-                    textInput.type = 'text';
-                    textInput.value = q.text;
-                    // Update data model on 'input' for live changes
-                    textInput.addEventListener('input', (e) => handleTextChange(q.id, e.target.value));
+        li.appendChild(checkbox);
+        li.appendChild(textInput);
+        questionListUL.appendChild(li);
+    });
+}
 
-                    li.appendChild(checkbox);
-                    li.appendChild(textInput);
-                    questionListUL.appendChild(li);
-                });
-            }
 
             /**
              * Updates the isSelected state in the data model.

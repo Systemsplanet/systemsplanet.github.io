@@ -597,8 +597,8 @@
                 // --- OpenRouter Specific Implementation ---
                 if (selectedAI === 'openrouter') {
                     const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
-                    const model =
-                        "mistralai/mistral-7b-instruct:free"; // Use a free, fast model
+                    const model = "openrouter/auto";
+                        //"mistralai/mistral-7b-instruct:free"; // Use a free, fast model
 
                     try {
                         answerOutput.textContent = 'Thinking...';
@@ -615,7 +615,7 @@
                                 'X-Title': 'AI Question Capture'
                             },
                             body: JSON.stringify({
-                               // model: model, default to openrouters defaults
+                                model:model,
                                 messages: [
                                     { role: 'user', content: promptText }
                                 ]

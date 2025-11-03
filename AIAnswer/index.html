@@ -558,8 +558,9 @@
              * @returns {string} - The cleaned text.
              */
             function cleanAiReply(text) {
+                console.info ("prompt:["+ text+ "]");
                 if (!text) return ""; // Handle empty or null input
-
+return text;
                 // Regex to find and remove common LLM control tokens
                 // It matches:
                 // <s>, </s>
@@ -568,8 +569,8 @@
                 // [USER], [/USER]
                 // [ASSISTANT], [/ASSISTANT]
                 // We also trim whitespace from the final result.
-                const tokenRegex = /<s>|<\/s>|\[\/s>|\[OUT\]|\[\/OUT\]|\[INST\]|\[\/INST\]|\[USER\]|\[\/USER\]|\[ASSISTANT\]|\[\/ASSISTANT\]/g;
-                return text.replace(tokenRegex, "").trim();
+        // const tokenRegex = /<s>|<\/s>|\[\/s>|\[OUT\]|\[\/OUT\]|\[INST\]|\[\/INST\]|\[USER\]|\[\/USER\]|\[ASSISTANT\]|\[\/ASSISTANT\]/g;
+        // return text.replace(tokenRegex, "").trim();
             }
 
 
@@ -601,7 +602,7 @@
 
                     try {
                         answerOutput.textContent = 'Thinking...';
-                        console.error('api key [' + apiKey +"]")
+                        console.info('key:[' + apiKey +"]");
                         const response = await fetch(API_URL, {
                             method: 'POST',
                             headers: {
@@ -629,7 +630,10 @@
                         const data = await response.json();
                         
                         if (data.choices && data.choices.length > 0) {
+                            console.info("out0:["+ data.choices[0].message.content + "]");
+
                             const reply = cleanAiReply(data.choices[0].message.content);
+                            console.info("out1:["+ reply + "]");
                             answerOutput.textContent = reply;
 
                             // Optionally read reply out loud

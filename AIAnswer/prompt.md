@@ -8,77 +8,79 @@ capturing questions from a live conversation and
 makes it easy to edit before sending them to AI.
 
 ## Development
-As a senior javascript/css/html developer design a single page web app
-A single html file
-fit as much as possible in the screen without scrolling
-it should look and feel like a mobile app
+As a senior javascript/css/html developer 
+   design a single page web app
+   A single html file
+   fit as much as possible in the screen without scrolling
+   it should look and feel like a mobile app
 
 ## Edit Link
 Add an edit link to the top called "edit" that opens a new page to:
 https://github.com/Systemsplanet/systemsplanet.github.io/blob/main/AIAnswer/index.html
 
+# AI Options
+OPENROUTER is the default AI
+Option to select the AI key to use
+Store in a never-expiring browser cookies:
+    API keys
+    Active AI 
+    
 ## LISTEN MODE
 The GUI contains a two state button called listenBtn
 listenBtn value is on or off
 listenBtn lable is LISTEN
 
 when listenBtn is pressed
-   if listenBtn == on then 
-      stop listening
-      listenBtn = off
+   if listenBtn value == on then 
+      listenBtn value = off
+      abort Transcription API
    else
-      listenBtn = on
-      reset the GUI to clear previous questions list
-      start Transcription API
+      listenBtn value = on
+      call Transcription API in a new thread
       
+## Question List
+Keep each question asked in a questionList list box 
+questionList may be scrolled to select questions
+only last 5 questions are visible at a time
+questionList supports up to 50 questions max.
+latest question is at the end of questionList
+ 
+Each questionList entry:
+   isSelected check box on the left of each entry.
+   editable questionText text box containing the trimmed question text. 
+
+## Answer MODE
+The GUI has a two state button called answerBtn
+answerBtn label is ANSWER
+answerBtn value is on or off
+When answerBtn selected
+   if answerBtn value == on then
+     answerBtn value = off
+.  else
+     answerBtn value = on
+     Stop Transcription API
+     if questionList has no entries where isSelected == on then
+        for each questionList entry ql in reverse order
+           if ql.questionText not blank
+              ql.isSelected = on 
+              break
+     let promptText = ""
+     for each questionList entry ql
+        if ql.isSelected == on then
+           let prompt = trim ql.questionText
+           if length of prompt > 0 then 
+              promptText += prompt + Carriage Return
+     If length of trim promptText >0 then
+        Send promptText to AI API
+        Disply AI reply
+        Optionally Read AI reply out loud
+     answerBtn value = off
+
 ### Transcription API
-If listenBtn is on then
+While listenBtn is on then
    Use microphone to listen 
    Transcibe voice to text
    Identify each question
-   Add each question to top of questionList so the latest question is first in 
-   
-When transcription api returns then 
-   reissue a new transcrption API request
-    always be displaying.
-   
-
-
+   Add each question to bottom of questionList so the latest question is last entry
+   Scroll questionList to bottom
       
-      
-
-## Question List
-Keep each question asked in a questionList list box 
-the questionList may be scrolled to select questions
-only top 5 questions are visible at a time
-questionList supports up to 50 questions max.
- 
-Each questionList entry:
-   starts with a isSelected check box on the left of each entry.
-   contains an editable questionText text box containing the question
-   if no isSelected checkboxes are selected when a new question is added to the list then
-      select the checkbox of the last question asked  
-
-## ASK MODE
-When the user hits ASK button
-   Stop Listening
-   if no questions are selected then select the first non blank question
-   promptText = ""
-   Starting with the last question in the list to the first question:
-      if isSelected checkbox is selected then 
-       add the question to the promptText plus a new line char
-   If trimmed query length >1 then
-      Send the query to AI
-
-## Reply
-Disply AI reply.
-Optionally Read AI reply out loud.
-
-# AI Options
-OPENROUTER is the deafult AI.
-Option to add new AI API keys
-Option to select the AI key to use
-Save API keys in a never expiring browser cookie
-
-
-

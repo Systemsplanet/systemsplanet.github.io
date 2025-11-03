@@ -197,12 +197,19 @@
             max-height: 40vh; /* Limit answer height */
             overflow-y: auto; /* Scrollable answer area */
         }
-        
+        #ai-model {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        /*
         #answer-container h3 {
             font-size: 0.9rem;
             font-weight: 600;
             margin-bottom: 5px;
         }
+        */
 
         #answer-output {
             background: #f0f2f5;
@@ -257,7 +264,7 @@
             </div>
 
             <div id="answer-container">
-                <h3>AI Answer:</h3>
+                <div id="ai-name">AI Reply:</div>
                 <div id="answer-output">Your AI answer will appear here...</div>
                 <label id="read-aloud-toggle">
                     <input type="checkbox" id="read-aloud-checkbox">
@@ -279,6 +286,7 @@
             const questionListUL = document.getElementById('questionList');
             const questionListContainer = document.getElementById('questionList-container');
             const answerOutput = document.getElementById('answer-output');
+            const aiModel = document.getElementById('ai-model');
             const aiSelect = document.getElementById('ai-select');
             const apiKeyInput = document.getElementById('api-key-input');
             const saveApiKeyBtn = document.getElementById('save-api-key-btn');
@@ -582,6 +590,7 @@
              * @param {string} promptText - The full prompt to send.
              */
             async function sendToAI(promptText) {
+                aiModel.textContent = "AI Reply"
                 const selectedAI = aiSelect.value;
                 const apiKey = getSetting(`apiKey_${selectedAI}`); // USE getSetting
 
@@ -633,7 +642,7 @@
                         
                         if (data.choices && data.choices.length > 0) {
                             console.info("out0:["+ data.choices[0].message.content + "]");
-
+                            aiModel.textContent = "AI (" + data.provider + ":" + data.model + ") Reply";
                             const reply = cleanAiReply(data.choices[0].message.content);
                             console.info("out1:["+ reply + "]");
                             answerOutput.textContent = reply;

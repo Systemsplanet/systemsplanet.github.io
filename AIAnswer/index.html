@@ -568,8 +568,8 @@
                 // [USER], [/USER]
                 // [ASSISTANT], [/ASSISTANT]
                 // We also trim whitespace from the final result.
-                const tokenRegex = /<s>|</s>|\[OUT\]|\[\/OUT\]|\[INST\]|\[\/INST\]|\[USER\]|\[\/USER\]|\[ASSISTANT\]|\[\/ASSISTANT\]/g;
-                
+                const tokenRegex = /<s>|<\/s>|\[OUT\]|\[\/OUT\]|\[INST\]|\[\/INST\]|\[USER\]|\[\/USER\]|\[ASSISTANT\]|\[\/ASSISTANT\]/g;
+  
                 return text.replace(tokenRegex, "").trim();
             }
 

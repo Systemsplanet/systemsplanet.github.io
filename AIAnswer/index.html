@@ -16,7 +16,7 @@
         /* App Body & Font */
         html, body {
             height: 100%;
-            overflow: hidden; /* Prevent scrolling on the body */
+            overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: #f0f2f5;
             color: #1c1e21;
@@ -24,10 +24,10 @@
 
         /* Main App Container */
         #app-container {
-          display: flex;
-          flex-direction: column;
-        height: 100vh; /* Fallback for older browsers */
-        height: 100dvh; /* Dynamic height, handles keyboard */
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            height: 100dvh;
         }
 
         /* Header Area */
@@ -38,7 +38,7 @@
             padding: 10px 12px;
             background-color: #ffffff;
             border-bottom: 1px solid #dddfe2;
-            flex-shrink: 0; /* Prevent header from shrinking */
+            flex-shrink: 0;
         }
 
         #edit-link {
@@ -79,16 +79,17 @@
             border: none;
             cursor: pointer;
         }
+
         #ai-controls button:hover {
             background-color: #0069d9;
         }
 
         /* Main Content Area */
         main {
-            flex-grow: 1; /* Take up remaining space */
+            flex-grow: 1;
             display: flex;
             flex-direction: column;
-            overflow: hidden; /* Prevent main from scrolling */
+            overflow: hidden;
         }
 
         /* Control Buttons (Listen/Answer) */
@@ -115,17 +116,19 @@
         #listenBtn {
             color: white;
         }
-        /* "off" state - ready to listen */
+
         #listenBtn[data-value="off"] {
             background-color: #42b72a;
         }
+
         #listenBtn[data-value="off"]:hover {
             background-color: #36a420;
         }
-        /* "on" state - currently listening */
+
         #listenBtn[data-value="on"] {
             background-color: #fa383e;
         }
+
         #listenBtn[data-value="on"]:hover {
             background-color: #e02c30;
         }
@@ -134,9 +137,11 @@
             background-color: #007bff;
             color: white;
         }
+
         #answerBtn:hover {
             background-color: #0069d9;
         }
+
         #answerBtn:disabled,
         #answerBtn[data-value="on"] {
             background-color: #9dbfff;
@@ -146,8 +151,8 @@
 
         /* Question List */
         #questionList-container {
-            flex-grow: 1; /* This is the main scrolling area */
-            overflow-y: auto; /* Allow internal scrolling */
+            flex-grow: 1;
+            overflow-y: auto;
             background-color: #ffffff;
             padding: 10px;
         }
@@ -169,7 +174,6 @@
         #questionList li input[type="checkbox"] {
             margin-right: 10px;
             flex-shrink: 0;
-            /* Larger, easier-to-tap checkbox */
             width: 18px;
             height: 18px;
         }
@@ -180,8 +184,9 @@
             padding: 8px;
             border-radius: 4px;
             font-size: 0.95rem;
-            min-width: 0; /* Fix flexbox overflow */
+            min-width: 0;
         }
+
         #questionList li input[type="text"]:focus {
             outline: none;
             border-color: #007bff;
@@ -190,26 +195,20 @@
 
         /* Answer Area */
         #answer-container {
-            flex-shrink: 0; /* Prevent shrinking */
+            flex-shrink: 0;
             padding: 10px;
             background-color: #ffffff;
             border-top: 1px solid #dddfe2;
-            max-height: 40vh; /* Limit answer height */
-            overflow-y: auto; /* Scrollable answer area */
+            max-height: 40vh;
+            overflow-y: auto;
         }
+
         #ai-model {
             display: block;
             font-size: 0.9rem;
             font-weight: 600;
             margin-bottom: 5px;
         }
-        /*
-        #answer-container h3 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        */
 
         #answer-output {
             background: #f0f2f5;
@@ -217,7 +216,7 @@
             padding: 10px;
             border-radius: 6px;
             min-height: 40px;
-            white-space: pre-wrap; /* Preserve newlines from AI */
+            white-space: pre-wrap;
             word-wrap: break-word;
             font-size: 0.9rem;
         }
@@ -228,6 +227,7 @@
             font-size: 0.9rem;
             color: #4b4f56;
         }
+
         #read-aloud-toggle input {
             margin-right: 5px;
             vertical-align: middle;
@@ -235,15 +235,13 @@
     </style>
 </head>
 <body>
-
     <div id="app-container">
-        
         <header>
             <div id="ai-controls">
                 <label for="ai-select">AI:</label>
                 <select id="ai-select">
                     <option value="openrouter" selected>openrouter/auto</option>
-                 </select>
+                </select>
                 <label for="api-key-input">Key:</label>
                 <input type="password" id="api-key-input" placeholder="API Key">
                 <button id="save-api-key-btn" title="Save Key & AI Choice">Save</button>
@@ -253,15 +251,13 @@
         </header>
 
         <main>
-            
             <div id="controls">
                 <button id="listenBtn" data-value="off">LISTEN</button>
                 <button id="answerBtn" data-value="off">ANSWER</button>
             </div>
 
             <div id="questionList-container">
-                <ul id="questionList">
-                    </ul>
+                <ul id="questionList"></ul>
             </div>
 
             <div id="answer-container">
@@ -272,15 +268,11 @@
                     Read AI reply out loud
                 </label>
             </div>
-            
         </main>
-        
     </div>
 
     <script>
-        // Wait for the DOM to be fully loaded
         document.addEventListener('DOMContentLoaded', () => {
-
             // --- DOM Element References ---
             const listenBtn = document.getElementById('listenBtn');
             const answerBtn = document.getElementById('answerBtn');
@@ -294,18 +286,13 @@
             const readAloudCheckbox = document.getElementById('read-aloud-checkbox');
 
             // --- App State ---
-            let questionListData = []; // Array of { id, text, isSelected }
+            let questionListData = [];
             const MAX_QUESTIONS = 50;
-            let recognition; // SpeechRecognition instance
+            let recognition;
             let isListening = false;
-            let currentAbortController = null; // To cancel fetch requests
+            let currentAbortController = null;
 
-            // --- LocalStorage Helper Functions (Replaces Cookies) ---
-            /**
-             * Saves a setting to localStorage.
-             * @param {string} name - The name of the setting.
-             * @param {string} value - The value of the setting.
-             */
+            // --- LocalStorage Helper Functions ---
             function saveSetting(name, value) {
                 try {
                     localStorage.setItem(name, value);
@@ -315,11 +302,6 @@
                 }
             }
 
-            /**
-             * Gets a setting from localStorage.
-             * @param {string} name - The name of the setting.
-             * @returns {string | null} - The setting value or null.
-             */
             function getSetting(name) {
                 try {
                     return localStorage.getItem(name);
@@ -329,93 +311,64 @@
                 }
             }
 
-            // --- Settings & Storage Management (Updated) ---
-            
-            /**
-             * Loads the API key for the currently selected AI from localStorage.
-             */
+            // --- Settings & Storage Management ---
             function loadApiKeyForSelectedAI() {
                 const selectedAI = aiSelect.value;
-                const savedKey = getSetting(`apiKey_${selectedAI}`); // USE getSetting
+                const savedKey = getSetting(`apiKey_${selectedAI}`);
                 apiKeyInput.value = savedKey || '';
             }
 
-            /**
-             * Loads all saved settings from localStorage on page load.
-             */
             function loadSettings() {
-                const savedAI = getSetting('activeAI'); // USE getSetting
+                const savedAI = getSetting('activeAI');
                 if (savedAI) {
                     aiSelect.value = savedAI;
                 }
                 loadApiKeyForSelectedAI();
             }
 
-            /**
-             * Saves the current AI selection and API key to localStorage.
-             */
             function saveSettings() {
                 const selectedAI = aiSelect.value;
-                const newKey = apiKeyInput.value.trim(); // Trim whitespace
+                const newKey = apiKeyInput.value.trim();
                 
-                saveSetting(`apiKey_${selectedAI}`, newKey); // USE saveSetting
-                saveSetting('activeAI', selectedAI);      // USE saveSetting
+                saveSetting(`apiKey_${selectedAI}`, newKey);
+                saveSetting('activeAI', selectedAI);
                 
                 alert('Settings saved.');
-                apiKeyInput.blur(); // Remove focus
+                apiKeyInput.blur();
             }
 
             // --- Question List Management ---
-
-            /**
-             * Re-draws the entire question list UL from the questionListData array.
-             */
             function renderQuestionList() {
-    questionListUL.innerHTML = ''; // Clear existing list
-    
-    // Render ALL questions from the data model.
-    // The CSS container (#questionList-container) will correctly
-    // grow, shrink, and add scrollbars as needed.
-    questionListData.forEach(q => {
-        const li = document.createElement('li');
-        li.dataset.id = q.id;
+                questionListUL.innerHTML = '';
+                
+                questionListData.forEach(q => {
+                    const li = document.createElement('li');
+                    li.dataset.id = q.id;
 
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = q.isSelected;
-        checkbox.addEventListener('change', () => handleCheckboxChange(q.id));
+                    const checkbox = document.createElement('input');
+                    checkbox.type = 'checkbox';
+                    checkbox.checked = q.isSelected;
+                    checkbox.addEventListener('change', () => handleCheckboxChange(q.id));
 
-        const textInput = document.createElement('input');
-        textInput.type = 'text';
-        textInput.value = q.text;
-        // Update data model on 'input' for live changes
-        textInput.addEventListener('input', (e) => handleTextChange(q.id, e.target.value));
+                    const textInput = document.createElement('input');
+                    textInput.type = 'text';
+                    textInput.value = q.text;
+                    textInput.addEventListener('input', (e) => handleTextChange(q.id, e.target.value));
 
-        li.appendChild(checkbox);
-        li.appendChild(textInput);
-        questionListUL.appendChild(li);
-    });
-}
+                    li.appendChild(checkbox);
+                    li.appendChild(textInput);
+                    questionListUL.appendChild(li);
+                });
+            }
 
-
-            /**
-             * Updates the isSelected state in the data model.
-             * @param {number} id - The ID of the question to update.
-             */
             function handleCheckboxChange(id) {
                 const question = questionListData.find(q => q.id === id);
                 if (question) {
                     question.isSelected = !question.isSelected;
                 }
-                // Re-render to reflect state, as the `li` might be outside the visible window
                 renderQuestionList();
             }
 
-            /**
-             * Updates the text in the data model.
-             * @param {number} id - The ID of the question to update.
-             * @param {string} newText - The new text value.
-             */
             function handleTextChange(id, newText) {
                 const question = questionListData.find(q => q.id === id);
                 if (question) {
@@ -423,37 +376,25 @@
                 }
             }
 
-            /**
-             * Adds a new question to the list.
-             * @param {string} text - The text of the question.
-             */
             function addQuestion(text) {
                 const trimmedText = text.trim();
-                if (!trimmedText) return; // Don't add empty questions
+                if (!trimmedText) return;
 
-                // "Scroll up" - Discard the first entry if at max
                 if (questionListData.length >= MAX_QUESTIONS) {
                     questionListData.shift(); 
                 }
 
-                // Add new question to the bottom
                 questionListData.push({
-                    id: Date.now(), // Simple unique ID
+                    id: Date.now(),
                     text: trimmedText,
                     isSelected: false
                 });
 
-                renderQuestionList(); // Re-draw the UI
-                
-                // Scroll GUI to bottom
+                renderQuestionList();
                 questionListContainer.scrollTop = questionListContainer.scrollHeight;
             }
 
-            // --- Speech Recognition (Listen Mode) ---
-            
-            /**
-             * Initializes the SpeechRecognition API.
-             */
+            // --- Speech Recognition ---
             function setupSpeechRecognition() {
                 window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
                 
@@ -465,68 +406,47 @@
                 }
 
                 recognition = new SpeechRecognition();
-                recognition.continuous = true;  // Keep listening even after speech ends
-                recognition.interimResults = false; // Only get final results
+                recognition.continuous = true;
+                recognition.interimResults = false;
                 recognition.lang = 'en-US';
 
-                /**
-                 * Fired when a final speech result is available.
-                 */
                 recognition.onresult = (event) => {
                     let transcript = '';
-                    // Loop through results (though with continuous=true, we often just care about the last)
                     for (let i = event.resultIndex; i < event.results.length; ++i) {
                         transcript += event.results[i][0].transcript + ' ';
                     }
-                    
-                    // "for each question identified... Add question to bottom"
-                    // We interpret each final transcript as a "question"
                     addQuestion(transcript);
                 };
 
-                /**
-                 * Handle errors.
-                 */
                 recognition.onerror = (event) => {
                     console.error('Speech recognition error:', event.error);
                     if (event.error === 'no-speech' || event.error === 'audio-capture' || event.error === 'network') {
-                        // Don't necessarily stop, but log it
+                        // Don't stop for minor errors
                     } else {
-                        // A more fatal error
                         stopListening();
                     }
                 };
 
-                /**
-                 * Fired when recognition ends (e.g., manually aborted or network loss).
-                 */
                 recognition.onend = () => {
-                    // Automatically restart if we were *supposed* to be listening
                     if (isListening) {
                         try {
                             recognition.start();
                         } catch (e) {
                             console.error("Could not restart recognition:", e);
-                            stopListening(); // Give up and reset UI
+                            stopListening();
                         }
                     }
                 };
             }
 
-            /**
-             * Starts the speech recognition.
-             */
             function startListening() {
-                if (!recognition) return; // Not supported
+                if (!recognition) return;
 
                 try {
-                    // Stop answering if it's running
                     if (answerBtn.dataset.value === 'on') {
-                        // Cancel any ongoing AI request
                         if (currentAbortController) {
                             currentAbortController.abort();
                         }
-                        // Reset answer button
                         answerBtn.dataset.value = 'off';
                         answerBtn.disabled = false;
                         answerBtn.textContent = 'ANSWER';
@@ -537,20 +457,13 @@
                     listenBtn.dataset.value = "on";
                     listenBtn.textContent = "LISTENING...";
                 } catch (e) {
-                    // Handle "already started" error, which can happen
                     console.warn("Recognition already started or error starting:", e.message);
-                    if (e.name === 'InvalidStateError') {
-                        // It's already running, which matches our state
-                    }
                 }
             }
 
-            /**
-             * Stops the speech recognition.
-             */
             function stopListening() {
                 if (isListening) {
-                    isListening = false; // Set state *before* aborting to prevent onend restart
+                    isListening = false;
                     if (recognition) {
                         recognition.abort();
                     }
@@ -559,56 +472,29 @@
                 listenBtn.textContent = "LISTEN";
             }
 
-
-
-            /**
-             * Cleans raw AI output by removing common control tokens.
-             * @param {string} text - The raw text from the AI.
-             * @returns {string} - The cleaned text.
-             */
             function cleanAiReply(text) {
-                if (!text) return ""; // Handle empty or null input
-                //return text;
-                // Regex to find and remove common LLM control tokens
-                // It matches:
-                // <s>, </s>
-                // [OUT], [/OUT]
-                // [INST], [/INST]
-                // [USER], [/USER]
-                // [ASSISTANT], [/ASSISTANT]
-                // We also trim whitespace from the final result.
+                if (!text) return "";
                 const tokenRegex = /<s>|<\/s>|\[\/s>|\[OUT\]|\[\/OUT\]|\[INST\]|\[\/INST\]|\[USER\]|\[\/USER\]|\[ASSISTANT\]|\[\/ASSISTANT\]/g;
                 return text.replace(tokenRegex, "").trim();
             }
 
-
-
-            
-            // --- AI Interaction (Answer Mode) ---
-
-            /**
-             * Sends the combined prompt text to the selected AI API.
-             * @param {string} promptText - The full prompt to send.
-             */
+            // --- AI Interaction ---
             async function sendToAI(promptText) {
                 aiModel.textContent = "AI Reply"
                 const selectedAI = aiSelect.value;
-                const apiKey = getSetting(`apiKey_${selectedAI}`); // USE getSetting
+                const apiKey = getSetting(`apiKey_${selectedAI}`);
 
                 if (!apiKey) {
                     answerOutput.textContent = `Error: API key for ${selectedAI} is not set. Please set it at the top and click Save.`;
-                    return; // Return a resolved promise
+                    return;
                 }
                 
-                // Set up for cancellation
                 currentAbortController = new AbortController();
                 const signal = currentAbortController.signal;
 
-                // --- OpenRouter Specific Implementation ---
                 if (selectedAI === 'openrouter') {
                     const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
                     const model = "openrouter/auto";
-                        //"mistralai/mistral-7b-instruct:free"; // Use a free, fast model
 
                     try {
                         answerOutput.textContent = 'Thinking...';
@@ -620,23 +506,20 @@
                             headers: {
                                 'Authorization': `Bearer ${apiKey}`,
                                 'Content-Type': 'application/json',
-                                // Recommended headers for OpenRouter
                                 'HTTP-Referer': 'https://github.com/Systemsplanet/systemsplanet.github.io', 
                                 'X-Title': 'AI Question Capture'
                             },
                             body: JSON.stringify({
-                                model:model,
-                             // Fallback models
-                             // models: ['mistralai/mistral-7b-instruct:free','anthropic/claude-3.5-sonnet', 'gryphe/mythomax-l2-13b'],
+                                model: model,
                                 messages: [
                                     { role: 'user', content: promptText }
                                 ]
                             }),
-                            signal: signal // Pass the abort signal
+                            signal: signal
                         });
 
                         if (!response.ok) {
-                            const errorData = await response.json().catch(() => ({})); // Handle non-json errors
+                            const errorData = await response.json().catch(() => ({}));
                             const errorMsg = errorData.error?.message || response.statusText;
                             throw new Error(`API Error (${response.status}): ${errorMsg}`);
                         }
@@ -650,7 +533,6 @@
                             console.info("out1:["+ reply + "]");
                             answerOutput.textContent = reply;
 
-                            // Optionally read reply out loud
                             if (readAloudCheckbox.checked) {
                                 readAloud(reply);
                             }
@@ -672,51 +554,35 @@
                 }
             }
 
-            /**
-             * Reads the provided text using browser's SpeechSynthesis.
-             * @param {string} text - The text to speak.
-             */
             function readAloud(text) {
                 if (!('speechSynthesis' in window)) {
                     console.warn('Speech Synthesis not supported.');
                     return;
                 }
-                // Cancel any speech that is currently playing
                 window.speechSynthesis.cancel();
                 
                 const utterance = new SpeechSynthesisUtterance(text);
-                utterance.lang = 'en-US'; // Use system default
+                utterance.lang = 'en-US';
                 window.speechSynthesis.speak(utterance);
             }
 
             // --- Event Listeners ---
-
-            // Listen Button Click
             listenBtn.addEventListener('click', () => {
                 if (listenBtn.dataset.value === 'on') {
-                    // Value is 'on', so turn it 'off'
                     stopListening();
                 } else {
-                    // Value is 'off', so turn it 'on'
-                    
-                    // Loop through the data and uncheck all items
                     questionListData.forEach(q => {
                         q.isSelected = false;
                     });
-                    
-                    // Re-render the list to show the changes
                     renderQuestionList();
                     startListening();
                 }
             });
 
-            // Answer Button Click
             answerBtn.addEventListener('click', async () => {
                 if (answerBtn.dataset.value === 'on') {
-                    // "if answerBtn value == on then answerBtn value = off."
-                    // This acts as a CANCEL button
                     if (currentAbortController) {
-                        currentAbortController.abort(); // Abort the fetch
+                        currentAbortController.abort();
                     }
                     answerBtn.dataset.value = 'off';
                     answerBtn.disabled = false;
@@ -724,75 +590,55 @@
                     return;
                 }
                 
-                // --- This is the "else" block (value == 'off') ---
-                answerBtn.dataset.value = 'on'; // Set to 'on' (busy) state
-                answerBtn.disabled = true; // Disable to prevent double-click
-                answerBtn.textContent = 'CANCEL'; // Now it's a cancel button
+                answerBtn.dataset.value = 'on';
+                answerBtn.disabled = true;
+                answerBtn.textContent = 'CANCEL';
 
-                // "Stop Transcription API"
                 stopListening();
 
-                // "if questionList has no entries where isSelected == on"
                 let selectedQuestions = questionListData.filter(q => q.isSelected);
 
                 if (selectedQuestions.length === 0) {
-                    // "for each questionList entry ql in reverse order... break."
                     for (let i = questionListData.length - 1; i >= 0; i--) {
                         if (questionListData[i].text.trim()) {
-                            questionListData[i].isSelected = true; // Select it in the data
+                            questionListData[i].isSelected = true;
                             break;
                         }
                     }
-                    // Update the UI to show the new selection
                     renderQuestionList();
                 }
 
-                // "let promptText = ''"
                 let promptText = "";
-                // "for each questionList entry ql..."
                 questionListData.forEach(ql => {
                     if (ql.isSelected) {
                         const prompt = ql.text.trim();
                         if (prompt.length > 0) {
-                            promptText += prompt + "\n"; // Use newline
+                            promptText += prompt + "\n";
                         }
                     }
                 });
                 
                 promptText = promptText.trim();
 
-                // "If length of trim promptText > 0"
                 if (promptText.length > 0) {
-                    // "Prime" the SpeechSynthesis API before the async call.
-                    // This is required by many browsers (especially mobile)
-                    // which block speech not directly initiated by a user click.
                     if (readAloudCheckbox.checked && 'speechSynthesis' in window) {
-                        window.speechSynthesis.cancel(); // Clear any old queue
-                        const primingUtterance = new SpeechSynthesisUtterance(' '); // Speak a single space
-                        primingUtterance.volume = 0; // Make it silent
+                        window.speechSynthesis.cancel();
+                        const primingUtterance = new SpeechSynthesisUtterance(' ');
+                        primingUtterance.volume = 0;
                         window.speechSynthesis.speak(primingUtterance);
                     }
-                    
 
-                    // "Send promptText to AI API... Display AI reply..."
-                    // Now, the call *after* the await is more likely to work.
                     await sendToAI(promptText);
-
                 } else {
                     answerOutput.textContent = 'No selected questions with text to answer.';
                 }
 
-
-                // "answerBtn value = off." (This runs after AI call finishes or fails)
                 answerBtn.dataset.value = 'off';
                 answerBtn.disabled = false;
                 answerBtn.textContent = 'ANSWER';
             });
 
-            // AI Selection Change
             aiSelect.addEventListener('change', loadApiKeyForSelectedAI);
-
-            // Save Button Click
             saveApiKeyBtn.addEventListener('click', saveSettings);
 
             // --- Initialization ---

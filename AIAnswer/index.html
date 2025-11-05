@@ -495,10 +495,9 @@
                 if (selectedAI === 'openrouter') {
                     const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
                     const model = "openrouter/auto";
-
                     try {
                         answerOutput.textContent = 'Thinking...';
-                        console.info('key:[' + apiKey +"]");
+                        //console.info('key:[' + apiKey +"]");
                         console.info("in:["+ promptText + "]");
                 
                         const response = await fetch(API_URL, {
@@ -511,6 +510,7 @@
                             },
                             body: JSON.stringify({
                                 model: model,
+                             // models: ['mistralai/mistral-7b-instruct:free'],
                                 messages: [
                                     { role: 'user', content: promptText }
                                 ]

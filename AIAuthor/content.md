@@ -1,4 +1,3 @@
-Here is the content.md template designed to provide an AI with all the necessary instructions and metadata to generate a YouTube video based on a news topic.
 # content.md - AI Video Generation Template
 
 ## 1. Project Overview
@@ -52,7 +51,7 @@ Here is the content.md template designed to provide an AI with all the necessary
 
 ### Video Description
 *Guideline: First 200 characters are crucial. Include keywords naturally.*
-```text
+
 [Hook/Summary of the news story]
 
 [Key Takeaways/Bullet Points]
@@ -61,32 +60,34 @@ Here is the content.md template designed to provide an AI with all the necessary
 
 [Links: Source references, Social Media handles]
 
-3. Content Script & Visuals
-Scene 1: Intro (0:00 - 0:30)
- * Visual Prompt: [Describe background video/b-roll]
- * Audio/Voiceover:
-   > "Welcome back. Breaking news today regarding [Topic]..."
-   > 
-Scene 2: The Core Issue (0:30 - 1:30)
- * Visual Prompt: [Describe chart, interview clip, or animation]
- * Audio/Voiceover:
-   > "[Deep dive into the specific details of the news story]..."
-   > 
-Scene 3: Analysis/Impact (1:30 - 2:30)
- * Visual Prompt: [Describe reaction shots or future projection graphics]
- * Audio/Voiceover:
-   > "What does this mean for the future? Experts suggest..."
-   > 
-Scene 4: Conclusion & Outro (2:30 - End)
- * Visual Prompt: [Channel Logo, Subscribe Button animation]
- * Audio/Voiceover:
-   > "Let us know your thoughts in the comments below. Don't forget to like and subscribe."
-   > 
-4. Final Checklist
- * [ ] Script text-to-speech generation completed.
- * [ ] B-roll and images generated/gathered.
- * [ ] Background music selected (Royalty-free).
- * [ ] Thumbnail created and verified (1280x720).
- * [ ] Metadata (Tags, Description) finalized.
-<!-- end list -->
 
+## 3. Content Script & Visuals
+
+​Scene 1: Intro (0:00 - 0:30)
+​Visual Prompt: [Describe background video/b-roll]
+​Audio/Voiceover:
+​"Welcome back. Breaking news today regarding [Topic]..."
+
+​Scene 2: The Core Issue (0:30 - 1:30)
+​Visual Prompt: [Describe chart, interview clip, or animation]
+​Audio/Voiceover:
+​"[Deep dive into the specific details of the news story]..."
+
+​Scene 3: Analysis/Impact (1:30 - 2:30)
+​Visual Prompt: [Describe reaction shots or future projection graphics]
+​Audio/Voiceover:
+​"What does this mean for the future? Experts suggest..."
+
+​Scene 4: Conclusion & Outro (2:30 - End)
+​Visual Prompt: [Channel Logo, Subscribe Button animation]
+​Audio/Voiceover:
+​"Let us know your thoughts in the comments below. Don't forget to like and subscribe."
+
+## ​4. Final Checklist
+​[ ] Script text-to-speech generation completed.
+​[ ] B-roll and images generated/gathered.
+​[ ] Background music selected (Royalty-free).
+​[ ] Thumbnail created and verified (1280x720).
+​[ ] Metadata (Tags, Description) finalized.
+​
+<!-- end list -->

@@ -7,7 +7,7 @@
  * **Current Phase**: PHASE (% COMPLETE)
  * **Script Status**: ALL SEGMENTS COMPLETE ( lines, min runtime) - Ready for filming
  * **Topic:** [Insert News Topic Here]
- * **Source URL:** [Insert Link to News Source]
+ * **Source URLs:** [Insert Links to News Sources]
  * **Tone:** [e.g., Informative, Urgent, Humorous, Professional]
  * **Target Audience:** [e.g., Tech Enthusiasts, General Public, Investors]
 

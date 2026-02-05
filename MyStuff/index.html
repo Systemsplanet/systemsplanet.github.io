@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyStuff - Inventory Manager</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg: #f3f4f6;
+            --surface: #ffffff;
+            --text: #1f2937;
+            --text-light: #6b7280;
+            --border: #e5e7eb;
+            --danger: #ef4444;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 0; }
+        
+        /* Layout */
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        header { display: flex; justify-content: space-between; align-items: center; background: var(--surface); padding: 15px 20px; border-bottom: 1px solid var(--border); box-shadow: var(--shadow); position: sticky; top: 0; z-index: 10; }
+        h1 { margin: 0; font-size: 1.5rem; color: var(--primary); }
+        
+        /* Controls */
+        .controls { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+        select, input, button, textarea { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; }
+        button { cursor: pointer; background: var(--surface); transition: 0.2s; font-weight: 600; }
+        button.primary { background: var(--primary); color: white; border: none; }
+        button.primary:hover { background: var(--primary-hover); }
+        button.danger { background: var(--danger); color: white; border: none; }
+        .icon-btn { display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+        /* Table */
+        .table-container { overflow-x: auto; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border); }
+        th { background: #f9fafb; font-weight: 600; color: var(--text-light); }
+        tr:hover { background: #f9fafb; }
+        .thumb { width: 50px; height: 50px; object-fit: cover; border-radius: 4px; }
+
+        /* Modals */
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: var(--surface); padding: 25px; border-radius: var(--radius); width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; position: relative; }
+        .modal-header { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .close { cursor: pointer; font-size: 24px; }
+        
+        /* Forms */
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+        .form-group input, .form-group textarea, .form-group select { width: 100%; box-sizing: border-box; }
+        .input-with-action { display: flex; gap: 5px; }
+        .input-with-action input { flex: 1; }
+
+        /* Logs & Chat */
+        #logArea { width: 100%; height: 100px; background: #1e1e1e; color: #00ff00; font-family: monospace; padding: 10px; font-size: 12px; margin-top: 10px; border-radius: 4px; overflow-y: scroll; }
+        #aiPreview { max-width: 100%; height: auto; margin-top: 10px; border-radius: var(--radius); display: none; border: 2px dashed var(--border); }
+        
+        /* Loading Overlay */
+        #loader { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(255,255,255,0.8); z-index: 200; justify-content: center; align-items: center; flex-direction: column; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <div style="display:flex; align-items:center; gap:10px;">
+        <h1>MyStuff</h1>
+        <span id="connectionStatus" style="font-size:12px; padding:2px 6px; border-radius:4px; background:#e5e7eb;">Offline</span>
+    </div>
+    <div style="display:flex; gap:10px;">
+        <button onclick="app.openChat()">🤖 Ask AI</button>
+        <button onclick="app.openSettings()">⚙️ GitHub Config</button>
+        <button class="primary icon-btn" onclick="app.openAddModal()">+ Add Stuff</button>
+    </div>
+</header>
+
+<div class="container">
+    <div class="controls">
+        <select id="filterRoom" onchange="app.renderTable()">
+            <option value="">All Rooms</option>
+        </select>
+        <select id="filterName" onchange="app.renderTable()">
+            <option value="">All Names</option>
+        </select>
+        <input type="text" id="search" placeholder="Search description..." onkeyup="app.renderTable()">
+        <button class="primary" onclick="app.syncToGitHub()">☁️ Save/Sync to GitHub</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Img</th>
+                    <th>Room</th>
+                    <th>Name</th>
+                    <th>Location</th>
+                    <th>Description</th>
+                    <th>Updated</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody">
+                </tbody>
+        </table>
+    </div>
+</div>
+
+<div id="itemModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">Add Stuff</h2>
+            <span class="close" onclick="app.closeModal('itemModal')">&times;</span>
+        </div>
+        <form id="itemForm" onsubmit="event.preventDefault(); app.saveItem();">
+            <input type="hidden" id="itemId">
+            
+            <div class="form-group" style="background: #f0f9ff; padding: 15px; border-radius: 8px; border: 1px solid #bae6fd;">
+                <label>1. Photo & AI Analysis</label>
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <button type="button" class="icon-btn" onclick="document.getElementById('cameraInput').click()">📷 Take Picture</button>
+                    <input type="file" id="cameraInput" accept="image/*" capture="environment" style="display:none" onchange="app.handleImageUpload(this)">
+                </div>
+                <img id="aiPreview" alt="Preview">
+                <p style="font-size:12px; color:var(--text-light)">Uploading an image will trigger AI analysis to auto-fill details.</p>
+            </div>
+
+            <div class="form-group">
+                <label>Room</label>
+                <input type="text" id="inpRoom" list="roomList" required>
+                <datalist id="roomList"></datalist>
+            </div>
+
+            <div class="form-group">
+                <label>Name</label>
+                <input type="text" id="inpName" required>
+            </div>
+
+            <div class="form-group">
+                <label>Location (Specific)</label>
+                <div class="input-with-action">
+                    <input type="text" id="inpLocation">
+                    <button type="button" onclick="app.startSpeech('inpLocation')" title="Speak Location">🎤</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>GPS Coordinates</label>
+                <div class="input-with-action">
+                    <input type="text" id="inpGPS" placeholder="Lat, Lon" readonly>
+                    <button type="button" onclick="app.getGPS()" title="Get Current GPS">📍</button>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Description (AI Generated)</label>
+                <textarea id="inpDesc" rows="5" placeholder="Details about the item..."></textarea>
+            </div>
+
+            <button type="submit" class="primary" style="width:100%">Save Item</button>
+        </form>
+    </div>
+</div>
+
+<div id="settingsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Configuration</h2>
+            <span class="close" onclick="app.closeModal('settingsModal')">&times;</span>
+        </div>
+        <div class="form-group">
+            <label>GitHub Owner (Username)</label>
+            <input type="text" id="ghOwner">
+        </div>
+        <div class="form-group">
+            <label>Repository Name</label>
+            <input type="text" id="ghRepo">
+        </div>
+        <div class="form-group">
+            <label>JSON File Path (e.g., mystuff/data.json)</label>
+            <input type="text" id="ghPath" value="mystuff/data.json">
+        </div>
+        <div class="form-group">
+            <label>GitHub Personal Access Token (Repo Scope)</label>
+            <input type="password" id="ghToken">
+        </div>
+        <div class="form-group">
+            <label>OpenRouter API Key (For AI)</label>
+            <input type="password" id="aiKey">
+        </div>
+        <button class="primary" onclick="app.saveSettings()">Save Config</button>
+        
+        <h3>System Logs</h3>
+        <div id="logArea"></div>
+    </div>
+</div>
+
+<div id="chatModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Ask AI about your Stuff</h2>
+            <span class="close" onclick="app.closeModal('chatModal')">&times;</span>
+        </div>
+        <div id="chatHistory" style="height:300px; overflow-y:auto; border:1px solid var(--border); margin-bottom:10px; padding:10px; background:#fafafa;"></div>
+        <div class="input-with-action">
+            <input type="text" id="chatInput" placeholder="Where did I put the hammer?">
+            <button class="primary" onclick="app.sendChat()">Ask</button>
+        </div>
+    </div>
+</div>
+
+<div id="loader">
+    <div class="spinner"></div>
+    <p id="loaderText" style="margin-top:10px;">Processing...</p>
+</div>
+
+<script>
+/**
+ * APP LOGIC
+ */
+const app = {
+    data: [],
+    settings: {},
+    currentImageBase64: null, // Holds the resized base64 image for the current add operation
+
+    init: async () => {
+        app.loadSettings();
+        app.loadLocalData();
+        app.log("App Initialized. Configure GitHub to Sync.");
+        app.populateFilters();
+        app.renderTable();
+    },
+
+    // --- Data Management ---
+
+    loadSettings: () => {
+        const s = localStorage.getItem('mystuff_settings');
+        if (s) {
+            app.settings = JSON.parse(s);
+            document.getElementById('ghOwner').value = app.settings.owner || '';
+            document.getElementById('ghRepo').value = app.settings.repo || '';
+            document.getElementById('ghPath').value = app.settings.path || 'mystuff/data.json';
+            document.getElementById('ghToken').value = app.settings.token || '';
+            document.getElementById('aiKey').value = app.settings.aiKey || '';
+            
+            if(app.settings.token) document.getElementById('connectionStatus').innerText = "Configured";
+        }
+    },
+
+    saveSettings: () => {
+        app.settings = {
+            owner: document.getElementById('ghOwner').value,
+            repo: document.getElementById('ghRepo').value,
+            path: document.getElementById('ghPath').value,
+            token: document.getElementById('ghToken').value,
+            aiKey: document.getElementById('aiKey').value
+        };
+        localStorage.setItem('mystuff_settings', JSON.stringify(app.settings));
+        app.closeModal('settingsModal');
+        app.log("Settings Saved.");
+        app.syncToGitHub(true); // Initial fetch
+    },
+
+    loadLocalData: () => {
+        const d = localStorage.getItem('mystuff_data');
+        if (d) app.data = JSON.parse(d);
+    },
+
+    saveLocalData: () => {
+        localStorage.setItem('mystuff_data', JSON.stringify(app.data));
+        app.populateFilters();
+        app.renderTable();
+    },
+
+    // --- GitHub Integration ---
+
+    githubRequest: async (method, path, body = null) => {
+        if (!app.settings.token) {
+            alert("Please configure GitHub settings first.");
+            return null;
+        }
+        const url = `https://api.github.com/repos/${app.settings.owner}/${app.settings.repo}/contents/${path}`;
+        const options = {
+            method: method,
+            headers: {
+                'Authorization': `token ${app.settings.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            }
+        };
+        if (body) options.body = JSON.stringify(body);
+
+        try {
+            const response = await fetch(url, options);
+            if (!response.ok) {
+                if (response.status === 404 && method === 'GET') return null; // File not found
+                throw new Error(`GitHub API Error: ${response.status}`);
+            }
+            return await response.json();
+        } catch (error) {
+            app.log(`Error: ${error.message}`);
+            return null;
+        }
+    },
+
+    syncToGitHub: async (pullOnly = false) => {
+        app.toggleLoader(true, "Syncing with GitHub...");
+        
+        // 1. Get current remote file to get SHA
+        const currentFile = await app.githubRequest('GET', app.settings.path);
+        
+        if (currentFile) {
+            // Decode content
+            const remoteContent = JSON.parse(atob(currentFile.content));
+            // Simple Merge Strategy: Remote wins if pullOnly, else Local wins (Overwriting for simplicity in this demo)
+            // Ideally, we merge by timestamp.
+            if(pullOnly) {
+                app.data = remoteContent;
+                app.saveLocalData();
+                app.log("Data pulled from GitHub.");
+            } else {
+                // Update Remote
+                await app.uploadJson(app.settings.path, app.data, currentFile.sha);
+            }
+        } else if (!pullOnly) {
+            // Create new file
+            await app.uploadJson(app.settings.path, app.data);
+        }
+
+        app.toggleLoader(false);
+    },
+
+    uploadJson: async (path, content, sha = null) => {
+        const body = {
+            message: `Update MyStuff data ${new Date().toISOString()}`,
+            content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
+        };
+        if (sha) body.sha = sha;
+        await app.githubRequest('PUT', path, body);
+        app.log("JSON saved to GitHub.");
+    },
+
+    uploadImage: async (room, filename, base64Data) => {
+        // Remove Data URL prefix to get raw base64
+        const content = base64Data.split(',')[1];
+        const path = `${room}/${filename}`;
+        
+        // Check if exists (unlikely for new items)
+        const check = await app.githubRequest('GET', path);
+        const body = {
+            message: `Add image ${filename}`,
+            content: content
+        };
+        if(check && check.sha) body.sha = check.sha;
+
+        const res = await app.githubRequest('PUT', path, body);
+        if(res) app.log(`Image saved to ${path}`);
+        return res ? res.content.download_url : null; // Return the raw URL or GitHub blob URL
+    },
+
+    // --- Core Logic ---
+
+    openAddModal: () => {
+        document.getElementById('itemForm').reset();
+        document.getElementById('itemId').value = '';
+        document.getElementById('modalTitle').innerText = 'Add Stuff';
+        document.getElementById('aiPreview').style.display = 'none';
+        app.currentImageBase64 = null;
+        document.getElementById('itemModal').classList.add('active');
+    },
+
+    saveItem: async () => {
+        const id = document.getElementById('itemId').value || crypto.randomUUID();
+        const room = document.getElementById('inpRoom').value;
+        const name = document.getElementById('inpName').value;
+        
+        // Duplicate Check (only on new items)
+        if (!document.getElementById('itemId').value) {
+            const exists = app.data.some(i => i.name.toLowerCase() === name.toLowerCase() && i.room.toLowerCase() === room.toLowerCase());
+            if (exists) {
+                alert("An item with this Name in this Room already exists!");
+                return;
+            }
+        }
+
+        app.toggleLoader(true, "Saving Item & Uploading Image...");
+
+        let imagePath = "";
+        
+        // Handle Image Upload if exists
+        if (app.currentImageBase64 && app.settings.token) {
+            const dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+            const filename = `${name.replace(/\s+/g, '_')}-${dateStr}.jpg`;
+            await app.uploadImage(room, filename, app.currentImageBase64);
+            imagePath = `${room}/${filename}`; // Relative path
+        }
+
+        const item = {
+            id,
+            room,
+            name,
+            location: document.getElementById('inpLocation').value,
+            gps: document.getElementById('inpGPS').value,
+            description: document.getElementById('inpDesc').value,
+            updated: new Date().toISOString(),
+            imagePath: imagePath || (app.data.find(i=>i.id===id)?.imagePath || "")
+        };
+
+        // Update local data
+        const idx = app.data.findIndex(i => i.id === id);
+        if (idx > -1) app.data[idx] = item;
+        else app.data.push(item);
+
+        app.saveLocalData();
+        
+        // Auto-save JSON to GitHub
+        await app.syncToGitHub();
+
+        app.toggleLoader(false);
+        app.closeModal('itemModal');
+    },
+
+    deleteItem: (id) => {
+        if(confirm("Are you sure?")) {
+            app.data = app.data.filter(i => i.id !== id);
+            app.saveLocalData();
+            app.syncToGitHub();
+        }
+    },
+
+    editItem: (id) => {
+        const item = app.data.find(i => i.id === id);
+        if(!item) return;
+        document.getElementById('itemId').value = item.id;
+        document.getElementById('inpRoom').value = item.room;
+        document.getElementById('inpName').value = item.name;
+        document.getElementById('inpLocation').value = item.location;
+        document.getElementById('inpGPS').value = item.gps;
+        document.getElementById('inpDesc').value = item.description;
+        document.getElementById('modalTitle').innerText = 'Edit Stuff';
+        document.getElementById('itemModal').classList.add('active');
+    },
+
+    // --- Browser APIs ---
+
+    startSpeech: (targetId) => {
+        if (!('webkitSpeechRecognition' in window)) {
+            alert("Speech API not supported in this browser.");
+            return;
+        }
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.start();
+        document.getElementById(targetId).placeholder = "Listening...";
+        
+        recognition.onresult = (event) => {
+            document.getElementById(targetId).value = event.results[0][0].transcript;
+        };
+        recognition.onend = () => {
+            document.getElementById(targetId).placeholder = "";
+        };
+    },
+
+    getGPS: () => {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser.");
+            return;
+        }
+        app.toggleLoader(true, "Getting Location...");
+        navigator.geolocation.getCurrentPosition((position) => {
+            const crd = position.coords;
+            document.getElementById('inpGPS').value = `${crd.latitude.toFixed(5)}, ${crd.longitude.toFixed(5)}`;
+            app.toggleLoader(false);
+        }, (err) => {
+            app.toggleLoader(false);
+            alert(`ERROR(${err.code}): ${err.message}`);
+        }, { enableHighAccuracy: true });
+    },
+
+    handleImageUpload: (input) => {
+        if (input.files && input.files[0]) {
+            const file = input.files[0];
+            const reader = new FileReader();
+            
+            app.toggleLoader(true, "Processing Image...");
+
+            reader.onload = (e) => {
+                // Resize image to max 800px width/height to save bandwidth/storage
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    let width = img.width;
+                    let height = img.height;
+                    const MAX_SIZE = 800;
+
+                    if (width > height) {
+                        if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
+                    } else {
+                        if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    
+                    const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                    app.currentImageBase64 = dataUrl;
+                    
+                    const preview = document.getElementById('aiPreview');
+                    preview.src = dataUrl;
+                    preview.style.display = 'block';
+                    
+                    // Trigger AI Analysis
+                    app.analyzeImageWithAI(dataUrl);
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    },
+
+    // --- AI Integration (OpenRouter) ---
+
+    analyzeImageWithAI: async (base64Image) => {
+        if (!app.settings.aiKey) {
+            app.toggleLoader(false);
+            alert("Please configure OpenRouter API Key for AI features.");
+            return;
+        }
+
+        try {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${app.settings.aiKey}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "model": "google/gemini-2.0-flash-001", // Or openai/gpt-4o, using Gemini Flash for speed/cost
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "text",
+                                    "text": "Analyze this image. Provide a detailed description including category, manufacturer, model name, serial number (if visible), color, size, weight estimates, and condition. Format it as plain text suitable for an inventory description."
+                                },
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": base64Image
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            if (data.choices && data.choices.length > 0) {
+                const desc = data.choices[0].message.content;
+                document.getElementById('inpDesc').value = desc;
+                
+                // Try to guess Name/Category
+                // Simple heuristic: Take first 5 words
+                const firstLine = desc.split('.')[0];
+                if(!document.getElementById('inpName').value) {
+                   // document.getElementById('inpName').value = firstLine.substring(0, 30);
+                }
+            }
+        } catch (e) {
+            console.error(e);
+            alert("AI Analysis failed. Check console.");
+        } finally {
+            app.toggleLoader(false);
+        }
+    },
+
+    sendChat: async () => {
+        const input = document.getElementById('chatInput');
+        const query = input.value;
+        if(!query) return;
+
+        const history = document.getElementById('chatHistory');
+        history.innerHTML += `<div style="text-align:right; margin:5px; color:blue;"><b>You:</b> ${query}</div>`;
+        input.value = "";
+        
+        app.toggleLoader(true, "Thinking...");
+
+        // Prepare context from data
+        const inventoryContext = JSON.stringify(app.data.map(i => ({ name: i.name, room: i.room, location: i.location, desc: i.description })));
+
+        try {
+            const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${app.settings.aiKey}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    "model": "google/gemini-2.0-flash-001",
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": `You are a helpful inventory assistant. Answer questions based on this JSON data: ${inventoryContext}`
+                        },
+                        {
+                            "role": "user",
+                            "content": query
+                        }
+                    ]
+                })
+            });
+
+            const data = await response.json();
+            const reply = data.choices[0].message.content;
+            history.innerHTML += `<div style="text-align:left; margin:5px; background:#eee; padding:5px; border-radius:4px;"><b>AI:</b> ${reply}</div>`;
+            history.scrollTop = history.scrollHeight;
+
+        } catch (e) {
+            history.innerHTML += `<div style="color:red">Error contacting AI</div>`;
+        } finally {
+            app.toggleLoader(false);
+        }
+    },
+
+    // --- UI Rendering ---
+
+    populateFilters: () => {
+        const rooms = [...new Set(app.data.map(i => i.room))].sort();
+        const names = [...new Set(app.data.map(i => i.name))].sort();
+        
+        const roomSel = document.getElementById('filterRoom');
+        const nameSel = document.getElementById('filterName');
+        const roomList = document.getElementById('roomList');
+
+        // Clear existing (except first)
+        while(roomSel.options.length > 1) roomSel.remove(1);
+        while(nameSel.options.length > 1) nameSel.remove(1);
+        roomList.innerHTML = '';
+
+        rooms.forEach(r => {
+            roomSel.add(new Option(r, r));
+            const opt = document.createElement('option'); opt.value = r; roomList.appendChild(opt);
+        });
+        names.forEach(n => nameSel.add(new Option(n, n)));
+    },
+
+    renderTable: () => {
+        const tbody = document.getElementById('tableBody');
+        tbody.innerHTML = '';
+        
+        const fRoom = document.getElementById('filterRoom').value;
+        const fName = document.getElementById('filterName').value;
+        const search = document.getElementById('search').value.toLowerCase();
+
+        const filtered = app.data.filter(i => {
+            return (!fRoom || i.room === fRoom) &&
+                   (!fName || i.name === fName) &&
+                   (!search || i.description.toLowerCase().includes(search) || i.name.toLowerCase().includes(search));
+        });
+
+        filtered.forEach(item => {
+            const tr = document.createElement('tr');
+            // Image handling (if github settings valid, try to construct raw url, else placeholder)
+            let imgSrc = "https://via.placeholder.com/50?text=No+Img";
+            if(item.imagePath && app.settings.owner) {
+                // Construct raw github user content url
+                imgSrc = `https://raw.githubusercontent.com/${app.settings.owner}/${app.settings.repo}/main/${item.imagePath}`;
+            }
+
+            tr.innerHTML = `
+                <td><img src="${imgSrc}" class="thumb" onerror="this.src='https://via.placeholder.com/50?text=Err'"></td>
+                <td>${item.room}</td>
+                <td><strong>${item.name}</strong></td>
+                <td>${item.location}</td>
+                <td><small>${item.description.substring(0, 50)}...</small></td>
+                <td>${new Date(item.updated).toLocaleDateString()}</td>
+                <td>
+                    <button onclick="app.editItem('${item.id}')">✏️</button>
+                    <button class="danger" onclick="app.deleteItem('${item.id}')">🗑️</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    },
+
+    // --- Helpers ---
+    openSettings: () => document.getElementById('settingsModal').classList.add('active'),
+    openChat: () => document.getElementById('chatModal').classList.add('active'),
+    closeModal: (id) => document.getElementById(id).classList.remove('active'),
+    log: (msg) => {
+        const logArea = document.getElementById('logArea');
+        logArea.innerHTML += `> ${msg}<br>`;
+        logArea.scrollTop = logArea.scrollHeight;
+        console.log(msg);
+    },
+    toggleLoader: (show, text) => {
+        const el = document.getElementById('loader');
+        el.style.display = show ? 'flex' : 'none';
+        if(text) document.getElementById('loaderText').innerText = text;
+    }
+};
+
+// Start
+window.addEventListener('load', app.init);
+</script>
+</body>
+</html>

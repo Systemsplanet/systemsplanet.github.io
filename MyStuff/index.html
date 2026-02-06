@@ -279,39 +279,45 @@ const app = {
     },
 
     // --- GitHub Integration ---
+
 githubRequest: async (method, path, body = null) => {
-    if (!app.settings.token) {
-        app.log("Error: No GitHub Token found.");
+    if (!app.settings.token || !app.settings.owner || !app.settings.repo) {
+        app.log("Error: Configuration missing (Owner, Repo, or Token).");
         return null;
     }
-    const url = `https://api.github.com/repos/${app.settings.owner}/${app.settings.repo}/contents/${path}`;
+
+    const owner = app.settings.owner.trim();
+    const repo = app.settings.repo.trim();
+    const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+    const url = `https://api.github.com/repos/${owner}/${repo}/contents/${cleanPath}`;
+    
+    // REMOVED 'Cache-Control' and changed 'Bearer' to 'token' which is more standard for GitHub
     const options = {
         method: method,
         headers: {
-            'Authorization': `token ${app.settings.token}`,
-            'Content-Type': 'application/json',
+            'Authorization': `token ${app.settings.token.trim()}`,
             'Accept': 'application/vnd.github.v3+json',
-            'Cache-Control': 'no-cache'
+            'Content-Type': 'application/json'
         }
     };
+    
     if (body) options.body = JSON.stringify(body);
 
     try {
         const response = await fetch(url, options);
-        // 404 is expected for a first-time sync
-        if (response.status === 404) return null; 
+        if (response.status === 404 && method === 'GET') return null;
         
         if (!response.ok) {
-            const errData = await response.json();
-            throw new Error(errData.message || `Status ${response.status}`);
+            const errorData = await response.json().catch(() => ({ message: "Unknown error" }));
+            throw new Error(errorData.message || `Status ${response.status}`);
         }
         return await response.json();
     } catch (error) {
         app.log(`GitHub API Error: ${error.message}`);
-        throw error; // Re-throw to stop the 'Syncing' hang
+        throw error;
     }
 },
-
+    
 syncToGitHub: async (pullOnly = false) => {
     app.toggleLoader(true, "Syncing with GitHub...");
     try {

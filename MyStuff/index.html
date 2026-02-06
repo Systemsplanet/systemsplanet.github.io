@@ -442,13 +442,60 @@ uploadJson: async (path, content, sha = null) => {
         app.closeModal('itemModal');
     },
 
-    deleteItem: (id) => {
-        if(confirm("Are you sure?")) {
-            app.data = app.data.filter(i => i.id !== id);
-            app.saveLocalData();
-            app.syncToGitHub();
+    
+deleteImage: async (imagePath) => {
+    if (!imagePath || !app.settings.token) return;
+
+    try {
+        // 1. Get the file's SHA (required for deletion)
+        const fileInfo = await app.githubRequest('GET', imagePath);
+        if (!fileInfo || !fileInfo.sha) return;
+
+        // 2. Send the DELETE request
+        const body = {
+            message: `Delete image: ${imagePath}`,
+            sha: fileInfo.sha
+        };
+
+        const res = await app.githubRequest('DELETE', imagePath, body);
+        if (res) app.log(`Physical image deleted: ${imagePath}`);
+    } catch (e) {
+        // We log but don't stop, in case the image was already gone
+        app.log(`Note: Could not delete physical file (${e.message})`);
+    }
+},
+
+
+deleteItem: async (id) => {
+    if (!confirm("Are you sure you want to delete this item and its image from GitHub?")) return;
+
+    const item = app.data.find(i => i.id === id);
+    if (!item) return;
+
+    app.toggleLoader(true, "Deleting from GitHub...");
+
+    try {
+        // 1. Delete the physical image file from GitHub
+        if (item.imagePath) {
+            await app.deleteImage(item.imagePath);
         }
-    },
+
+        // 2. Remove from local array
+        app.data = app.data.filter(i => i.id !== id);
+        app.saveLocalData();
+
+        // 3. Sync the updated JSON manifest
+        await app.syncToGitHub();
+        
+        app.log("Item and image removed successfully.");
+    } catch (e) {
+        app.log("Delete failed: " + e.message);
+    } finally {
+        app.toggleLoader(false);
+        app.renderTable();
+    }
+},
+
 
     editItem: (id) => {
         const item = app.data.find(i => i.id === id);

@@ -279,72 +279,82 @@ const app = {
     },
 
     // --- GitHub Integration ---
-
-    githubRequest: async (method, path, body = null) => {
-        if (!app.settings.token) {
-            alert("Please configure GitHub settings first.");
-            return null;
+githubRequest: async (method, path, body = null) => {
+    if (!app.settings.token) {
+        app.log("Error: No GitHub Token found.");
+        return null;
+    }
+    const url = `https://api.github.com/repos/${app.settings.owner}/${app.settings.repo}/contents/${path}`;
+    const options = {
+        method: method,
+        headers: {
+            'Authorization': `token ${app.settings.token}`,
+            'Content-Type': 'application/json',
+            'Accept': 'application/vnd.github.v3+json',
+            'Cache-Control': 'no-cache'
         }
-        const url = `https://api.github.com/repos/${app.settings.owner}/${app.settings.repo}/contents/${path}`;
-        const options = {
-            method: method,
-            headers: {
-                'Authorization': `token ${app.settings.token}`,
-                'Content-Type': 'application/json',
-                'Accept': 'application/vnd.github.v3+json'
-            }
-        };
-        if (body) options.body = JSON.stringify(body);
+    };
+    if (body) options.body = JSON.stringify(body);
 
-        try {
-            const response = await fetch(url, options);
-            if (!response.ok) {
-                if (response.status === 404 && method === 'GET') return null; // File not found
-                throw new Error(`GitHub API Error: ${response.status}`);
-            }
-            return await response.json();
-        } catch (error) {
-            app.log(`Error: ${error.message}`);
-            return null;
-        }
-    },
-
-    syncToGitHub: async (pullOnly = false) => {
-        app.toggleLoader(true, "Syncing with GitHub...");
+    try {
+        const response = await fetch(url, options);
+        // 404 is expected for a first-time sync
+        if (response.status === 404) return null; 
         
-        // 1. Get current remote file to get SHA
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.message || `Status ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        app.log(`GitHub API Error: ${error.message}`);
+        throw error; // Re-throw to stop the 'Syncing' hang
+    }
+},
+
+syncToGitHub: async (pullOnly = false) => {
+    app.toggleLoader(true, "Syncing with GitHub...");
+    try {
+        // 1. Check if file exists to get SHA
         const currentFile = await app.githubRequest('GET', app.settings.path);
         
         if (currentFile) {
-            // Decode content
-            const remoteContent = JSON.parse(atob(currentFile.content));
-            // Simple Merge Strategy: Remote wins if pullOnly, else Local wins (Overwriting for simplicity in this demo)
-            // Ideally, we merge by timestamp.
+            // Fix: GitHub base64 can contain newlines, replace them
+            const cleanBase64 = currentFile.content.replace(/\s/g, '');
+            const remoteContent = JSON.parse(decodeURIComponent(escape(atob(cleanBase64))));
+            
             if(pullOnly) {
                 app.data = remoteContent;
                 app.saveLocalData();
                 app.log("Data pulled from GitHub.");
             } else {
-                // Update Remote
                 await app.uploadJson(app.settings.path, app.data, currentFile.sha);
             }
         } else if (!pullOnly) {
-            // Create new file
+            // File doesn't exist, create it
             await app.uploadJson(app.settings.path, app.data);
         }
-
+    } catch (e) {
+        app.log("Sync Failed: " + e.message);
+    } finally {
         app.toggleLoader(false);
-    },
+    }
+},
 
-    uploadJson: async (path, content, sha = null) => {
-        const body = {
-            message: `Update MyStuff data ${new Date().toISOString()}`,
-            content: btoa(unescape(encodeURIComponent(JSON.stringify(content, null, 2)))),
-        };
-        if (sha) body.sha = sha;
-        await app.githubRequest('PUT', path, body);
-        app.log("JSON saved to GitHub.");
-    },
+uploadJson: async (path, content, sha = null) => {
+    // Proper UTF-8 to Base64 conversion
+    const jsonStr = JSON.stringify(content, null, 2);
+    const contentBase64 = btoa(unescape(encodeURIComponent(jsonStr)));
+    
+    const body = {
+        message: `Update MyStuff data ${new Date().toISOString()}`,
+        content: contentBase64
+    };
+    if (sha) body.sha = sha;
+
+    const res = await app.githubRequest('PUT', path, body);
+    if(res) app.log("JSON saved successfully.");
+},
 
     uploadImage: async (room, filename, base64Data) => {
         // Remove Data URL prefix to get raw base64

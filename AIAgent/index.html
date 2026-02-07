@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Agent (Git-DB)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script type="module">
+        import { Octokit } from "https://esm.sh/@octokit/rest";
+        import { marked } from "https://esm.sh/marked";
+        window.Octokit = Octokit;
+        window.marked = marked;
+    </script>
+    <style>
+        body { background-color: #111; color: #eee; font-family: sans-serif; }
+        .hide { display: none !important; }
+        .msg { padding: 10px; margin: 10px 0; border-radius: 8px; max-width: 85%; }
+        .u { background: #333; align-self: flex-end; margin-left: auto; }
+        .a { background: #224; align-self: flex-start; }
+        #chat { display: flex; flex-direction: column; padding-bottom: 80px; }
+    </style>
+</head>
+<body class="h-screen flex flex-col">
+
+    <header class="p-4 border-b border-gray-700 flex justify-between items-center bg-gray-900">
+        <h1 class="font-bold text-lg">Git-Agent</h1>
+        <button onclick="ui.tog('cfg')" class="text-sm text-blue-400">⚙️ Settings</button>
+    </header>
+
+    <div id="cfg" class="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+        <div class="bg-gray-800 p-6 rounded-lg w-full max-w-md space-y-4">
+            <h2 class="text-xl font-bold">Configuration</h2>
+            
+            <div>
+                <label class="text-xs text-gray-400">GitHub Token (Repo Scope)</label>
+                <input id="k_gh" type="password" class="w-full bg-gray-900 p-2 rounded border border-gray-700" placeholder="ghp_...">
+            </div>
+            
+            <div>
+                <label class="text-xs text-gray-400">GitHub Repo (user/repo)</label>
+                <input id="k_repo" type="text" class="w-full bg-gray-900 p-2 rounded border border-gray-700" placeholder="username/my-notes">
+            </div>
+
+            <div>
+                <label class="text-xs text-gray-400">AI API Key</label>
+                <input id="k_ai" type="password" class="w-full bg-gray-900 p-2 rounded border border-gray-700" placeholder="sk-...">
+            </div>
+
+            <div>
+                <label class="text-xs text-gray-400">AI Endpoint URL</label>
+                <input id="k_url" type="text" class="w-full bg-gray-900 p-2 rounded border border-gray-700" value="https://api.openai.com/v1/chat/completions">
+            </div>
+
+            <button onclick="app.save()" class="w-full bg-blue-600 p-2 rounded font-bold hover:bg-blue-500">Save & Connect</button>
+        </div>
+    </div>
+
+    <main id="main" class="flex-1 overflow-y-auto p-4 scroll-smooth">
+        <div id="chat"></div>
+        <div id="status" class="text-center text-xs text-gray-500 mt-4 hide">Syncing...</div>
+    </main>
+
+    <footer class="p-4 bg-gray-900 border-t border-gray-700 fixed bottom-0 w-full">
+        <div class="flex gap-2 max-w-4xl mx-auto">
+            <textarea id="inp" rows="1" class="flex-1 bg-gray-800 p-3 rounded text-white border border-gray-600 resize-none" placeholder="Type a message..."></textarea>
+            <button onclick="app.send()" class="bg-blue-600 px-6 rounded font-bold">➤</button>
+        </div>
+    </footer>
+
+    <script type="module">
+        // --- GLOBALS ---
+        const $ = (id) => document.getElementById(id);
+        const LS_KEY = 'git_agent_cfg';
+        let gh, cfg = {};
+
+        // --- UI HELPERS ---
+        window.ui = {
+            tog: (id) => $(id).classList.toggle('hide'),
+            
+            // Render a message bubble
+            msg: (txt, role) => {
+                const d = document.createElement('div');
+                d.className = `msg ${role === 'user' ? 'u' : 'a'}`;
+                d.innerHTML = role === 'user' ? txt : window.marked.parse(txt);
+                $('chat').appendChild(d);
+                $('main').scrollTo(0, 99999);
+            },
+            
+            log: (txt) => { 
+                $('status').innerText = txt; 
+                $('status').classList.remove('hide'); 
+                setTimeout(() => $('status').classList.add('hide'), 3000); 
+            }
+        };
+
+        // --- CORE LOGIC ---
+        window.app = {
+            // 1. Init: Load keys, setup GH client
+            init: async () => {
+                const raw = localStorage.getItem(LS_KEY);
+                if (!raw) return; // Stay on settings
+                cfg = JSON.parse(raw);
+                
+                // Pre-fill inputs
+                $('k_gh').value = cfg.gh;
+                $('k_repo').value = cfg.repo;
+                $('k_ai').value = cfg.ai;
+                $('k_url').value = cfg.url;
+                
+                // Init Octokit
+                gh = new window.Octokit({ auth: cfg.gh });
+                
+                ui.tog('cfg'); // Close modal
+                await app.sync('load'); // Load history
+            },
+
+            // 2. Save Settings
+            save: async () => {
+                cfg = {
+                    gh: $('k_gh').value,
+                    repo: $('k_repo').value,
+                    ai: $('k_ai').value,
+                    url: $('k_url').value
+                };
+                localStorage.setItem(LS_KEY, JSON.stringify(cfg));
+                window.location.reload();
+            },
+
+            // 3. Sync: Read/Write to GitHub
+            sync: async (mode, content = []) => {
+                const [owner, repo] = cfg.repo.split('/');
+                const path = 'chat_history.json';
+                
+                ui.log(mode === 'load' ? 'Loading history...' : 'Saving...');
+                
+                try {
+                    // Try to get file sha and content
+                    let sha, history = [];
+                    try {
+                        const res = await gh.repos.getContent({ owner, repo, path });
+                        sha = res.data.sha;
+                        history = JSON.parse(atob(res.data.content));
+                    } catch (e) { console.log("New file"); }
+
+                    if (mode === 'load') {
+                        history.forEach(m => ui.msg(m.content, m.role));
+                        return history;
+                    }
+
+                    if (mode === 'save') {
+                        // Merge new content
+                        const newHistory = [...history, ...content];
+                        const b64 = btoa(JSON.stringify(newHistory, null, 2));
+                        
+                        await gh.repos.createOrUpdateFileContents({
+                            owner, repo, path, message: 'Update chat',
+                            content: b64, sha
+                        });
+                        return newHistory;
+                    }
+                } catch (err) {
+                    alert('GitHub Error: ' + err.message);
+                }
+            },
+
+            // 4. Send Message (The "Agent" Loop)
+            send: async () => {
+                const txt = $('inp').value;
+                if (!txt) return;
+                
+                // UI update
+                $('inp').value = '';
+                ui.msg(txt, 'user');
+
+                // 1. Get History
+                const hist = await app.sync('load'); 
+                const msgs = [...hist, { role: "user", content: txt }];
+
+                // 2. Call AI
+                ui.log('Thinking...');
+                try {
+                    const req = await fetch(cfg.url, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${cfg.ai}`
+                        },
+                        body: JSON.stringify({
+                            model: "gpt-4o", // Change model name as needed
+                            messages: msgs
+                        })
+                    });
+                    
+                    const data = await req.json();
+                    const reply = data.choices[0].message.content;
+                    
+                    // 3. Show & Save
+                    ui.msg(reply, 'assistant');
+                    await app.sync('save', [
+                        { role: "user", content: txt },
+                        { role: "assistant", content: reply }
+                    ]);
+                    
+                } catch (err) {
+                    ui.msg(`Error: ${err.message}`, 'assistant');
+                }
+            }
+        };
+
+        // Start
+        setTimeout(app.init, 500);
+    </script>
+</body>
+</html>

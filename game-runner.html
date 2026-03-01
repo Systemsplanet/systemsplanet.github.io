@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Retro Ice Break - Prototype</title>
+    <style>
+        body {
+            background: #111;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            color: #eee;
+            font-family: 'Courier New', Courier, monospace;
+        }
+        canvas {
+            border: 4px solid #fff;
+            background: #000033; /* Dark blue night sky */
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+        .ui { margin-top: 10px; text-align: center; }
+        kbd {
+            background: #444;
+            padding: 3px 8px;
+            border-radius: 4px;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ui">
+        <h2>REPRO: ICE BREAK CHALLENGE</h2>
+        <p>Press <kbd>SPACE</kbd> to Punch</p>
+        <h3 id="scoreBoard">Score: 0</h3>
+    </div>
+
+    <canvas id="gameCanvas" width="600" height="200"></canvas>
+
+    <div class="ui">
+        <p id="feedback" style="color: cyan; font-weight: bold;"></p>
+    </div>
+
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreElement = document.getElementById('scoreBoard');
+    const feedbackElement = document.getElementById('feedback');
+
+    // Game Constants
+    const PLAYER_X = 100;
+    const GROUND_Y = 160;
+    const RUN_SPEED = 4;
+    const PUNCH_DIST = 40; // How close block must be to shatter
+
+    let score = 0;
+    let frameCount = 0;
+    let isPunching = false;
+    let punchCooldown = 0;
+    let blocks = [];
+    let particles = [];
+
+    // Simple Input
+    window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space' && punchCooldown <= 0) {
+            isPunching = true;
+            punchCooldown = 15; // frames the punch lasts
+            checkHit();
+        }
+    });
+
+    function checkHit() {
+        blocks.forEach((block, index) => {
+            let dist = block.x - PLAYER_X;
+            // Success window: 10px to 50px away
+            if (dist > 5 && dist < 55) {
+                createExplosion(block.x, block.y);
+                blocks.splice(index, 1);
+                score += 100;
+                feedbackElement.innerText = "SHATTERED!";
+            }
+        });
+    }
+
+    function createExplosion(x, y) {
+        for(let i=0; i<10; i++) {
+            particles.push({
+                x: x + 15,
+                y: y + 15,
+                vx: (Math.random() - 0.5) * 10,
+                vy: (Math.random() - 0.5) * 10,
+                life: 20
+            });
+        }
+    }
+
+    function update() {
+        frameCount++;
+        
+        // Spawn ice blocks every ~80 frames
+        if (frameCount % 80 === 0) {
+            blocks.push({ x: 650, y: GROUND_Y - 40, width: 30, height: 40 });
+        }
+
+        // Move blocks (creates illusion of running)
+        blocks.forEach((block, index) => {
+            block.x -= RUN_SPEED;
+            // Fail condition: Block hits player
+            if (block.x < PLAYER_X - 10) {
+                blocks.splice(index, 1);
+                score = Math.max(0, score - 50);
+                feedbackElement.innerText = "MISSED!";
+                feedbackElement.style.color = "red";
+            }
+        });
+
+        // Update particles
+        particles.forEach((p, i) => {
+            p.x += p.vx; p.y += p.vy; p.life--;
+            if (p.life <= 0) particles.splice(i, 1);
+        });
+
+        if (punchCooldown > 0) {
+            punchCooldown--;
+            if (punchCooldown === 0) isPunching = false;
+        }
+
+        scoreElement.innerText = `Score: ${score}`;
+    }
+
+    function draw() {
+        // Clear screen
+        ctx.fillStyle = '#000033';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Draw Ground
+        ctx.fillStyle = '#333';
+        ctx.fillRect(0, GROUND_Y, canvas.width, 40);
+
+        // Draw Player (Running Man)
+        ctx.fillStyle = isPunching ? '#F00' : '#FFD700';
+        // Simple procedural legs
+        let legOffset = Math.sin(frameCount * 0.2) * 10;
+        ctx.fillRect(PLAYER_X, GROUND_Y - 50, 20, 40); // Body
+        ctx.fillRect(PLAYER_X + 5, GROUND_Y - 10, 5, legOffset > 0 ? 10 : 5); // Leg L
+        ctx.fillRect(PLAYER_X + 12, GROUND_Y - 10, 5, legOffset < 0 ? 10 : 5); // Leg R
+        
+        // Draw Punching Arm
+        if (isPunching) {
+            ctx.fillStyle = '#FFAAAA';
+            ctx.fillRect(PLAYER_X + 20, GROUND_Y - 35, 25, 8);
+        }
+
+        // Draw Ice Blocks
+        ctx.fillStyle = '#A0E7FF';
+        ctx.strokeStyle = '#FFF';
+        blocks.forEach(block => {
+            ctx.fillRect(block.x, block.y, block.width, block.height);
+            ctx.strokeRect(block.x, block.y, block.width, block.height);
+        });
+
+        // Draw Particles
+        ctx.fillStyle = '#FFF';
+        particles.forEach(p => {
+            ctx.fillRect(p.x, p.y, 3, 3);
+        });
+    }
+
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    gameLoop();
+</script>
+</body>
+</html>

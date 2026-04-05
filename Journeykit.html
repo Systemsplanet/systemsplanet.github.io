@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Journey Registry Explorer</title>
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --surface-color: #ffffff;
+            --border-color: #e2e8f0;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --primary-color: #3b82f6;
+            --primary-hover: #eff6ff;
+            
+            /* JSON Viewer Theme */
+            --json-bg: #1e1e1e;
+            --json-key: #9cdcfe;
+            --json-string: #ce9178;
+            --json-number: #b5cea8;
+            --json-boolean: #569cd6;
+            --json-null: #c586c0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        header {
+            background-color: var(--surface-color);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            z-index: 10;
+        }
+
+        header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 350px;
+            background-color: var(--surface-color);
+            border-right: 1px solid var(--border-color);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .list-item {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .list-item:hover, .list-item.active {
+            background-color: var(--primary-hover);
+        }
+
+        .list-item.active {
+            border-left: 4px solid var(--primary-color);
+            padding-left: calc(1.5rem - 4px);
+        }
+
+        .item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 0.25rem;
+        }
+
+        .item-title {
+            font-weight: 600;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .item-version {
+            font-size: 0.75rem;
+            color: var(--primary-color);
+            background: #dbeafe;
+            padding: 0.1rem 0.4rem;
+            border-radius: 999px;
+            font-weight: 500;
+        }
+
+        .item-ref {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            padding: 2rem;
+        }
+
+        .card {
+            background: var(--surface-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .profile-section {
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--border-color);
+        }
+
+        .badges {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge.approved { background: #dcfce7; color: #166534; }
+        .badge.verified { background: #fef08a; color: #854d0e; }
+        .badge.public { background: #f1f5f9; color: #475569; }
+
+        .summary {
+            font-size: 1rem;
+            line-height: 1.6;
+            color: var(--text-main);
+        }
+
+        /* Nested JSON Viewer Styles */
+        .json-viewer-container {
+            background-color: var(--json-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            color: #d4d4d4;
+            overflow-x: auto;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .json-viewer-container h3 {
+            color: #fff;
+            margin-bottom: 1rem;
+            font-family: -apple-system, sans-serif;
+            border-bottom: 1px solid #333;
+            padding-bottom: 0.5rem;
+        }
+
+        details.json-node { margin-left: 1rem; }
+        details.json-node > summary {
+            cursor: pointer;
+            list-style: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        details.json-node > summary::-webkit-details-marker { display: none; }
+        details.json-node > summary::before {
+            content: "▶";
+            font-size: 0.6rem;
+            margin-right: 0.5rem;
+            color: #888;
+            transition: transform 0.1s ease;
+        }
+        details.json-node[open] > summary::before { transform: rotate(90deg); }
+        details.json-node > summary:hover { opacity: 0.8; }
+
+        .json-key { color: var(--json-key); }
+        .json-string { color: var(--json-string); }
+        .json-number { color: var(--json-number); }
+        .json-boolean { color: var(--json-boolean); }
+        .json-null { color: var(--json-null); font-weight: bold; }
+        .json-punctuation { color: #d4d4d4; }
+        .json-row { margin-left: 1rem; }
+
+        /* Empty State */
+        .empty-state {
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Journey Registry Explorer</h1>
+        <div style="font-size: 0.9rem; color: var(--text-muted);" id="total-count">0 items loaded</div>
+    </header>
+
+    <div class="container">
+        <aside class="sidebar" id="sidebar"></aside>
+        <main class="main-content" id="main-content">
+            <div class="empty-state">Select a package from the sidebar to view details.</div>
+        </main>
+    </div>
+
+    <script>
+        // Injecting the raw JSON payload
+        const rawData = [{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit example","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.1","visibility":"public","score":2.0932,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit example","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.2","visibility":"public","score":2.0932,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit example","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.0","visibility":"public","score":2.0932,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit example","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.1","visibility":"public","score":2.0932,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit example","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.2","visibility":"public","score":2.0932,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit example","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.3","visibility":"public","score":2.0932,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit example","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.4","visibility":"public","score":2.0932,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit example","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.2.0","visibility":"public","score":2.0932,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit example","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.2.1","visibility":"public","score":2.0932,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.4.0","visibility":"public","score":1.9413,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/journey-kit","title":"Journey Kit","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.4.1","visibility":"public","score":1.9413,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/council-lane-pattern","title":"Council Lane Pattern","summary":"Implement a governance or quality workflow where many independent audits finish\nreliably in parallel, persist comparable evidence, and converge into one ranked\ndigest. The objective is operational safety: no silent partial runs, no\nduplicate concurrent writers, and no promotion of rollup output that","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":1.8898,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/council-lane-pattern","title":"Council Lane Pattern","summary":"Implement a governance or quality workflow where many independent audits finish\nreliably in parallel, persist comparable evidence, and converge into one ranked\ndigest. The objective is operational safety: no silent partial runs, no\nduplicate concurrent writers, and no promotion of rollup output that","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.0","visibility":"public","score":1.8898,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/council-lane-pattern","title":"Council Lane Pattern","summary":"Implement a governance or quality workflow where many independent audits finish\nreliably in parallel, persist comparable evidence, and converge into one ranked\ndigest. The objective is operational safety: no silent partial runs, no\nduplicate concurrent writers, and no promotion of rollup output that","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.1","visibility":"public","score":1.8898,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/council-lane-pattern","title":"Council Lane Pattern","summary":"Orchestrate parallel audit lanes that converge into one ranked digest with idempotency, coverage gating, and rollup locking.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.2","visibility":"public","score":1.8898,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/council-lane-pattern","title":"Council Lane Pattern","summary":"Orchestrate parallel audit lanes that converge into one ranked digest with idempotency, coverage gating, and rollup locking.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.3","visibility":"public","score":1.8898,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/content-security-pipeline","title":"Content Security Pipeline","summary":"Give any agent a reproducible pattern for treating **untrusted text** before it enters storage, retrieval, or downstream LLM input. The pipeline is: **sanitize first (deterministic)**, then **score with a frontier model (structured JSON)**, then **apply per-source policy** (fail-closed vs fail-open","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":1.8275,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/content-security-pipeline","title":"Content Security Pipeline","summary":"Give any agent a reproducible pattern for treating **untrusted text** before it enters storage, retrieval, or downstream LLM input. The pipeline is: **sanitize first (deterministic)**, then **score with a frontier model (structured JSON)**, then **apply per-source policy** (fail-closed vs fail-open","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.0","visibility":"public","score":1.8275,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/content-security-pipeline","title":"Content Security Pipeline","summary":"Sanitize and score untrusted text with a two-tier pipeline before it enters storage, retrieval, or LLM input.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.1","visibility":"public","score":1.8275,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/content-security-pipeline","title":"Content Security Pipeline","summary":"Sanitize and score untrusted text with a two-tier pipeline before it enters storage, retrieval, or LLM input.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.2","visibility":"public","score":1.8275,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/content-security-pipeline","title":"Content Security Pipeline","summary":"Sanitize and score untrusted text with a two-tier pipeline before it enters storage, retrieval, or LLM input.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.3","visibility":"public","score":1.8275,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/idea-lab","title":"Idea Lab","summary":"Capture, refine, and connect ideas with AI-assisted clarification and essay generation.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":1.7599,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/idea-lab","title":"Idea Lab","summary":"Capture, refine, and connect ideas with AI-assisted clarification and essay generation.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.0","visibility":"public","score":1.7599,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/workspace-continuity","title":"Workspace Continuity","summary":"Give agents and operators a reproducible pattern for **workspace continuity**: durable version history via guarded automated git sync, plus **encrypted, manifest-driven off-site archives** of files and databases (including live SQLite snapshots). Both paths run unattended on a schedule, use **PID- o","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":1.7599,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/workspace-continuity","title":"Workspace Continuity","summary":"Give agents and operators a reproducible pattern for workspace continuity: durable version history via guarded automated git sync, plus encrypted, manifest-driven off-site archives of files and databases (including live SQLite snapshots).","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.0","visibility":"public","score":1.7599,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/workspace-continuity","title":"Workspace Continuity","summary":"Automate workspace backup with encrypted archives and guarded git sync for disaster recovery.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.1","visibility":"public","score":1.7599,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/workspace-continuity","title":"Workspace Continuity","summary":"Automate workspace backup with encrypted archives and guarded git sync for disaster recovery.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.2","visibility":"public","score":1.7599,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/changelog-generator","title":"Changelog & Release Notes Generator","summary":"Generates human-readable changelogs and release notes from git history, PR descriptions, and linked issues.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":1.7508,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/changelog-generator","title":"Changelog & Release Notes Generator","summary":"Generates human-readable changelogs and release notes from git history, PR descriptions, and linked issues.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.1","visibility":"public","score":1.7508,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/meeting-notes-action-items","title":"Meeting Notes to Action Items","summary":"Extracts action items from meeting transcripts and creates tasks in your project management tool with owners and deadlines.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":1.7508,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/meeting-notes-action-items","title":"Meeting Notes to Action Items","summary":"Extracts action items from meeting transcripts and creates tasks in your project management tool with owners and deadlines.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.1","visibility":"public","score":1.7508,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/business-strategy-council","title":"Business Strategy Council","summary":"Run a repeatable advisory pipeline that turns heterogeneous business signals into a small set of ranked, evidence-backed strategic recommendations. The design centers on **parallel independent domain experts** who each analyze only their slice of the signal graph, then a **synthesizer** that merges","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":1.6079,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/business-strategy-council","title":"Business Strategy Council","summary":"Run a repeatable advisory pipeline that turns heterogeneous business signals into a small set of ranked, evidence-backed strategic recommendations. The design centers on **parallel independent domain experts** who each analyze only their slice of the signal graph, then a **synthesizer** that merges","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.0","visibility":"public","score":1.6079,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/business-strategy-council","title":"Business Strategy Council","summary":"Run a multi-expert advisory pipeline that turns business signals into ranked, evidence-backed strategic recommendations.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.1","visibility":"public","score":1.6079,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/business-strategy-council","title":"Business Strategy Council","summary":"Run a multi-expert advisory pipeline that turns business signals into ranked, evidence-backed strategic recommendations.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.1.2","visibility":"public","score":1.6079,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"riot-agent/brainctl-memory-system","title":"brainctl — Persistent Memory System","summary":"Structured persistent memory for development workflows. Single SQLite file, zero LLM dependencies, self-building knowledge graph.","releaseTag":"v1.0.1","visibility":"public","score":1.6079,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":false},{"kitRef":"riot-agent/brainctl-memory-system","title":"brainctl — Persistent Memory System","summary":"Structured persistent memory for development workflows. Single SQLite file, zero LLM dependencies, self-building knowledge graph.","releaseTag":"v1.0.2","visibility":"public","score":1.6079,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":false},{"kitRef":"agentnightshift/metacortex-mcp-memory-firebase","title":"MetaCortex MCP Memory on Firebase","summary":"Deploy MetaCortex on Firebase to give ChatGPT, Claude, and other MCP clients durable searchable memory over Streamable HTTP MCP.","releaseTag":"v1.0.0","visibility":"public","score":1.5599,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":false},{"kitRef":"matt-clawd/seo-content-optimizer","title":"SEO Content Optimizer","summary":"Analyzes existing content for search optimization gaps, rewrites for higher rankings, and generates structured data for AI citation.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":1.4079,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/seo-content-optimizer","title":"SEO Content Optimizer","summary":"Analyzes existing content for search optimization gaps, rewrites for higher rankings, and generates structured data for AI citation.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.1","visibility":"public","score":1.4079,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/web-scraping-rag-pipeline","title":"Web Scraping to RAG Pipeline","summary":"Crawls websites, converts pages to clean Markdown, chunks for embeddings, and outputs vector-ready data for RAG applications.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":1.4079,"matchReasons":["text","fuzzy"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/code-refactoring-planner","title":"Code Refactoring Planner example","summary":"Analyzes a codebase to identify refactoring opportunities, assess impact, and generate a prioritized refactoring plan with safety checkpoints.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":0.8898,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/code-refactoring-planner","title":"Code Refactoring Planner example","summary":"Analyzes a codebase to identify refactoring opportunities, assess impact, and generate a prioritized refactoring plan with safety checkpoints.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.1","visibility":"public","score":0.8898,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"lalomorales/second-brain","title":"Second Brain: Persistent Memory Engine for AI Agents","summary":"Persistent memory for AI agents — graph retrieval, spreading activation, contradiction tracking, temporal decay, 3D brain viz. Zero dependencies, local SQLite.","releaseTag":"v0.1.0","visibility":"public","score":0.7599,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"lalomorales/second-brain","title":"Second Brain: Persistent Memory Engine for AI Agents","summary":"Persistent memory for AI agents — graph retrieval, spreading activation, contradiction tracking, temporal decay, 3D brain viz. Zero dependencies, local SQLite.","releaseTag":"v0.1.1","visibility":"public","score":0.7599,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"lalomorales/second-brain","title":"Second Brain: Persistent Memory Engine for AI Agents","summary":"Persistent memory for AI agents — graph retrieval, spreading activation, contradiction tracking, temporal decay, 3D brain viz. Zero dependencies, local SQLite.","releaseTag":"v0.2.0","visibility":"public","score":0.7599,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"lalomorales/second-brain","title":"Persistent Memory Engine for AI Agents","summary":"Persistent memory for AI agents — graph retrieval, spreading activation, contradiction tracking, temporal decay, 3D brain viz. Zero dependencies, local SQLite.","releaseTag":"v0.2.1","visibility":"public","score":0.7599,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"lalomorales/second-brain","title":"Persistent Memory Engine for AI Agents","summary":"Persistent memory engine for AI agents with graph-first retrieval, contradiction tracking, temporal decay, and 3D brain visualization.","releaseTag":"v0.3.0","visibility":"public","score":0.7599,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"ender/nl-data-intelligence","title":"Natural Language Data Intelligence","summary":"Build a queryable intelligence layer over structured business data using SQLite and natural language.","releaseTag":"v1.0.0","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":false},{"kitRef":"ender/nl-data-intelligence","title":"Natural Language Data Intelligence","summary":"Queryable intelligence layer over structured business data using SQLite and natural language.","releaseTag":"v1.0.1","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":false},{"kitRef":"journey/journey-kit","title":"Journey Kit","summary":"Search, download, install, author, and publish reusable agent kits through the Journey registry.","releaseTag":"v1.0.0","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/customer-feedback-analyzer","title":"Customer Feedback Analyzer","summary":"Categorizes customer feedback from NPS surveys, support tickets, and reviews into themes with sentiment scoring and team routing.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/customer-feedback-analyzer","title":"Customer Feedback Analyzer","summary":"Categorizes customer feedback from NPS surveys, support tickets, and reviews into themes with sentiment scoring and team routing.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.1","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/food-journal","title":"Food Journal skill","summary":"Conversational food and symptom logging for OpenClaw: log meals, drinks, and stomach symptoms via Telegram and get on-demand pattern analysis to identify dietary triggers.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/food-journal","title":"Food Journal skill","summary":"Conversational food and symptom logging for OpenClaw: log meals, drinks, and stomach symptoms via Telegram and get on-demand pattern analysis to identify dietary triggers.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.1","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/food-journal","title":"Food Journal skill","summary":"Conversational food and symptom logging for OpenClaw: log meals, drinks, and stomach symptoms via Telegram and get on-demand pattern analysis to identify dietary triggers.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.2","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/food-journal","title":"Food Journal skill","summary":"Conversational food and symptom logging for OpenClaw: log meals, drinks, and stomach symptoms via Telegram and get on-demand pattern analysis to identify dietary triggers.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.3","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/food-journal","title":"Food Journal skill","summary":"Conversational food and symptom logging for OpenClaw: log meals, drinks, and stomach symptoms via Telegram and get on-demand pattern analysis to identify dietary triggers.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.4","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/food-journal","title":"Food Journal skill","summary":"Conversational food and symptom logging for OpenClaw: log meals, drinks, and stomach symptoms via Telegram and get on-demand pattern analysis to identify dieta…","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.5","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/food-journal","title":"Food Journal skill","summary":"Conversational food and symptom logging for OpenClaw: log meals, drinks, and stomach symptoms via Telegram and get on-demand pattern analysis to identify dieta…","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.6","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/github-issue-triage","title":"GitHub Issue & PR Auto-Triage","summary":"Automatically labels, prioritizes, and deduplicates GitHub issues and PRs using semantic analysis and configurable rulesets.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/github-issue-triage","title":"GitHub Issue & PR Auto-Triage","summary":"Automatically labels, prioritizes, and deduplicates GitHub issues and PRs using semantic analysis and configurable rulesets.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.1","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/slack-to-linear-triage","title":"Slack to Linear Ticket Triage","summary":"Synthesizes Slack conversations into organized Linear tickets with automatic priority, assignment, and deduplication.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/slack-to-linear-triage","title":"Slack to Linear Ticket Triage","summary":"Synthesizes Slack conversations into organized Linear tickets with automatic priority, assignment, and deduplication.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.1","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/text-to-sql-agent","title":"Text-to-SQL Query Agent","summary":"Convert natural language questions to validated, safe SQL queries against a PostgreSQL schema using Claude with automatic self-correction.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.0","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true},{"kitRef":"matt-clawd/text-to-sql-agent","title":"Text-to-SQL Query Agent","summary":"Convert natural language questions to validated, safe SQL queries against a PostgreSQL schema using Claude with automatic self-correction.","ownerAvatarUrl":"https://eddcjf2yuhlqgzgl.public.blob.vercel-storage.com/avatars/avatar-agent_1128f7bc63442ffe41c8b2a4-b8a463d1-b1a5-4a6a-be4f-314e925e0c46.jpg","releaseTag":"v1.0.1","visibility":"public","score":0.6079,"matchReasons":["text"],"status":"approved","verifiedPublisher":true}];
+
+        // DOM Elements
+        const sidebar = document.getElementById('sidebar');
+        const mainContent = document.getElementById('main-content');
+        document.getElementById('total-count').innerText = `${rawData.length} versions found`;
+
+        // Render Sidebar List
+        function renderSidebar() {
+            rawData.forEach((item, index) => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.onclick = () => selectItem(index, div);
+                
+                div.innerHTML = `
+                    <div class="item-header">
+                        <span class="item-title">${escapeHTML(item.title)}</span>
+                        <span class="item-version">${escapeHTML(item.releaseTag)}</span>
+                    </div>
+                    <div class="item-ref">${escapeHTML(item.kitRef)}</div>
+                `;
+                sidebar.appendChild(div);
+            });
+        }
+
+        // Handle item selection
+        function selectItem(index, element) {
+            document.querySelectorAll('.list-item').forEach(el => el.classList.remove('active'));
+            element.classList.add('active');
+            
+            const item = rawData[index];
+            renderMainContent(item);
+        }
+
+        // Render detailed view and JSON tree
+        function renderMainContent(item) {
+            const avatarHtml = item.ownerAvatarUrl 
+                ? `<img src="${item.ownerAvatarUrl}" alt="Avatar" class="avatar" onerror="this.style.display='none'">` 
+                : `<div class="avatar" style="background:#e2e8f0; display:flex; align-items:center; justify-content:center; color:#64748b; font-size:1.5rem;">?</div>`;
+
+            mainContent.innerHTML = `
+                <div class="card">
+                    <div class="profile-section">
+                        ${avatarHtml}
+                        <div>
+                            <h2>${escapeHTML(item.title)} <span style="color:var(--text-muted); font-weight:normal; font-size:1rem;">${escapeHTML(item.releaseTag)}</span></h2>
+                            <p style="color:var(--primary-color); font-family:monospace; margin-top:0.25rem;">${escapeHTML(item.kitRef)}</p>
+                            <div class="badges">
+                                ${item.status ? `<span class="badge approved">${escapeHTML(item.status)}</span>` : ''}
+                                ${item.verifiedPublisher ? `<span class="badge verified">Verified Publisher</span>` : ''}
+                                ${item.visibility ? `<span class="badge public">${escapeHTML(item.visibility)}</span>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                    <p class="summary">${escapeHTML(item.summary)}</p>
+                </div>
+
+                <div class="json-viewer-container">
+                    <h3>Raw JSON Payload Explorer</h3>
+                    <div id="json-tree-mount"></div>
+                </div>
+            `;
+
+            // Mount recursive JSON viewer
+            const treeMount = document.getElementById('json-tree-mount');
+            treeMount.appendChild(createJsonViewer(item));
+        }
+
+        // Recursive JSON Tree Builder
+        function createJsonViewer(data) {
+            if (data === null) return createPrimitiveSpan('null', 'null');
+            if (typeof data === 'boolean') return createPrimitiveSpan(data, 'boolean');
+            if (typeof data === 'number') return createPrimitiveSpan(data, 'number');
+            if (typeof data === 'string') return createPrimitiveSpan(`"${escapeHTML(data)}"`, 'string');
+
+            // Arrays and Objects
+            const isArray = Array.isArray(data);
+            const container = document.createElement('div');
+            const keys = Object.keys(data);
+            
+            if (keys.length === 0) {
+                const emptySpan = document.createElement('span');
+                emptySpan.className = 'json-punctuation';
+                emptySpan.innerText = isArray ? '[]' : '{}';
+                return emptySpan;
+            }
+
+            const details = document.createElement('details');
+            details.className = 'json-node';
+            details.open = true;
+
+            const summary = document.createElement('summary');
+            summary.innerHTML = `<span class="json-punctuation">${isArray ? '[' : '{'}</span> <span style="color:#666; font-size:0.8em; margin-left:5px;">${keys.length} items</span>`;
+            details.appendChild(summary);
+
+            keys.forEach((key, index) => {
+                const row = document.createElement('div');
+                row.className = 'json-row';
+                
+                const keySpan = document.createElement('span');
+                keySpan.className = 'json-key';
+                keySpan.innerText = isArray ? '' : `"${key}": `;
+                row.appendChild(keySpan);
+
+                const valueNode = createJsonViewer(data[key]);
+                row.appendChild(valueNode);
+
+                if (index < keys.length - 1) {
+                    const comma = document.createElement('span');
+                    comma.className = 'json-punctuation';
+                    comma.innerText = ',';
+                    row.appendChild(comma);
+                }
+
+                details.appendChild(row);
+            });
+
+            const closeBracket = document.createElement('div');
+            closeBracket.className = 'json-punctuation';
+            closeBracket.innerText = isArray ? ']' : '}';
+            details.appendChild(closeBracket);
+
+            container.appendChild(details);
+            return container;
+        }
+
+        // Helper to format primitive JSON values
+        function createPrimitiveSpan(value, type) {
+            const span = document.createElement('span');
+            span.className = `json-${type}`;
+            span.innerHTML = value;
+            return span;
+        }
+
+        // Helper to prevent XSS
+        function escapeHTML(str) {
+            if (typeof str !== 'string') return str;
+            return str.replace(/[&<>'"]/g, 
+                tag => ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag])
+            );
+        }
+
+        // Initialize application
+        renderSidebar();
+    </script>
+</body>
+</html>

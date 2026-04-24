@@ -184,7 +184,8 @@
         import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
         //const MODEL_ID = "Phi-3-mini-4k-instruct-q4f16_1-MLC";
-        const MODEL_ID = "Qwen2.5-0.5B-Instruct-q4f16_1-MLC";
+        //const MODEL_ID = "Qwen2.5-0.5B-Instruct-q4f16_1-MLC";
+        const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
         const STORAGE_KEY = "webllm_chat_history";
 
         // DOM Elements
@@ -202,6 +203,11 @@
 
         // Initialization
         async function initialize() {
+            // 1. Request Permission to store large files
+            if (navigator.storage && navigator.storage.persist) {
+               const isPersisted = await navigator.storage.persist();
+               console.log(`Storage persisted: ${isPersisted}`);
+            }
             if (!navigator.gpu) {
                 statusEl.style.color = "#f38ba8";
                 statusEl.innerText = "Error: WebGPU not supported.";
@@ -230,6 +236,11 @@
                   chatConfig: {
                   // Lowering this saves a massive amount of VRAM on mobile
                      context_window_size: 1024, 
+                  },
+                  // This tells WebLLM to use IndexedDB if Cache API is being blocked
+                  // Some Android versions prefer IndexedDB for large blobs
+                  appConfig: { 
+                    useIndexedDB: true 
                   }
                 });
                 // Done loading

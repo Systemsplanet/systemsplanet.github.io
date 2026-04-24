@@ -224,8 +224,14 @@
 
             try {
                 // Creates engine. Downloads if not cached, loads from Cache Storage if it is.
-                engine = await CreateMLCEngine(MODEL_ID, { initProgressCallback });
-                
+                //engine = await CreateMLCEngine(MODEL_ID, { initProgressCallback });
+                engine = await CreateMLCEngine(MODEL_ID, { 
+                  initProgressCallback,
+                  chatConfig: {
+                  // Lowering this saves a massive amount of VRAM on mobile
+                     context_window_size: 1024, 
+                  }
+                });
                 // Done loading
                 progressContainer.style.display = "none";
                 statusEl.innerText = "Ready (Model Cached)";

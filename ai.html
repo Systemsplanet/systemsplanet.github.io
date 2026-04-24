@@ -13,9 +13,11 @@
             --text-main: #cdd6f4;
             --text-muted: #a6adc8;
             --border: #45475a;
+            --danger: #f38ba8;
+            --success: #a6e3a1;
+            --modal-bg: rgba(0, 0, 0, 0.7);
         }
 
-        /* Fixed mobile height and scrolling */
         html, body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--bg-color);
@@ -23,8 +25,8 @@
             margin: 0;
             padding: 0;
             height: 100%; 
-            height: 100dvh; /* Dynamic Viewport Height fixes mobile address bar cutoff */
-            overflow: hidden; /* Stops body scroll, allowing only chat window to scroll */
+            height: 100dvh; 
+            overflow: hidden; 
             display: flex;
             justify-content: center;
         }
@@ -37,6 +39,7 @@
             flex-direction: column;
             background-color: var(--chat-bg);
             box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+            position: relative;
         }
 
         header {
@@ -59,7 +62,7 @@
 
         #status {
             font-size: 0.8rem;
-            color: #f38ba8;
+            color: var(--danger);
             background: rgba(0, 0, 0, 0.2);
             padding: 5px 10px;
             border-radius: 6px;
@@ -70,18 +73,17 @@
             text-overflow: ellipsis;
         }
 
-        /* Progress Bar Styles */
         #progress-container {
             width: 100%;
             height: 4px;
             background-color: var(--border);
-            display: block; /* Hidden when complete */
+            display: block; 
         }
 
         #progress-bar {
             height: 100%;
             width: 0%;
-            background-color: #89b4fa;
+            background-color: var(--user-msg);
             transition: width 0.2s ease-out;
         }
 
@@ -92,7 +94,6 @@
             display: flex;
             flex-direction: column;
             gap: 15px;
-            /* Smooth scrolling for chat */
             scroll-behavior: smooth; 
         }
 
@@ -139,10 +140,10 @@
         input[type="text"]:disabled { opacity: 0.5; }
 
         button {
-            padding: 12px 20px;
+            padding: 10px 16px;
             border: none;
             border-radius: 8px;
-            font-size: 1rem;
+            font-size: 0.95rem;
             cursor: pointer;
             font-weight: bold;
             transition: opacity 0.2s;
@@ -151,8 +152,94 @@
         button:hover { opacity: 0.8; }
         button:disabled { cursor: not-allowed; opacity: 0.5; }
 
-        #send-btn { background-color: #a6e3a1; color: #11111b; }
-        #clear-btn { background-color: #f38ba8; color: #11111b; font-size: 0.8rem; padding: 6px 10px;}
+        #send-btn { background-color: var(--success); color: #11111b; }
+        .action-btn { background-color: var(--border); color: var(--text-main); }
+        .danger-btn { background-color: var(--danger); color: #11111b; }
+
+        /* --- Modal GUI Styles --- */
+        #history-modal {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--modal-bg);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background-color: var(--bg-color);
+            width: 100%;
+            max-width: 500px;
+            max-height: 80%;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border: 1px solid var(--border);
+        }
+
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 { margin: 0; font-size: 1.2rem; }
+
+        .modal-body {
+            padding: 15px 20px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--chat-bg);
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            gap: 10px;
+        }
+
+        .history-text {
+            flex-grow: 1;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .history-role {
+            font-weight: bold;
+            color: var(--user-msg);
+            margin-right: 5px;
+            text-transform: capitalize;
+        }
+        .history-role.assistant { color: var(--text-muted); }
+
+        .delete-single-btn {
+            background-color: var(--danger);
+            color: #11111b;
+            padding: 5px 10px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+        }
+
+        .modal-footer {
+            padding: 15px 20px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+        }
 
     </style>
 </head>
@@ -161,10 +248,10 @@
     <div id="app-container">
         <header>
             <div class="header-title-group">
-                <h1>WebGPU LLM</h1>
-                <button id="clear-btn">Delete History</button>
+                <h1>WebGPU Chat</h1>
+                <button id="manage-btn" class="action-btn">Manage History</button>
             </div>
-            <div id="status">Checking WebGPU support...</div>
+            <div id="status">Initializing...</div>
         </header>
         
         <div id="progress-container">
@@ -174,17 +261,28 @@
         <div id="chat-window"></div>
 
         <div id="input-container">
-            <input type="text" id="user-input" placeholder="Loading massive AI model..." disabled autocomplete="off">
+            <input type="text" id="user-input" placeholder="Initializing engine..." disabled autocomplete="off">
             <button id="send-btn" disabled>Send</button>
+        </div>
+
+        <div id="history-modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Manage Chat History</h2>
+                    <button id="close-modal-btn" class="action-btn">Close</button>
+                </div>
+                <div class="modal-body" id="history-list">
+                    </div>
+                <div class="modal-footer">
+                    <button id="delete-all-btn" class="danger-btn">Delete All Chats</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script type="module">
-        // Import WebLLM from esm.run (CDN)
         import { CreateMLCEngine } from "https://esm.run/@mlc-ai/web-llm";
 
-        //const MODEL_ID = "Phi-3-mini-4k-instruct-q4f16_1-MLC";
-        //const MODEL_ID = "Qwen2.5-0.5B-Instruct-q4f16_1-MLC";
         const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
         const STORAGE_KEY = "webllm_chat_history";
 
@@ -192,10 +290,16 @@
         const chatWindow = document.getElementById('chat-window');
         const userInput = document.getElementById('user-input');
         const sendBtn = document.getElementById('send-btn');
-        const clearBtn = document.getElementById('clear-btn');
         const statusEl = document.getElementById('status');
         const progressContainer = document.getElementById('progress-container');
         const progressBar = document.getElementById('progress-bar');
+        
+        // Modal Elements
+        const manageBtn = document.getElementById('manage-btn');
+        const historyModal = document.getElementById('history-modal');
+        const historyList = document.getElementById('history-list');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const deleteAllBtn = document.getElementById('delete-all-btn');
 
         // State
         let engine;
@@ -203,88 +307,127 @@
 
         // Initialization
         async function initialize() {
-            // 1. Request Permission to store large files
-            if (navigator.storage && navigator.storage.persist) {
-               const isPersisted = await navigator.storage.persist();
-               console.log(`Storage persisted: ${isPersisted}`);
-            }
             if (!navigator.gpu) {
-                statusEl.style.color = "#f38ba8";
-                statusEl.innerText = "Error: WebGPU not supported.";
+                statusEl.innerText = "WebGPU not supported.";
                 userInput.placeholder = "WebGPU is required for this app.";
                 return;
             }
 
-            renderHistory();
+            renderMainHistory();
 
-            // Progress callback provided by WebLLM
             const initProgressCallback = (report) => {
-                // report.progress is a float from 0.0 to 1.0
                 const percentage = Math.round(report.progress * 100);
-                
-                // Update text and visual bar
                 statusEl.innerText = `${percentage}% - ${report.text}`;
-                statusEl.style.color = "#89b4fa";
                 progressBar.style.width = `${percentage}%`;
             };
 
             try {
-                // Creates engine. Downloads if not cached, loads from Cache Storage if it is.
-                //engine = await CreateMLCEngine(MODEL_ID, { initProgressCallback });
+                // Manual appConfig to fix mobile find() undefined error
+                const myModelConfig = {
+                    model_list: [
+                        {
+                            "model_id": MODEL_ID,
+                            "model": "https://huggingface.co/mlc-ai/Llama-3.2-1B-Instruct-q4f16_1-MLC",
+                            "model_lib": "https://raw.githubusercontent.com/mlc-ai/binary-mlc-llm-libs/main/web-wasm/Llama-3.2-1B-Instruct-q4f16_1-MLC/Llama-3.2-1B-Instruct-q4f16_1-MLC-android.wasm"
+                        }
+                    ]
+                };
+
                 engine = await CreateMLCEngine(MODEL_ID, { 
-                  initProgressCallback,
-                  chatConfig: {
-                  // Lowering this saves a massive amount of VRAM on mobile
-                     context_window_size: 1024, 
-                  },
-                  // This tells WebLLM to use IndexedDB if Cache API is being blocked
-                  // Some Android versions prefer IndexedDB for large blobs
-                  appConfig: { 
-                    useIndexedDB: true 
-                  }
+                    initProgressCallback,
+                    appConfig: myModelConfig
                 });
-                // Done loading
-                progressContainer.style.display = "none";
-                statusEl.innerText = "Ready (Model Cached)";
-                statusEl.style.color = "#a6e3a1";
                 
-                // Enable inputs
+                progressContainer.style.display = "none";
+                statusEl.innerText = "Ready";
+                statusEl.style.color = "var(--success)";
+                
                 userInput.disabled = false;
                 sendBtn.disabled = false;
                 userInput.placeholder = "Type a message...";
             } catch (error) {
                 console.error(error);
                 statusEl.innerText = "Failed to load model.";
-                statusEl.style.color = "#f38ba8";
                 userInput.placeholder = "Error loading model. Check console.";
             }
         }
 
-        // UI Functions
+        // --- Core UI Functions ---
         function appendMessageToUI(role, content) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message');
             msgDiv.classList.add(role === 'user' ? 'user-message' : 'bot-message');
             msgDiv.innerText = content;
             chatWindow.appendChild(msgDiv);
-            
-            // Auto-scroll to bottom
             chatWindow.scrollTop = chatWindow.scrollHeight;
             return msgDiv;
         }
 
-        function renderHistory() {
+        function renderMainHistory() {
             chatWindow.innerHTML = '';
             messageHistory.forEach(msg => appendMessageToUI(msg.role, msg.content));
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
 
-        // Chat Logic
+        // --- Modal GUI Functions ---
+        function openModal() {
+            renderModalList();
+            historyModal.style.display = 'flex';
+        }
+
+        function closeModal() {
+            historyModal.style.display = 'none';
+        }
+
+        function renderModalList() {
+            historyList.innerHTML = '';
+            
+            if (messageHistory.length === 0) {
+                historyList.innerHTML = '<div style="text-align:center; color: var(--text-muted); margin-top: 20px;">No chat history found.</div>';
+                return;
+            }
+
+            messageHistory.forEach((msg, index) => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'history-item';
+                
+                // Truncate text for the preview
+                const previewText = msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content;
+                
+                itemDiv.innerHTML = `
+                    <div class="history-text">
+                        <span class="history-role ${msg.role}">${msg.role}:</span> 
+                        ${previewText}
+                    </div>
+                    <button class="delete-single-btn" data-index="${index}">Delete</button>
+                `;
+                historyList.appendChild(itemDiv);
+            });
+
+            // Attach event listeners to the new delete buttons
+            document.querySelectorAll('.delete-single-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const indexToRemove = parseInt(e.target.getAttribute('data-index'));
+                    deleteSingleMessage(indexToRemove);
+                });
+            });
+        }
+
+        function deleteSingleMessage(index) {
+            // Remove the item from array
+            messageHistory.splice(index, 1);
+            // Save to local storage
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(messageHistory));
+            // Re-render both views
+            renderMainHistory();
+            renderModalList();
+        }
+
+        // --- Chat Interaction Logic ---
         async function handleSend() {
             const text = userInput.value.trim();
             if (!text || !engine) return;
 
-            // Update UI & Local Storage with User Input
             userInput.value = '';
             userInput.disabled = true;
             sendBtn.disabled = true;
@@ -293,11 +436,9 @@
             messageHistory.push({ role: 'user', content: text });
             localStorage.setItem(STORAGE_KEY, JSON.stringify(messageHistory));
 
-            // Prepare bot response area
             const botMsgDiv = appendMessageToUI('assistant', '...');
 
             try {
-                // Generate Streamed Response
                 const chunks = await engine.chat.completions.create({
                     messages: messageHistory,
                     temperature: 0.7,
@@ -312,7 +453,6 @@
                     chatWindow.scrollTop = chatWindow.scrollHeight;
                 }
 
-                // Finalize and save
                 messageHistory.push({ role: 'assistant', content: fullResponse });
                 localStorage.setItem(STORAGE_KEY, JSON.stringify(messageHistory));
 
@@ -320,25 +460,33 @@
                 console.error(error);
                 botMsgDiv.innerText = "An error occurred while generating the response.";
             } finally {
-                // Re-enable inputs
                 userInput.disabled = false;
                 sendBtn.disabled = false;
                 userInput.focus();
             }
         }
 
-        // Event Listeners
+        // --- Event Listeners ---
         sendBtn.addEventListener('click', handleSend);
         userInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSend();
         });
 
-        clearBtn.addEventListener('click', () => {
-            if (confirm("Are you sure you want to delete your local conversation history?")) {
+        manageBtn.addEventListener('click', openModal);
+        closeModalBtn.addEventListener('click', closeModal);
+
+        deleteAllBtn.addEventListener('click', () => {
+            if (confirm("Are you sure you want to delete ALL chat history? This cannot be undone.")) {
                 messageHistory = [];
                 localStorage.removeItem(STORAGE_KEY);
-                renderHistory();
+                renderMainHistory();
+                closeModal();
             }
+        });
+
+        // Close modal if user clicks outside the modal content area
+        historyModal.addEventListener('click', (e) => {
+            if (e.target === historyModal) closeModal();
         });
 
         // Start

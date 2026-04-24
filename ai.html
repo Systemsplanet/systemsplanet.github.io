@@ -73,6 +73,38 @@
             text-overflow: ellipsis;
         }
 
+        /* --- Settings/Prompt Bar --- */
+        #settings-bar {
+            padding: 10px 20px;
+            background-color: var(--chat-bg);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #settings-bar label {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        #system-prompt-input {
+            flex-grow: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        #system-prompt-input:focus {
+            border-color: var(--user-msg);
+        }
+
         #progress-container {
             width: 100%;
             height: 4px;
@@ -126,7 +158,7 @@
             background-color: var(--chat-bg);
         }
 
-        input[type="text"] {
+        #user-input {
             flex-grow: 1;
             padding: 12px;
             border-radius: 8px;
@@ -137,7 +169,7 @@
             outline: none;
         }
 
-        input[type="text"]:disabled { opacity: 0.5; }
+        #user-input:disabled { opacity: 0.5; }
 
         button {
             padding: 10px 16px;
@@ -253,6 +285,11 @@
             </div>
             <div id="status">Initializing...</div>
         </header>
+
+        <div id="settings-bar">
+            <label for="system-prompt-input">Persona:</label>
+            <input type="text" id="system-prompt-input" autocomplete="off" placeholder="Tell the AI how to act...">
+        </div>
         
         <div id="progress-container">
             <div id="progress-bar"></div>
@@ -281,11 +318,13 @@
     </div>
 
     <script type="module">
-        // Import prebuiltAppConfig so we don't have to manually guess the WASM URLs
         import { CreateMLCEngine, prebuiltAppConfig } from "https://esm.run/@mlc-ai/web-llm";
 
+        // --- Configuration ---
         const MODEL_ID = "Llama-3.2-1B-Instruct-q4f16_1-MLC";
         const STORAGE_KEY = "webllm_chat_history";
+        const PROMPT_STORAGE_KEY = "webllm_system_prompt";
+        const DEFAULT_PROMPT = "As a grumpy yoda,";
 
         // DOM Elements
         const chatWindow = document.getElementById('chat-window');
@@ -294,6 +333,7 @@
         const statusEl = document.getElementById('status');
         const progressContainer = document.getElementById('progress-container');
         const progressBar = document.getElementById('progress-bar');
+        const systemPromptInput = document.getElementById('system-prompt-input');
         
         // Modal Elements
         const manageBtn = document.getElementById('manage-btn');
@@ -305,6 +345,16 @@
         // State
         let engine;
         let messageHistory = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+        
+        // Load System Prompt from local storage or use default
+        let currentSystemPrompt = localStorage.getItem(PROMPT_STORAGE_KEY) || DEFAULT_PROMPT;
+        systemPromptInput.value = currentSystemPrompt;
+
+        // Save System Prompt whenever the user types in it
+        systemPromptInput.addEventListener('input', (e) => {
+            currentSystemPrompt = e.target.value;
+            localStorage.setItem(PROMPT_STORAGE_KEY, currentSystemPrompt);
+        });
 
         // Initialization
         async function initialize() {
@@ -314,7 +364,6 @@
                 return;
             }
 
-            // Optional: Request persistent storage if supported by the mobile browser
             if (navigator.storage && navigator.storage.persist) {
                 navigator.storage.persist().then(isPersisted => {
                     console.log(`Storage persisted: ${isPersisted}`);
@@ -330,7 +379,6 @@
             };
 
             try {
-                // Merge default WebLLM config with our mobile IndexedDB stability flag
                 engine = await CreateMLCEngine(MODEL_ID, { 
                     initProgressCallback,
                     appConfig: {
@@ -392,7 +440,6 @@
                 const itemDiv = document.createElement('div');
                 itemDiv.className = 'history-item';
                 
-                // Truncate text for the preview
                 const previewText = msg.content.length > 50 ? msg.content.substring(0, 50) + '...' : msg.content;
                 
                 itemDiv.innerHTML = `
@@ -405,7 +452,6 @@
                 historyList.appendChild(itemDiv);
             });
 
-            // Attach event listeners to the new delete buttons
             document.querySelectorAll('.delete-single-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const indexToRemove = parseInt(e.target.getAttribute('data-index'));
@@ -415,11 +461,8 @@
         }
 
         function deleteSingleMessage(index) {
-            // Remove the item from array
             messageHistory.splice(index, 1);
-            // Save to local storage
             localStorage.setItem(STORAGE_KEY, JSON.stringify(messageHistory));
-            // Re-render both views
             renderMainHistory();
             renderModalList();
         }
@@ -440,8 +483,14 @@
             const botMsgDiv = appendMessageToUI('assistant', '...');
 
             try {
+                // Prepend the editable System Prompt to the conversation array
+                const apiMessages = [
+                    { role: 'system', content: currentSystemPrompt },
+                    ...messageHistory
+                ];
+
                 const chunks = await engine.chat.completions.create({
-                    messages: messageHistory,
+                    messages: apiMessages,
                     temperature: 0.7,
                     stream: true
                 });
@@ -485,7 +534,6 @@
             }
         });
 
-        // Close modal if user clicks outside the modal content area
         historyModal.addEventListener('click', (e) => {
             if (e.target === historyModal) closeModal();
         });

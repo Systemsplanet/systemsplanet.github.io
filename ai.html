@@ -324,7 +324,6 @@
             <button id="stop-btn">Stop</button>
         </div>
 
-
         <div id="history-modal">
             <div class="modal-content">
                 <div class="modal-header">
@@ -341,34 +340,18 @@
     </div>
 
     <script type="module">
-        // === 1. ADD THIS ENTIRE BLOCK FOR OFFLINE SUPPORT ===
-        const swCode = `
-            const CACHE_NAME = 'webllm-offline-cache-v1';
-            self.addEventListener('install', e => self.skipWaiting());
-            self.addEventListener('activate', e => e.waitUntil(clients.claim()));
-            self.addEventListener('fetch', e => {
-                e.respondWith(
-                    caches.match(e.request).then(res => {
-                        if (res) return res; // Return from cache if offline
-                        return fetch(e.request).then(netRes => {
-                            // Save new successful network requests to cache
-                            if (netRes && netRes.ok && e.request.method === 'GET') {
-                                const copy = netRes.clone();
-                                caches.open(CACHE_NAME).then(c => c.put(e.request, copy));
-                            }
-                            return netRes;
-                        });
-                    })
-                );
-            });
-        `;
-        const blob = new Blob([swCode], { type: 'application/javascript' });
-        const swUrl = URL.createObjectURL(blob);
+        // Register the Service Worker correctly for offline support
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register(swUrl)
-                .then(() => console.log("Offline caching enabled."));
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log("Offline caching enabled. Scope:", registration.scope);
+                    })
+                    .catch(error => {
+                        console.error("Service Worker registration failed:", error);
+                    });
+            });
         }
-        // =====================================================
 
         import { CreateMLCEngine, prebuiltAppConfig } from "https://esm.run/@mlc-ai/web-llm";
 
@@ -519,8 +502,6 @@
             renderModalList();
         }
 
-
-
         // --- Chat Interaction Logic ---
         async function handleSend() {
             const text = userInput.value.trim();
@@ -552,7 +533,6 @@
                     stream: true
                 });
 
-                
                 let isFirstChunk = true;
 
                 for await (const chunk of chunks) {
@@ -583,8 +563,6 @@
                 userInput.focus();
             }
         }
-
-
 
         // --- Event Listeners ---
         stopBtn.addEventListener('click', () => {

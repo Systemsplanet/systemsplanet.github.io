@@ -465,7 +465,11 @@
             messageHistory.forEach(msg => appendMessageToUI(msg.role, msg.content));
             chatWindow.scrollTop = chatWindow.scrollHeight;
         }
-
+        function closeKeyboard() {
+          if (document.activeElement instanceof HTMLElement) {
+            document.activeElement.blur();
+          }
+        }
         // --- Modal GUI Functions ---
         function openModal() {
             renderModalList();
@@ -519,7 +523,7 @@
         async function handleSend() {
             const text = userInput.value.trim();
             if (!text || !engine) return;
-
+            closeKeyboard();
             // 1. Lock input, hide Send, show Stop
             userInput.value = '';
             userInput.disabled = true;
@@ -576,6 +580,7 @@
                 userInput.focus();
             }
         }
+
 
         // --- Event Listeners ---
         stopBtn.addEventListener('click', () => {

@@ -41,7 +41,7 @@ gitlogServer = new GitlogServer(
   "YOUR_WIFI_SSID", 
   "YOUR_WIFI_PWD"
 );
-
+```
 
 
 ## ⚠️ Troubleshooting

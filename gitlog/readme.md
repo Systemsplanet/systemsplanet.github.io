@@ -42,3 +42,13 @@ gitlogServer = new GitlogServer(
   "YOUR_WIFI_PWD"
 );
 
+
+
+## ⚠️ Troubleshooting
+
+| Symptom | Common Cause | Solution |
+| :--- | :--- | :--- |
+| **Clients aren't reaching the server** | Range or interference issues. | Ensure your Server ESP32 is close enough to your Wi-Fi router to maintain a stable connection, and that the Clients are within ESP-NOW radio range of the Server (typically up to 200 meters line-of-sight, though walls reduce this). |
+| **HTTP Error 401 or 403** | Authentication failure. | Your GitHub Personal Access Token is invalid, expired, or missing the `repo` scope. Generate a new token and update the Server sketch. |
+| **HTTP Error 404** | Target not found. | The GitHub username or repository name provided in the Server constructor is incorrect or the repository is entirely empty (no main branch). Double-check your spelling. |
+| **Clock Sync Failing** | Network timeout on boot. | Ensure the Server has a working internet connection.

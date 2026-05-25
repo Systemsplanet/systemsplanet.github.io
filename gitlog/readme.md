@@ -1,7 +1,44 @@
-# gitlog - esp32 log to github
+# GitLog: ESP-NOW to GitHub Zero-Config Logging Bridge
 
-this library allows any esp32 client 
-to create a log file on github.
+GitLog is a lightweight, highly optimized C++ library and architecture for the ESP32. It allows multiple battery-powered ESP32 sensor nodes to wake up, broadcast data, and immediately return to deep sleep without ever connecting to Wi-Fi. 
 
-The file created is:
-yyyymmdd-hhmmss-mac
+A central "Bridge" ESP32 listens for these broadcasts via the ESP-NOW protocol, connects to Wi-Fi, and logs the events directly to a GitHub repository as individual text files using the GitHub REST API.
+
+## 🚀 Key Features
+
+* **Zero-Configuration Clients:** Client sensors require zero network configuration. They do not hold Wi-Fi SSIDs, passwords, or even unique IDs. The bridge dynamically extracts the sensor's hardware MAC address from the packet to use as its Unique GUID.
+* **Auto-Channel Hopping & ACK:** Clients automatically sweep standard 2.4GHz Wi-Fi channels (1-11) until they receive an instant ACK (acknowledgment) from the server, preventing packet loss if the router assigns the server a new channel.
+* **NTP-Free Time Syncing:** The server completely bypasses external NTP servers. It extracts the HTTP `Date` header from GitHub's API responses to perfectly sync and dynamically correct the ESP32's internal RTC down to the second.
+* **Anti-Fragmentation Memory Management:** Instead of downloading and appending to a massive log file (which destroys ESP32 RAM), the server pushes a new `YYYYMMDD-HHMMSS-[MAC].txt` file for every event. Memory is strictly stack-allocated.
+
+## 🏗️ System Architecture
+
+1. **Client Node:** Wakes from Deep Sleep -> Sweeps channels broadcasting via ESP-NOW -> Receives ACK -> Sleeps.
+2. **Server Bridge:** Listens constantly -> Sends ACK immediately on receipt -> Connects to GitHub API via HTTPS -> Formats payload to Base64 -> Pushes new file -> Updates RTC from GitHub's reply.
+
+## 🛠️ Hardware & Software Requirements
+
+* **Hardware:** Minimum of 2x ESP32 development boards (1 Server, 1+ Clients).
+* **Software:** Arduino IDE with the official ESP32 Core installed.
+* **Libraries:** All required libraries (`esp_now.h`, `WiFi.h`, `esp_wifi.h`, `HTTPClient.h`, `WiFiClientSecure.h`, `time.h`, `base64.h`) are built into the standard ESP32 core. No external downloads needed!
+
+## ⚙️ Setup & Installation
+
+### 1. GitHub Personal Access Token
+To allow the Server to write files to your repository, you need a Personal Access Token (PAT).
+1. Go to GitHub -> Settings -> Developer Settings -> Personal access tokens (Tokens (classic)).
+2. Generate a new token and give it the **`repo`** scope (Full control of private repositories).
+3. Copy the token. **Keep it secret.**
+
+### 2. Configure the Server (Gateway)
+Open `server/server.ino` and update the constructor with your credentials:
+
+```cpp
+gitlogServer = new GitlogServer(
+  "YOUR_GITHUB_TOKEN", 
+  "YOUR_GITHUB_USERNAME", 
+  "YOUR_REPO_NAME", 
+  "YOUR_WIFI_SSID", 
+  "YOUR_WIFI_PWD"
+);
+

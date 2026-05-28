@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitUpload</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+  :root {
+    --bg:        #0a0c0f;
+    --surface:   #111418;
+    --border:    #1e2530;
+    --border2:   #2a3340;
+    --text:      #c8d4e0;
+    --muted:     #4a5a6a;
+    --accent:    #00d4aa;
+    --accent2:   #0088ff;
+    --warn:      #ff6b35;
+    --green:     #39d353;
+    --red:       #f85149;
+    --bar-h:     6px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Subtle grid bg */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(0,212,170,.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0,212,170,.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  #app {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px 60px;
+  }
+
+  /* ── Header ── */
+  header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 28px 0 24px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 28px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  .logo h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 22px;
+    letter-spacing: -0.5px;
+    color: #fff;
+  }
+  .logo h1 span { color: var(--accent); }
+  .logo .tagline {
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+  }
+
+  .pct-badge {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: -1px;
+    min-width: 80px;
+    text-align: right;
+    transition: color .3s;
+  }
+  .pct-badge.done { color: var(--green); }
+  .pct-badge.error { color: var(--red); }
+  .pct-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-align: right;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 2px;
+  }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .card-header:hover { background: rgba(255,255,255,.02); }
+  .card-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    flex: 1;
+  }
+  .card-body { padding: 18px; }
+
+  .chevron {
+    width: 16px; height: 16px;
+    border-right: 2px solid var(--muted);
+    border-bottom: 2px solid var(--muted);
+    transform: rotate(45deg);
+    transition: transform .25s;
+    flex-shrink: 0;
+  }
+  .collapsed .chevron { transform: rotate(-45deg); }
+  .collapsible { overflow: hidden; transition: max-height .35s ease; max-height: 500px; }
+  .collapsible.hidden { max-height: 0; }
+
+  /* ── Settings form ── */
+  .form-row {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .form-row:last-child { margin-bottom: 0; }
+  label {
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: .5px;
+    text-align: right;
+  }
+  input[type=text], input[type=password] {
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    border-radius: 4px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 8px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color .2s;
+  }
+  input:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--muted); }
+
+  .settings-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── Status dot ── */
+  .status-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--muted);
+    flex-shrink: 0;
+    transition: background .3s;
+  }
+  .status-dot.ok    { background: var(--green); box-shadow: 0 0 6px var(--green); }
+  .status-dot.error { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+  /* ── Buttons ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: .5px;
+    cursor: pointer;
+    transition: all .15s;
+    white-space: nowrap;
+  }
+  .btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    border-color: var(--accent);
+  }
+  .btn-primary:hover:not(:disabled) { background: #00ffcc; border-color: #00ffcc; }
+
+  .btn-ghost {
+    background: transparent;
+    color: var(--muted);
+    border-color: var(--border2);
+  }
+  .btn-ghost:hover:not(:disabled) { color: var(--text); border-color: var(--muted); }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--red);
+    border-color: var(--red);
+  }
+  .btn-danger:hover:not(:disabled) { background: rgba(248,81,73,.12); }
+
+  .btn-sm { padding: 5px 10px; font-size: 10px; }
+
+  /* ── File drop zone ── */
+  #drop-zone {
+    border: 2px dashed var(--border2);
+    border-radius: 6px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+  }
+  #drop-zone:hover, #drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(0,212,170,.04);
+  }
+  #drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .drop-icon {
+    font-size: 36px;
+    margin-bottom: 14px;
+    display: block;
+  }
+  .drop-text { color: var(--muted); font-size: 12px; line-height: 1.8; }
+  .drop-text strong { color: var(--text); }
+
+  #selected-file {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(0,212,170,.07);
+    border: 1px solid rgba(0,212,170,.2);
+    border-radius: 5px;
+    margin-top: 14px;
+  }
+  #selected-file .file-icon { font-size: 20px; }
+  #selected-file .file-name { flex: 1; color: var(--accent); font-size: 12px; }
+  #selected-file .file-size { color: var(--muted); font-size: 11px; }
+
+  /* ── Upload section ── */
+  .upload-controls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .path-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .path-row label { text-align: left; min-width: 80px; color: var(--muted); font-size: 11px; }
+  .path-row input { flex: 1; }
+
+  /* ── Progress bar ── */
+  #progress-wrap {
+    margin-bottom: 18px;
+    display: none;
+  }
+  #progress-wrap.visible { display: block; }
+
+  .prog-file {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+  .prog-filename { color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 70%; }
+  .prog-counter { color: var(--muted); flex-shrink: 0; }
+
+  .bar-track {
+    height: var(--bar-h);
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    position: relative;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    width: 0%;
+    transition: width .3s ease;
+    position: relative;
+  }
+  /* Shimmer on bar */
+  .bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; left: -60%; width: 60%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+    animation: shimmer 1.4s infinite;
+  }
+  @keyframes shimmer { to { left: 110%; } }
+  .bar-fill.done { background: var(--green); }
+  .bar-fill.done::after { display: none; }
+
+  /* Individual file mini-bar */
+  #file-prog-wrap {
+    margin-top: 8px;
+    display: none;
+  }
+  #file-prog-wrap.visible { display: block; }
+  .file-mini-bar .bar-track { height: 3px; }
+
+  /* ── Log area ── */
+  #log-area {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 14px;
+    font-size: 11px;
+    line-height: 1.7;
+    color: var(--muted);
+    min-height: 160px;
+    max-height: 320px;
+    overflow-y: auto;
+    resize: vertical;
+    width: 100%;
+    font-family: 'JetBrains Mono', monospace;
+    outline: none;
+  }
+  #log-area:focus { border-color: var(--border2); }
+
+  .log-ok    { color: var(--green); }
+  .log-err   { color: var(--red); }
+  .log-info  { color: var(--accent2); }
+  .log-warn  { color: var(--warn); }
+  .log-file  { color: var(--accent); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  /* ── Toast ── */
+  #toast {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--surface);
+    border: 1px solid var(--border2);
+    color: var(--text);
+    opacity: 0;
+    transform: translateY(12px);
+    transition: all .3s;
+    z-index: 999;
+    pointer-events: none;
+    max-width: 340px;
+  }
+  #toast.show { opacity: 1; transform: translateY(0); }
+  #toast.ok   { border-color: var(--green); color: var(--green); }
+  #toast.err  { border-color: var(--red);   color: var(--red); }
+  #toast.info { border-color: var(--accent2); color: var(--accent2); }
+
+  /* ── Misc ── */
+  .sep { height: 1px; background: var(--border); margin: 4px 0; }
+  .row { display: flex; gap: 10px; align-items: center; }
+  .flex1 { flex: 1; }
+
+  .stat-chips {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .chip {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    letter-spacing: .5px;
+    border: 1px solid var(--border2);
+    color: var(--muted);
+  }
+  .chip span { font-weight: 700; color: var(--text); }
+  .chip.active { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- Header -->
+  <header>
+    <div class="logo">
+      <div>
+        <h1>git<span>upload</span></h1>
+        <div class="tagline">zip → github deployer</div>
+      </div>
+    </div>
+    <div>
+      <div class="pct-badge" id="pct-display">—</div>
+      <div class="pct-label">complete</div>
+    </div>
+  </header>
+
+  <!-- Settings Card -->
+  <div class="card" id="settings-card">
+    <div class="card-header" onclick="toggleCard('settings-card')">
+      <div class="status-dot" id="settings-dot"></div>
+      <span class="card-title">GitHub Settings</span>
+      <div class="chevron"></div>
+    </div>
+    <div class="collapsible" id="settings-body">
+      <div class="card-body">
+        <div class="form-row">
+          <label>Token</label>
+          <input type="password" id="gh-token" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" autocomplete="off">
+        </div>
+        <div class="form-row">
+          <label>Owner</label>
+          <input type="text" id="gh-owner" placeholder="username or org">
+        </div>
+        <div class="form-row">
+          <label>Repository</label>
+          <input type="text" id="gh-repo" placeholder="my-repo">
+        </div>
+        <div class="form-row">
+          <label>Branch</label>
+          <input type="text" id="gh-branch" value="main" placeholder="main">
+        </div>
+        <div class="settings-actions">
+          <button class="btn btn-ghost btn-sm" onclick="clearSettings()">Clear</button>
+          <button class="btn btn-ghost btn-sm" onclick="testConnection()">Test Connection</button>
+          <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save Settings</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Card -->
+  <div class="card">
+    <div class="card-header">
+      <div class="status-dot" id="upload-dot"></div>
+      <span class="card-title">Upload</span>
+    </div>
+    <div class="card-body">
+
+      <!-- Drop zone -->
+      <div id="drop-zone">
+        <input type="file" id="zip-input" accept=".zip" onchange="handleFileSelect(event)">
+        <span class="drop-icon">📦</span>
+        <div class="drop-text">
+          <strong>Drop a ZIP file here</strong><br>
+          or click to browse
+        </div>
+      </div>
+
+      <div id="selected-file">
+        <span class="file-icon">🗜️</span>
+        <span class="file-name" id="sf-name"></span>
+        <span class="file-size" id="sf-size"></span>
+        <button class="btn btn-ghost btn-sm" onclick="clearFile()">✕</button>
+      </div>
+
+      <!-- Path prefix -->
+      <div class="path-row" style="margin-top:16px;">
+        <label>Repo path</label>
+        <input type="text" id="gh-path" placeholder="Leave empty for root  /  or  src/folder/">
+      </div>
+
+      <!-- Stats chips -->
+      <div class="stat-chips" id="stat-chips" style="display:none">
+        <div class="chip"><span id="chip-total">0</span> files found</div>
+        <div class="chip"><span id="chip-done">0</span> uploaded</div>
+        <div class="chip" id="chip-err-wrap"><span id="chip-err">0</span> errors</div>
+      </div>
+
+      <!-- Progress -->
+      <div id="progress-wrap">
+        <div class="prog-file">
+          <span class="prog-filename" id="prog-filename">Initializing…</span>
+          <span class="prog-counter" id="prog-counter">0 / 0</span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="main-bar"></div>
+        </div>
+        <div id="file-prog-wrap" class="file-mini-bar">
+          <div class="bar-track" style="margin-top:5px">
+            <div class="bar-fill" id="file-bar"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="upload-controls">
+        <button class="btn btn-primary" id="upload-btn" onclick="startUpload()" disabled>
+          ▲ Upload to GitHub
+        </button>
+        <button class="btn btn-danger" id="cancel-btn" onclick="cancelUpload()" style="display:none">
+          ✕ Cancel
+        </button>
+        <div class="flex1"></div>
+        <button class="btn btn-ghost btn-sm" onclick="clearLog()">Clear Log</button>
+      </div>
+
+      <!-- Log -->
+      <textarea id="log-area" readonly placeholder="Upload log will appear here…"></textarea>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<script>
+/* ========================================================
+   STATE
+======================================================== */
+let zipFile       = null;
+let cancelFlag    = false;
+let isUploading   = false;
+let uploadedCount = 0;
+let errorCount    = 0;
+let totalFiles    = 0;
+
+/* ========================================================
+   SETTINGS  (localStorage)
+======================================================== */
+const STORE_KEY = 'gitupload_settings';
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem(STORE_KEY) || '{}');
+    if (s.token)  document.getElementById('gh-token').value  = s.token;
+    if (s.owner)  document.getElementById('gh-owner').value  = s.owner;
+    if (s.repo)   document.getElementById('gh-repo').value   = s.repo;
+    if (s.branch) document.getElementById('gh-branch').value = s.branch;
+    if (s.path)   document.getElementById('gh-path').value   = s.path;
+    updateSettingsDot();
+  } catch(e) {}
+}
+
+function saveSettings() {
+  const s = getSettings();
+  if (!s.token || !s.owner || !s.repo) {
+    toast('Token, Owner and Repository are required.', 'err'); return;
+  }
+  localStorage.setItem(STORE_KEY, JSON.stringify({
+    token: s.token, owner: s.owner, repo: s.repo, branch: s.branch, path: s.path
+  }));
+  updateSettingsDot();
+  toast('Settings saved.', 'ok');
+  toggleCard('settings-card', false);
+}
+
+function clearSettings() {
+  localStorage.removeItem(STORE_KEY);
+  ['gh-token','gh-owner','gh-repo'].forEach(id => document.getElementById(id).value='');
+  document.getElementById('gh-branch').value = 'main';
+  updateSettingsDot();
+  toast('Settings cleared.', 'info');
+}
+
+function getSettings() {
+  return {
+    token:  document.getElementById('gh-token').value.trim(),
+    owner:  document.getElementById('gh-owner').value.trim(),
+    repo:   document.getElementById('gh-repo').value.trim(),
+    branch: document.getElementById('gh-branch').value.trim() || 'main',
+    path:   document.getElementById('gh-path').value.trim()
+  };
+}
+
+function updateSettingsDot() {
+  const s = getSettings();
+  const dot = document.getElementById('settings-dot');
+  const ok  = s.token && s.owner && s.repo;
+  dot.className = 'status-dot ' + (ok ? 'ok' : 'error');
+}
+
+async function testConnection() {
+  const s = getSettings();
+  if (!s.token || !s.owner || !s.repo) { toast('Fill in all settings first.', 'err'); return; }
+  log('Testing connection to ' + s.owner + '/' + s.repo + '…', 'info');
+  try {
+    const r = await fetch(`https://api.github.com/repos/${s.owner}/${s.repo}`, {
+      headers: { Authorization: `token ${s.token}`, Accept: 'application/vnd.github.v3+json' }
+    });
+    if (r.ok) {
+      const d = await r.json();
+      log('✓ Connected: ' + d.full_name + ' [' + (d.private ? 'private' : 'public') + ']', 'ok');
+      toast('Connection successful!', 'ok');
+      document.getElementById('settings-dot').className = 'status-dot ok';
+    } else {
+      const e = await r.json();
+      log('✗ ' + (e.message || r.status), 'err');
+      toast('Connection failed: ' + (e.message || r.status), 'err');
+    }
+  } catch(e) {
+    log('✗ Network error: ' + e.message, 'err');
+    toast('Network error', 'err');
+  }
+}
+
+/* ========================================================
+   CARD TOGGLE
+======================================================== */
+function toggleCard(cardId, forceOpen) {
+  const card = document.getElementById(cardId);
+  const body = card.querySelector('.collapsible');
+  const isHidden = body.classList.contains('hidden');
+  const open = forceOpen !== undefined ? forceOpen : isHidden;
+  body.classList.toggle('hidden', !open);
+  card.classList.toggle('collapsed', !open);
+}
+
+/* ========================================================
+   FILE SELECT / DROP
+======================================================== */
+const dropZone = document.getElementById('drop-zone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f && f.name.endsWith('.zip')) setZipFile(f);
+  else toast('Please drop a .zip file.', 'err');
+});
+
+function handleFileSelect(e) {
+  const f = e.target.files[0];
+  if (f) setZipFile(f);
+}
+
+function setZipFile(f) {
+  zipFile = f;
+  document.getElementById('sf-name').textContent = f.name;
+  document.getElementById('sf-size').textContent = formatBytes(f.size);
+  document.getElementById('selected-file').style.display = 'flex';
+  document.getElementById('upload-btn').disabled = false;
+  document.getElementById('upload-dot').className = 'status-dot ok';
+  log('Selected: ' + f.name + ' (' + formatBytes(f.size) + ')', 'info');
+}
+
+function clearFile() {
+  zipFile = null;
+  document.getElementById('zip-input').value = '';
+  document.getElementById('selected-file').style.display = 'none';
+  document.getElementById('upload-btn').disabled = true;
+  document.getElementById('upload-dot').className = 'status-dot';
+  setPercent(null);
+  document.getElementById('progress-wrap').classList.remove('visible');
+  document.getElementById('stat-chips').style.display = 'none';
+}
+
+/* ========================================================
+   UPLOAD
+======================================================== */
+async function startUpload() {
+  if (!zipFile || isUploading) return;
+  const s = getSettings();
+  if (!s.token || !s.owner || !s.repo) {
+    toast('Configure GitHub settings first.', 'err');
+    toggleCard('settings-card', true);
+    return;
+  }
+
+  cancelFlag   = false;
+  isUploading  = true;
+  uploadedCount = 0;
+  errorCount   = 0;
+
+  document.getElementById('upload-btn').disabled = true;
+  document.getElementById('cancel-btn').style.display = 'inline-flex';
+  document.getElementById('progress-wrap').classList.add('visible');
+  document.getElementById('stat-chips').style.display = 'flex';
+  document.getElementById('main-bar').className = 'bar-fill';
+
+  log('─────────────────────────────────', 'info');
+  log('Starting upload: ' + zipFile.name, 'info');
+  log('Target: ' + s.owner + '/' + s.repo + ' @ ' + s.branch, 'info');
+
+  try {
+    const jszip = window.JSZip || JSZip;
+    const zip   = await jszip.loadAsync(zipFile);
+
+    // Gather real files (skip directories)
+    const entries = [];
+    zip.forEach((path, entry) => {
+      if (!entry.dir) entries.push({ path, entry });
+    });
+
+    totalFiles = entries.length;
+    document.getElementById('chip-total').textContent = totalFiles;
+    log('Found ' + totalFiles + ' file(s) in ZIP.', 'info');
+
+    if (totalFiles === 0) {
+      log('ZIP contains no files.', 'warn');
+      finishUpload(false);
+      return;
+    }
+
+    setPercent(0);
+    updateCounter(0);
+
+    for (let i = 0; i < entries.length; i++) {
+      if (cancelFlag) {
+        log('⊘ Upload cancelled by user.', 'warn');
+        break;
+      }
+
+      const { path, entry } = entries[i];
+      const repoPath = buildRepoPath(s.path, path);
+      setCurrentFile(repoPath, i + 1, totalFiles);
+
+      try {
+        const content = await entry.async('base64');
+        await uploadFile(s, repoPath, content);
+        uploadedCount++;
+        document.getElementById('chip-done').textContent = uploadedCount;
+        logFile('✓ ' + repoPath);
+      } catch (err) {
+        errorCount++;
+        document.getElementById('chip-err').textContent = errorCount;
+        log('✗ ' + repoPath + ' — ' + err.message, 'err');
+      }
+
+      const pct = Math.round(((i + 1) / totalFiles) * 100);
+      setPercent(pct);
+      updateCounter(i + 1);
+    }
+
+    finishUpload(!cancelFlag);
+
+  } catch (err) {
+    log('✗ Failed to read ZIP: ' + err.message, 'err');
+    toast('Failed to read ZIP file.', 'err');
+    finishUpload(false);
+  }
+}
+
+async function uploadFile(s, repoPath, base64Content) {
+  const apiUrl = `https://api.github.com/repos/${s.owner}/${s.repo}/contents/${repoPath}`;
+  const headers = {
+    Authorization: `token ${s.token}`,
+    Accept: 'application/vnd.github.v3+json',
+    'Content-Type': 'application/json'
+  };
+
+  // Try to get existing file SHA (needed for overwrite)
+  let sha = null;
+  try {
+    const get = await fetch(apiUrl + '?ref=' + encodeURIComponent(s.branch), { headers });
+    if (get.ok) {
+      const d = await get.json();
+      sha = d.sha;
+    }
+  } catch(e) { /* new file */ }
+
+  const body = {
+    message: 'gitupload: ' + repoPath,
+    content: base64Content,
+    branch: s.branch
+  };
+  if (sha) body.sha = sha;
+
+  const r = await fetch(apiUrl, {
+    method: 'PUT',
+    headers,
+    body: JSON.stringify(body)
+  });
+
+  if (!r.ok) {
+    const e = await r.json();
+    throw new Error(e.message || ('HTTP ' + r.status));
+  }
+}
+
+function cancelUpload() {
+  cancelFlag = true;
+  toast('Cancelling…', 'info');
+}
+
+function finishUpload(success) {
+  isUploading = false;
+  document.getElementById('cancel-btn').style.display = 'none';
+  document.getElementById('upload-btn').disabled = false;
+
+  if (cancelFlag) {
+    document.getElementById('main-bar').style.width = '0%';
+    setPercent(null);
+    document.getElementById('pct-display').className = 'pct-badge';
+  } else if (success) {
+    document.getElementById('main-bar').className = 'bar-fill done';
+    setPercent(100);
+    document.getElementById('pct-display').className = 'pct-badge done';
+    toast('Upload complete! ' + uploadedCount + ' file(s).', 'ok');
+    log('─────────────────────────────────', 'ok');
+    log('Done. ' + uploadedCount + '/' + totalFiles + ' uploaded' +
+        (errorCount ? ', ' + errorCount + ' error(s).' : '.'), 'ok');
+  } else {
+    document.getElementById('pct-display').className = 'pct-badge error';
+    log('Upload ended with errors.', 'err');
+  }
+
+  document.getElementById('prog-filename').textContent = cancelFlag ? 'Cancelled' : (success ? 'Complete ✓' : 'Finished with errors');
+  document.getElementById('file-prog-wrap').classList.remove('visible');
+}
+
+/* ========================================================
+   HELPERS
+======================================================== */
+function buildRepoPath(prefix, filePath) {
+  // Remove leading slash/dot-slash from zip paths
+  filePath = filePath.replace(/^\.?\//, '');
+  if (!prefix) return filePath;
+  prefix = prefix.replace(/\/+$/, '');
+  return prefix + '/' + filePath;
+}
+
+function setCurrentFile(name, current, total) {
+  document.getElementById('prog-filename').textContent = name;
+  updateCounter(current - 1, total);
+
+  // Animate file bar (simulate per-file progress)
+  const fb = document.getElementById('file-bar');
+  document.getElementById('file-prog-wrap').classList.add('visible');
+  fb.style.width = '0%';
+  setTimeout(() => fb.style.width = '100%', 30);
+}
+
+function updateCounter(done, total) {
+  const t = total !== undefined ? total : totalFiles;
+  document.getElementById('prog-counter').textContent = done + ' / ' + t;
+}
+
+function setPercent(pct) {
+  const el = document.getElementById('pct-display');
+  if (pct === null) { el.textContent = '—'; return; }
+  el.textContent = pct + '%';
+  document.getElementById('main-bar').style.width = pct + '%';
+}
+
+function formatBytes(b) {
+  if (b < 1024) return b + ' B';
+  if (b < 1048576) return (b/1024).toFixed(1) + ' KB';
+  return (b/1048576).toFixed(1) + ' MB';
+}
+
+/* ========================================================
+   LOG
+======================================================== */
+const logEl = document.getElementById('log-area');
+
+function log(msg, type) {
+  const ts = new Date().toTimeString().slice(0,8);
+  const cls = type ? 'log-' + type : '';
+  const line = `[${ts}] ${msg}\n`;
+  // Append with span coloring by making textarea show plain text
+  // Use contenteditable div pattern via textarea + color markers
+  logEl.value += line;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+function logFile(msg) {
+  log(msg, 'file');
+}
+
+function clearLog() {
+  logEl.value = '';
+}
+
+/* ========================================================
+   TOAST
+======================================================== */
+let toastTimer;
+function toast(msg, type) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.className = 'show ' + (type || '');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 3200);
+}
+
+/* ========================================================
+   INIT
+======================================================== */
+loadSettings();
+toggleCard('settings-card', false);
+// Start open if no settings yet
+const saved = localStorage.getItem(STORE_KEY);
+if (!saved) toggleCard('settings-card', true);
+
+// Wire settings inputs to live-update dot
+['gh-token','gh-owner','gh-repo','gh-branch'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateSettingsDot);
+});
+</script>
+</body>
+</html>

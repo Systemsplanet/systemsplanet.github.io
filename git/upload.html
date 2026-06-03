@@ -787,18 +787,26 @@ async function uploadFile(s, repoPath, base64Content) {
   // Try to get existing file SHA (needed for overwrite)
   let sha = null;
   try {
-    const get = await fetch(apiUrl + '?ref=' + encodeURIComponent(s.branch), { headers });
+    // Force the browser to fetch a fresh SHA every time
+    const get = await fetch(apiUrl + '?ref=' + encodeURIComponent(s.branch), { 
+      headers,
+      cache: 'no-store' 
+    });
+    
     if (get.ok) {
       const d = await get.json();
-      sha = d.sha;
+      sha = d.sha; // We need this specific hash to overwrite
     }
-  } catch(e) { /* new file */ }
+  } catch(e) { 
+    /* new file, no sha needed */ 
+  }
 
   const body = {
     message: 'gitupload: ' + repoPath,
     content: base64Content,
     branch: s.branch
   };
+  
   if (sha) body.sha = sha;
 
   const r = await fetch(apiUrl, {
@@ -812,6 +820,7 @@ async function uploadFile(s, repoPath, base64Content) {
     throw new Error(e.message || ('HTTP ' + r.status));
   }
 }
+
 
 function cancelUpload() {
   cancelFlag = true;
